@@ -345,7 +345,7 @@ class CourseOverviewTestCase(ModuleStoreTestCase):
         course._grading_policy['GRADE_CUTOFFS'] = {}  # pylint: disable=protected-access
         with self.assertRaises(ValueError):
             __ = course.lowest_passing_grade
-        course_overview = CourseOverview._create_from_course(course)  # pylint: disable=protected-access
+        course_overview = CourseOverview._create_or_update(course)  # pylint: disable=protected-access
         self.assertEqual(course_overview.lowest_passing_grade, None)
 
     @ddt.data((ModuleStoreEnum.Type.mongo, 4, 4), (ModuleStoreEnum.Type.split, 3, 4))
@@ -922,7 +922,7 @@ class CourseOverviewImageSetTestCase(ModuleStoreTestCase):
         # Now do it the normal way -- this will cause an IntegrityError to be
         # thrown and suppressed in create_for_course()
         self.set_config(True)
-        CourseOverviewImageSet.create_for_course(overview)
+        CourseOverviewImageSet.create_or_update(overview)
         self.assertTrue(hasattr(overview, 'image_set'))
 
         # The following is actually very important for this test because
