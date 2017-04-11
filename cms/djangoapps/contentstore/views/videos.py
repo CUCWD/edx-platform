@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseNotFound
 from django.utils.translation import ugettext as _, ugettext_noop
-from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 import rfc6266
 
 from edxval.api import (
@@ -21,7 +21,8 @@ from edxval.api import (
     SortDirection,
     VideoSortField,
     remove_video_for_course,
-    update_video_status
+    update_video_status,
+    update_video_image
 )
 from opaque_keys.edx.keys import CourseKey
 
@@ -33,7 +34,7 @@ from util.json_request import expect_json, JsonResponse
 from .course import get_course_and_check_access
 
 
-__all__ = ["videos_handler", "video_encodings_download"]
+__all__ = ['videos_handler', 'video_encodings_download', 'video_images_handler']
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,14 @@ KEY_EXPIRATION_IN_SECONDS = 86400
 VIDEO_SUPPORTED_FILE_FORMATS = {
     '.mp4': 'video/mp4',
     '.mov': 'video/quicktime',
+}
+
+THUMBNAIL_SUPPORTED_FILE_FORMATS = {
+    '.jpeg': 'image/jpeg',
+    '.jpg': 'image/jpeg',
+    '.png': 'image/png',
+    '.gif': 'image/gif',
+    '.bmp': 'image/bmp'
 }
 
 VIDEO_UPLOAD_MAX_FILE_SIZE_GB = 5
@@ -145,6 +154,19 @@ def videos_handler(request, course_key_string, edx_video_id=None):
             return send_video_status_update(request.json)
 
         return videos_post(course, request)
+
+
+@expect_json
+@login_required
+@require_POST
+def video_images_handler(request, course_key_string, edx_video_id=None):
+    image = request.POST['file']
+    update_video_image(edx_video_id, course_key_string, image)
+    LOGGER.info(
+        'VIDEOS: Video image updated for edx_video_id [%s]',
+        edx_video_id
+    )
+    return JsonResponse(status=201)
 
 
 @login_required

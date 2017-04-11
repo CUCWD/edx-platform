@@ -89,6 +89,9 @@ from lms.envs.common import (
     FILE_UPLOAD_STORAGE_BUCKET_NAME,
     FILE_UPLOAD_STORAGE_PREFIX,
 
+    # Video Thumbnail settings
+    VIDEO_THUMBNAIL_SETTINGS,
+
     COURSE_ENROLLMENT_MODES
 )
 from path import Path as path

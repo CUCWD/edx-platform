@@ -23,6 +23,8 @@ from contentstore.tests.utils import CourseTestCase
 from contentstore.utils import reverse_course_url
 from xmodule.modulestore.tests.factories import CourseFactory
 
+from openedx.core.djangoapps.profile_images.tests.helpers import make_image_file
+
 
 class VideoUploadTestMixin(object):
     """
@@ -517,6 +519,28 @@ class VideosHandlerTestCase(VideoUploadTestMixin, CourseTestCase):
         self.assertEqual(response.status_code, 204)
 
         self.assert_video_status(url, edx_video_id, 'Failed')
+
+
+class VideoImageTestCase(VideoUploadTestMixin, CourseTestCase):
+    """
+    Tests fro video image.
+    """
+
+    VIEW_NAME = "video_images_handler"
+
+    def test_video_image(self):
+        """
+        Test video image is saved.
+        """
+        edx_video_id = 'test1'
+        video_iamge_url = self.get_url_for_course_key(self.course.id, {'edx_video_id': edx_video_id})
+        with make_image_file(extension='.jpg') as image_file:
+            data = image_file.read()
+            response = self.client.post(
+                video_iamge_url,
+                {'file': data},
+            )
+            self.assertEqual(response.status_code, 201)
 
 
 @patch.dict("django.conf.settings.FEATURES", {"ENABLE_VIDEO_UPLOAD_PIPELINE": True})

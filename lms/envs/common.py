@@ -2477,6 +2477,15 @@ MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED = 5
 MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS = 15 * 60
 
 
+########################## Video Thumbnail Storage ############################
+VIDEO_THUMBNAIL_SETTINGS = dict(
+    # Backend storage
+    # STORAGE_CLASS='storages.backends.s3boto.S3BotoStorage',
+    # STORAGE_KWARGS=dict(bucket='mushi-mallow-bucket'),
+    DIRECTORY_PREFIX='videothumbnail/',
+)
+
+
 ##### LMS DEADLINE DISPLAY TIME_ZONE #######
 TIME_ZONE_DISPLAYED_FOR_DEADLINES = 'UTC'
 
