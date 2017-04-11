@@ -703,10 +703,9 @@ def execute_compile_sass(args):
         )
 
 
-@task
-@no_help
-def execute_webpack():
-    sh(cmd("$(npm bin)/webpack"))
+def execute_webpack(prod=False):
+    env = "NODE_ENV=production" if prod else ""
+    sh(cmd("{env} $(npm bin)/webpack".format(env=env)))
 
 
 def execute_webpack_watch():
@@ -844,7 +843,7 @@ def update_assets(args):
     process_xmodule_assets()
     process_npm_assets()
     compile_coffeescript()
-    execute_webpack()
+    execute_webpack(prod=(args.settings != "devstack"))
 
     # Compile sass for themes and system
     execute_compile_sass(args)
