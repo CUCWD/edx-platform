@@ -348,7 +348,7 @@ def videos_index_html(course):
         {
             "context_course": course,
             # temporarily using assets url to test frontend
-            "image_upload_url": reverse_course_url('assets_handler', unicode(course.id)),
+            "image_upload_url": reverse_course_url('video_images_handler', unicode(course.id)),
             "video_handler_url": reverse_course_url("videos_handler", unicode(course.id)),
             "encodings_download_url": reverse_course_url("video_encodings_download", unicode(course.id)),
             "previous_uploads": _get_index_videos(course),
