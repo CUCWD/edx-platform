@@ -536,12 +536,19 @@ class VideoImageTestCase(VideoUploadTestMixin, CourseTestCase):
         video_iamge_url = self.get_url_for_course_key(self.course.id, {'edx_video_id': edx_video_id})
         with make_image_file(extension='.jpg') as image_file:
             data = image_file.read()
+            # TODO: We would need to check with jquery file uploader and what data it sends.
             response = self.client.post(
                 video_iamge_url,
-                {'file': data},
+                {'file': data, 'file_name': image_file.name},
             )
-            self.assertEqual(response.status_code, 201)
-
+            self.assertEqual(response.status_code, 200)
+            response = json.loads(response.content)
+            # TODO : Get path using storage settings.
+            expected_file_name = '/static/uploads/videoimage/{edx_video_id}-{file_name}'.format(
+                edx_video_id=edx_video_id,
+                file_name=image_file.name
+            )
+            self.assertEqual(response['image_url'], expected_file_name)
 
 @patch.dict("django.conf.settings.FEATURES", {"ENABLE_VIDEO_UPLOAD_PIPELINE": True})
 @override_settings(VIDEO_UPLOAD_PIPELINE={"BUCKET": "test_bucket", "ROOT_PATH": "test_root"})

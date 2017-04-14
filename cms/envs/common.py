@@ -89,8 +89,8 @@ from lms.envs.common import (
     FILE_UPLOAD_STORAGE_BUCKET_NAME,
     FILE_UPLOAD_STORAGE_PREFIX,
 
-    # Video Thumbnail settings
-    VIDEO_THUMBNAIL_SETTINGS,
+    # Video Image settings
+    VIDEO_IMAGE_SETTINGS,
 
     COURSE_ENROLLMENT_MODES
 )

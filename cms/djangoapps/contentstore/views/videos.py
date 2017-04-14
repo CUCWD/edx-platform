@@ -160,13 +160,19 @@ def videos_handler(request, course_key_string, edx_video_id=None):
 @login_required
 @require_POST
 def video_images_handler(request, course_key_string, edx_video_id=None):
-    image = request.POST['file']
-    update_video_image(edx_video_id, course_key_string, image)
+    # TODO : We need to be sure what data jQuery fileuploader sends.
+    image_file = request.POST['file']
+    file_name = request.POST['file_name']
+
+    # TODO: Image file validation
+    # We can use profile_iamges/images.py validate_uploaded_image method and may be need to abstract out some
+    # functionality based on our needs.
+    image_url = update_video_image(edx_video_id, course_key_string, image_file, file_name)
     LOGGER.info(
         'VIDEOS: Video image updated for edx_video_id [%s]',
         edx_video_id
     )
-    return JsonResponse(status=201)
+    return JsonResponse({'image_url' : image_url})
 
 
 @login_required
