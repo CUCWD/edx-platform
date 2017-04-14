@@ -161,8 +161,8 @@ def videos_handler(request, course_key_string, edx_video_id=None):
 @require_POST
 def video_images_handler(request, course_key_string, edx_video_id=None):
     # TODO : We need to be sure what data jQuery fileuploader sends.
-    image_file = request.POST['file']
-    file_name = request.POST['file_name']
+    image_file = request.FILES['file']
+    file_name = request.FILES['file'].name
 
     # TODO: Image file validation
     # We can use profile_iamges/images.py validate_uploaded_image method and may be need to abstract out some
