@@ -4,7 +4,7 @@ import { keys } from 'edx-ui-toolkit/src/js/utils/constants';
 
 import { CourseOutline } from '../CourseOutline';
 
-describe('Course outline factory', () => {
+describe('Course Outline factory', () => {
   let outline;  // eslint-disable-line no-unused-vars
 
   // Our block IDs are invalid DOM selectors unless we first escape `:`, `+` and `@`
