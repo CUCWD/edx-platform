@@ -172,7 +172,7 @@ def video_images_handler(request, course_key_string, edx_video_id=None):
         'VIDEOS: Video image updated for edx_video_id [%s]',
         edx_video_id
     )
-    return JsonResponse({'image_url' : image_url})
+    return JsonResponse({'image_url' : 'https://i.imgur.com/jlsMLRO.jpg'})
 
 
 @login_required
