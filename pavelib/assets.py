@@ -705,8 +705,8 @@ def execute_compile_sass(args):
 
 
 def execute_webpack(prod=False):
-    env = "NODE_ENV=production" if prod else ""
-    sh(cmd("{env} $(npm bin)/webpack".format(env=env)))
+    env = "NODE_ENV=production " if prod else ""
+    sh(cmd("{env}$(npm bin)/webpack".format(env=env)))
 
 
 def execute_webpack_watch():
