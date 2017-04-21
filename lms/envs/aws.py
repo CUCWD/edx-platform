@@ -943,3 +943,13 @@ ENTERPRISE_API_CACHE_TIMEOUT = ENV_TOKENS.get(
 # the service, and override the default parameters which are defined in common.py
 
 COURSES_API_CACHE_TIMEOUT = ENV_TOKENS.get('COURSES_API_CACHE_TIMEOUT', COURSES_API_CACHE_TIMEOUT)
+
+
+########################## DJANGO WEBPACK LOADER ##############################
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'BUNDLE_DIR_NAME': 'bundles/',
+        'STATS_FILE': os.path.join(STATIC_ROOT_BASE, 'webpack-stats.json'),
+    }
+}

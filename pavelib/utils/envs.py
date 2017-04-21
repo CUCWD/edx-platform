@@ -171,6 +171,9 @@ class Env(object):
         else:
             SERVICE_VARIANT = 'lms'
 
+    # location staticfiles are copied to during collectstatic
+    STATIC_ROOT_BASE = REPO_ROOT.parent.parent.parent / "var/edxapp/staticfiles"
+
     @lazy
     def env_tokens(self):
         """

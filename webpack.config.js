@@ -33,7 +33,8 @@ var wpconfig = {
             debug: !isProd
         }),
         new BundleTracker({
-            filename: './webpack-stats.json'
+            path: process.env.STATIC_ROOT_BASE || __dirname,
+            filename: 'webpack-stats.json'
         })
     ],
 

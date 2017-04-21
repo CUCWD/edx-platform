@@ -703,14 +703,18 @@ def execute_compile_sass(args):
             ),
         )
 
-
-def execute_webpack(prod=False):
-    env = "NODE_ENV=production " if prod else ""
-    sh(cmd("{env}$(npm bin)/webpack".format(env=env)))
+def execute_webpack(prod):
+    node_env = "production" if prod else "development"
+    sh(cmd("{node_env} {static_root_base} $(npm bin)/webpack".format(
+        node_env="NODE_ENV=" + node_env,
+        static_root_base="STATIC_ROOT_BASE=" + Env.STATIC_ROOT_BASE
+    )))
 
 
 def execute_webpack_watch():
-    run_background_process("$(npm bin)/webpack --watch --watch-poll=200")
+    run_background_process("{static_root_base} $(npm bin)/webpack --watch --watch-poll=200".format(
+        static_root_base="STATIC_ROOT_BASE=" + Env.STATIC_ROOT_BASE
+    ))
 
 
 def get_parsed_option(command_opts, opt_key, default=None):

@@ -1747,16 +1747,6 @@ REQUIRE_JS_PATH_OVERRIDES = {
     'hls': 'common/js/vendor/hls.js'
 }
 
-########################## DJANGO WEBPACK LOADER ##############################
-
-WEBPACK_LOADER = {
-    'DEFAULT': {
-        'BUNDLE_DIR_NAME': 'bundles/',
-        'STATS_FILE': os.path.join(REPO_ROOT, 'webpack-stats.json'),
-    }
-}
-
-
 ########################## DJANGO DEBUG TOOLBAR ###############################
 
 # We don't enable Django Debug Toolbar universally, but whenever we do, we want
