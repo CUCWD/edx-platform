@@ -913,14 +913,15 @@ class CertificateItemTest(ModuleStoreTestCase):
     )
     def test_refund_cert_callback_no_expiration(self):
         # When there is no expiration date on a verified mode, the user can always get a refund
-
-        # need to prevent analytics errors from appearing in stderr
-        with patch('sys.stderr', sys.stdout.write):
-            CourseEnrollment.enroll(self.user, self.course_key, 'verified')
-            cart = Order.get_cart_for_user(user=self.user)
-            CertificateItem.add_to_order(cart, self.course_key, self.cost, 'verified')
-            cart.purchase()
-            CourseEnrollment.unenroll(self.user, self.course_key)
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.datetime.now(pytz.UTC) + datetime.timedelta(days=1)
+            # need to prevent analytics errors from appearing in stderr
+            with patch('sys.stderr', sys.stdout.write):
+                CourseEnrollment.enroll(self.user, self.course_key, 'verified')
+                cart = Order.get_cart_for_user(user=self.user)
+                CertificateItem.add_to_order(cart, self.course_key, self.cost, 'verified')
+                cart.purchase()
+                CourseEnrollment.unenroll(self.user, self.course_key)
 
         target_certs = CertificateItem.objects.filter(course_id=self.course_key, user_id=self.user, status='refunded', mode='verified')
         self.assertTrue(target_certs[0])
@@ -965,13 +966,15 @@ class CertificateItemTest(ModuleStoreTestCase):
                                  expiration_datetime=(datetime.datetime.now(pytz.utc) + many_days))
         course_mode.save()
 
-        # need to prevent analytics errors from appearing in stderr
-        with patch('sys.stderr', sys.stdout.write):
-            CourseEnrollment.enroll(self.user, self.course_key, 'verified')
-            cart = Order.get_cart_for_user(user=self.user)
-            CertificateItem.add_to_order(cart, self.course_key, self.cost, 'verified')
-            cart.purchase()
-            CourseEnrollment.unenroll(self.user, self.course_key)
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.datetime.now(pytz.UTC) + datetime.timedelta(days=1)
+            # need to prevent analytics errors from appearing in stderr
+            with patch('sys.stderr', sys.stdout.write):
+                CourseEnrollment.enroll(self.user, self.course_key, 'verified')
+                cart = Order.get_cart_for_user(user=self.user)
+                CertificateItem.add_to_order(cart, self.course_key, self.cost, 'verified')
+                cart.purchase()
+                CourseEnrollment.unenroll(self.user, self.course_key)
 
         target_certs = CertificateItem.objects.filter(course_id=self.course_key, user_id=self.user, status='refunded', mode='verified')
         self.assertTrue(target_certs[0])
@@ -998,13 +1001,15 @@ class CertificateItemTest(ModuleStoreTestCase):
         cart.purchase()
 
         mail.outbox = []
-        with patch('shoppingcart.models.log.error') as mock_error_logger:
-            CourseEnrollment.unenroll(self.user, course_key)
-            self.assertFalse(mock_error_logger.called)
-            self.assertEquals(len(mail.outbox), 1)
-            self.assertEquals('[Refund] User-Requested Refund', mail.outbox[0].subject)
-            self.assertEquals(settings.PAYMENT_SUPPORT_EMAIL, mail.outbox[0].from_email)
-            self.assertIn('has requested a refund on Order', mail.outbox[0].body)
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.datetime.now(pytz.UTC) + datetime.timedelta(days=1)
+            with patch('shoppingcart.models.log.error') as mock_error_logger:
+                CourseEnrollment.unenroll(self.user, course_key)
+                self.assertFalse(mock_error_logger.called)
+                self.assertEquals(len(mail.outbox), 1)
+                self.assertEquals('[Refund] User-Requested Refund', mail.outbox[0].subject)
+                self.assertEquals(settings.PAYMENT_SUPPORT_EMAIL, mail.outbox[0].from_email)
+                self.assertIn('has requested a refund on Order', mail.outbox[0].body)
 
     @patch('shoppingcart.models.log.error')
     def test_refund_cert_callback_before_expiration_email_error(self, error_logger):
@@ -1025,10 +1030,11 @@ class CertificateItemTest(ModuleStoreTestCase):
         cart = Order.get_cart_for_user(user=self.user)
         CertificateItem.add_to_order(cart, course_key, self.cost, 'verified')
         cart.purchase()
-
-        with patch('shoppingcart.models.send_mail', side_effect=smtplib.SMTPException):
-            CourseEnrollment.unenroll(self.user, course_key)
-            self.assertTrue(error_logger.call_args[0][0].startswith('Failed sending email'))
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.datetime.now(pytz.UTC) + datetime.timedelta(days=1)
+            with patch('shoppingcart.models.send_mail', side_effect=smtplib.SMTPException):
+                CourseEnrollment.unenroll(self.user, course_key)
+                self.assertTrue(error_logger.call_args[0][0].startswith('Failed sending email'))
 
     def test_refund_cert_callback_after_expiration(self):
         # If the expiration date has passed, the user cannot get a refund

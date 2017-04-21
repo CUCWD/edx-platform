@@ -55,6 +55,7 @@ class RefundableTest(SharedModuleStoreTestCase):
             mode_display_name='Verified',
             expiration_datetime=datetime.now(pytz.UTC) + timedelta(days=1)
         )
+
         self.enrollment = CourseEnrollment.enroll(self.user, self.course.id, mode='verified')
 
         self.client = Client()
@@ -62,17 +63,17 @@ class RefundableTest(SharedModuleStoreTestCase):
 
     def test_refundable(self):
         """ Assert base case is refundable"""
-        self.assertTrue(self.enrollment.refundable())
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.now(pytz.UTC) + timedelta(days=1)
+            self.assertTrue(self.enrollment.refundable())
 
     def test_refundable_expired_verification(self):
-        """ Assert that enrollment is not refundable if course mode has expired."""
-        self.verified_mode.expiration_datetime = datetime.now(pytz.UTC) - timedelta(days=1)
-        self.verified_mode.save()
-        self.assertFalse(self.enrollment.refundable())
-
-        # Assert that can_refund overrides this and allows refund
-        self.enrollment.can_refund = True
-        self.assertTrue(self.enrollment.refundable())
+        """ Assert that enrollment is refundable if course mode has expired."""
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.now(pytz.UTC) + timedelta(days=1)
+            self.verified_mode.expiration_datetime = datetime.now(pytz.UTC) - timedelta(days=1)
+            self.verified_mode.save()
+            self.assertTrue(self.enrollment.refundable())
 
     def test_refundable_of_purchased_course(self):
         """ Assert that courses without a verified mode are not refundable"""
@@ -96,34 +97,39 @@ class RefundableTest(SharedModuleStoreTestCase):
 
     def test_refundable_when_certificate_exists(self):
         """ Assert that enrollment is not refundable once a certificat has been generated."""
-        self.assertTrue(self.enrollment.refundable())
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.now(pytz.UTC) + timedelta(days=1)
 
-        GeneratedCertificateFactory.create(
-            user=self.user,
-            course_id=self.course.id,
-            status=CertificateStatuses.downloadable,
-            mode='verified'
-        )
+            self.assertTrue(self.enrollment.refundable())
 
-        self.assertFalse(self.enrollment.refundable())
-        self.assertFalse(
-            self.enrollment.refundable(
-                user_already_has_certs_for=GeneratedCertificate.course_ids_with_certs_for_user(self.user)
+            GeneratedCertificateFactory.create(
+                user=self.user,
+                course_id=self.course.id,
+                status=CertificateStatuses.downloadable,
+                mode='verified'
             )
-        )
 
-        # Assert that can_refund overrides this and allows refund
-        self.enrollment.can_refund = True
-        self.assertTrue(self.enrollment.refundable())
-        self.assertTrue(
-            self.enrollment.refundable(
-                user_already_has_certs_for=GeneratedCertificate.course_ids_with_certs_for_user(self.user)
+            self.assertFalse(self.enrollment.refundable())
+            self.assertFalse(
+                self.enrollment.refundable(
+                    user_already_has_certs_for=GeneratedCertificate.course_ids_with_certs_for_user(self.user)
+                )
             )
-        )
+
+            # Assert that can_refund overrides this and allows refund
+            self.enrollment.can_refund = True
+            self.assertTrue(self.enrollment.refundable())
+            self.assertTrue(
+                self.enrollment.refundable(
+                    user_already_has_certs_for=GeneratedCertificate.course_ids_with_certs_for_user(self.user)
+                )
+            )
 
     def test_refundable_with_cutoff_date(self):
         """ Assert enrollment is refundable before cutoff and not refundable after."""
-        self.assertTrue(self.enrollment.refundable())
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.now(pytz.UTC) + timedelta(days=1)
+            self.assertTrue(self.enrollment.refundable())
 
         with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
             cutoff_date.return_value = datetime.now(pytz.UTC) - timedelta(minutes=5)

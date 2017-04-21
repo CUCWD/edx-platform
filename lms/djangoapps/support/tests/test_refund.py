@@ -8,6 +8,8 @@ to the E-Commerce service is complete.
 
 """
 import datetime
+import pytz
+from mock import patch
 
 from django.test.client import Client
 
@@ -95,8 +97,10 @@ class RefundTests(ModuleStoreTestCase):
         self._enroll()
         self.course_mode.expiration_datetime = datetime.datetime(2033, 4, 6)
         self.course_mode.save()
-        response = self.client.post('/support/refund/', self.form_pars)
-        self.assertContains(response, 'not past the refund window')
+        with patch('student.models.CourseEnrollment.refund_cutoff_date') as cutoff_date:
+            cutoff_date.return_value = datetime.datetime.now(pytz.UTC) + datetime.timedelta(days=1)
+            response = self.client.post('/support/refund/', self.form_pars)
+            self.assertContains(response, 'not past the refund window')
 
     def test_no_order(self):
         self._enroll(purchase=False)

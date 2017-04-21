@@ -7,6 +7,7 @@ import datetime
 import pytz
 import StringIO
 from textwrap import dedent
+from mock import patch
 
 from django.conf import settings
 
