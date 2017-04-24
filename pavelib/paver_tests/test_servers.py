@@ -4,6 +4,7 @@ import ddt
 from paver.easy import call_task
 
 from .utils import PaverTestCase
+from ..utils.envs import Env
 
 EXPECTED_COFFEE_COMMAND = (
     u"node_modules/.bin/coffee --compile `find {platform_root}/lms "
@@ -41,7 +42,7 @@ EXPECTED_INDEX_COURSE_COMMAND = (
     u"python manage.py {system} --settings={settings} reindex_course --setup"
 )
 EXPECTED_WEBPACK_COMMAND = (
-    u"NODE_ENV={env} STATIC_ROOT_BASE=/edx/var/edxapp/staticfiles $(npm bin)/webpack"
+    u"NODE_ENV={node_env} STATIC_ROOT_BASE={static_root_base} $(npm bin)/webpack"
 )
 
 
@@ -237,8 +238,9 @@ class TestPaverServerTasks(PaverTestCase):
             expected_messages.append(u"install npm_assets")
             expected_messages.append(EXPECTED_COFFEE_COMMAND.format(platform_root=self.platform_root))
             expected_messages.append(EXPECTED_WEBPACK_COMMAND.format(
-                env="production" if expected_asset_settings != "devstack" else "development")
-            )
+                node_env="production" if expected_asset_settings != "devstack" else "development",
+                static_root_base=Env.STATIC_ROOT_BASE
+            ))
             expected_messages.extend(self.expected_sass_commands(system=system, asset_settings=expected_asset_settings))
         if expected_collect_static:
             expected_messages.append(EXPECTED_COLLECT_STATIC_COMMAND.format(
@@ -277,8 +279,9 @@ class TestPaverServerTasks(PaverTestCase):
             expected_messages.append(u"install npm_assets")
             expected_messages.append(EXPECTED_COFFEE_COMMAND.format(platform_root=self.platform_root))
             expected_messages.append(EXPECTED_WEBPACK_COMMAND.format(
-                env="production" if expected_asset_settings != "devstack" else "development")
-            )
+                node_env="production" if expected_asset_settings != "devstack" else "development",
+                static_root_base=Env.STATIC_ROOT_BASE
+            ))
             expected_messages.extend(self.expected_sass_commands(asset_settings=expected_asset_settings))
         if expected_collect_static:
             expected_messages.append(EXPECTED_COLLECT_STATIC_COMMAND.format(

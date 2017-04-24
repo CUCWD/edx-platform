@@ -703,6 +703,7 @@ def execute_compile_sass(args):
             ),
         )
 
+
 def execute_webpack(prod):
     node_env = "production" if prod else "development"
     sh(cmd("{node_env} {static_root_base} $(npm bin)/webpack".format(
