@@ -4,6 +4,7 @@ Courseware views functions
 import json
 import logging
 import urllib
+import waffle
 from collections import OrderedDict, namedtuple
 from datetime import datetime
 
@@ -210,7 +211,7 @@ def jump_to_id(request, course_id, module_id):
 
 
 @ensure_csrf_cookie
-def jump_to(_request, course_id, location):
+def jump_to(request, course_id, location):
     """
     Show the page that contains a specific location.
 
@@ -225,7 +226,10 @@ def jump_to(_request, course_id, location):
     except InvalidKeyError:
         raise Http404(u"Invalid course_key or usage_key")
     try:
-        redirect_url = get_redirect_url(course_key, usage_key)
+        if usage_key.block_type == 'course' and waffle.flag_is_active(request, 'unified_course_view'):
+            redirect_url = reverse('edx.course_experience.course_home', args=[unicode(course_key)])
+        else:
+            redirect_url = get_redirect_url(course_key, usage_key)
     except ItemNotFoundError:
         raise Http404(u"No data at this location: {0}".format(usage_key))
     except NoPathToItem:
