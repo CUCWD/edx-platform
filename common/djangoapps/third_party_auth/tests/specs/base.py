@@ -80,6 +80,7 @@ class IntegrationTestMixin(object):
             'email': 'email-edited@tpa-test.none',
             'name': 'My Customized Name',
             'username': 'new_username',
+            'zipcode': '29634',
             'honor_code': True,
         }
         # Now complete the form:
@@ -496,6 +497,7 @@ class IntegrationTest(testutil.TestCase, test.TestCase):
             'password': 'password',
             'mailing_address': '',
             'email': 'user@email.com',
+            'zipcode': '29634',
         }
 
         if overrides:

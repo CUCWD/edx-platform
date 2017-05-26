@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import RequestFactory
+from django.test.utils import override_settings
 
 from courseware.access import has_access
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
@@ -70,6 +71,7 @@ class LoginEnrollmentTestCase(TestCase):
         # should redirect
         self.assert_request_status_code(302, reverse('logout'))
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     def create_account(self, username, email, password):
         """
         Create the account and check that it worked.

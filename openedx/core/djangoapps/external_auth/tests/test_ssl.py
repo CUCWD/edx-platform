@@ -36,9 +36,22 @@ FEATURES_WITHOUT_SSL_AUTH['AUTH_USE_CERTIFICATES'] = False
 CACHES_ENABLE_GENERAL = copy.deepcopy(settings.CACHES)
 CACHES_ENABLE_GENERAL['general']['BACKEND'] = 'django.core.cache.backends.locmem.LocMemCache'
 
+# @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
 
 @override_settings(FEATURES=FEATURES_WITH_SSL_AUTH)
 @override_settings(CACHES=CACHES_ENABLE_GENERAL)
+@override_settings(REGISTRATION_EXTRA_FIELDS={
+        "level_of_education": "optional",
+        "gender": "optional",
+        "year_of_birth": "optional",
+        "mailing_address": "optional",
+        "goals": "optional",
+        "honor_code": "required",
+        "terms_of_service": "hidden",
+        "city": "hidden",
+        "country": "hidden",
+        "zipcode": "optional",
+    })
 class SSLClientTest(ModuleStoreTestCase):
     """
     Tests SSL Authentication code sections of external_auth

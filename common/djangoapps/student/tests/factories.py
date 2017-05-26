@@ -48,6 +48,7 @@ class UserProfileFactory(DjangoModelFactory):
     mailing_address = None
     goals = u'Learn a lot'
     allow_certificate = True
+    zipcode = u'29634'
 
 
 class CourseModeFactory(DjangoModelFactory):

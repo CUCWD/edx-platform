@@ -20,7 +20,8 @@ FAKE_SITE = {
         "state": "required",
         "country": "required",
         "company": "required",
-        "title": "required"
+        "title": "required",
+        "zipcode": "required",
     },
     "extended_profile_fields": [
         "address1", "state", "company", "title"
@@ -56,6 +57,7 @@ class TestSite(TestCase):
             "email": "test@example.org",
             "password": "testpass",
             "name": "Test User",
+            "zipcode": "29634",
             "honor_code": "true",
             "terms_of_service": "true",
         }

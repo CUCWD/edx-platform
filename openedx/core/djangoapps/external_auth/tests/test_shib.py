@@ -296,6 +296,7 @@ class ShibSPTest(CacheIsolationTestCase):
             self.assertNotContains(response, fullname_input_html)
 
     @unittest.skipUnless(settings.FEATURES.get('AUTH_USE_SHIB'), "AUTH_USE_SHIB not set")
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     @data(*gen_all_identities())
     def test_registration_form_submit(self, identity):
         """

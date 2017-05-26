@@ -19,6 +19,10 @@ from django.template import loader
 from django.conf import settings
 from student.models import CourseEnrollmentAllowed
 from util.password_policy_validators import validate_password_strength
+from util.postcode_validators import (
+    validate_postcode
+)
+
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 
@@ -156,7 +160,8 @@ class AccountCreationForm(forms.Form):
             extended_profile_fields=None,
             enforce_username_neq_password=False,
             enforce_password_policy=False,
-            tos_required=True
+            tos_required=True,
+            enforce_zipcode_validity=False
     ):
         super(AccountCreationForm, self).__init__(data)
 
@@ -168,9 +173,12 @@ class AccountCreationForm(forms.Form):
             self.fields["terms_of_service"] = TrueField(
                 error_messages={"required": _("You must accept the terms of service.")}
             )
+        self.enforce_zipcode_validity = enforce_zipcode_validity
+
 
         # TODO: These messages don't say anything about minimum length
         error_message_dict = {
+            "zipcode": _("A zipcode is required"),
             "level_of_education": _("A level of education is required"),
             "gender": _("Your gender is required"),
             "year_of_birth": _("Your year of birth is required"),
@@ -258,6 +266,19 @@ class AccountCreationForm(forms.Form):
                 ).format(email=email)
             )
         return email
+
+    def clean_zipcode(self):
+        """ Enforce U.S. zipcode restrictions """
+        zipcode = self.cleaned_data["zipcode"]
+
+        # Verify that the zipcode is a valid U.S. postal code.
+        if self.enforce_zipcode_validity:
+            try:
+                validate_postcode('US')(zipcode)
+            except ValidationError, err:
+                raise ValidationError(_("Zip Code: ") + "; ".join(err.messages))
+
+        return zipcode
 
     def clean_year_of_birth(self):
         """

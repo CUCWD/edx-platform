@@ -110,6 +110,7 @@ class UserAPITestCase(APITestCase):
         legacy_profile.bio = "Tired mother of twins"
         legacy_profile.profile_image_uploaded_at = TEST_PROFILE_IMAGE_UPLOADED_AT
         legacy_profile.language_proficiencies.add(LanguageProficiency(code='en'))
+        legacy_profile.zipcode = u"29634"
         legacy_profile.save()
 
     def _verify_profile_image_data(self, data, has_profile_image):
@@ -243,7 +244,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         Verify that all account fields are returned (even those that are not shareable).
         """
         data = response.data
-        self.assertEqual(17, len(data))
+        self.assertEqual(18, len(data))
         self.assertEqual(self.user.username, data["username"])
         self.assertEqual(self.user.first_name + " " + self.user.last_name, data["name"])
         self.assertEqual("US", data["country"])
@@ -260,6 +261,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         self.assertEquals(requires_parental_consent, data["requires_parental_consent"])
         self.assertEqual([{"code": "en"}], data["language_proficiencies"])
         self.assertEqual(UserPreference.get_value(self.user, 'account_privacy'), data["account_privacy"])
+        self.assertEqual(u"29634", data["zipcode"])
 
     def test_anonymous_access(self):
         """
@@ -372,7 +374,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
             with self.assertNumQueries(queries):
                 response = self.send_get(self.client)
             data = response.data
-            self.assertEqual(17, len(data))
+            self.assertEqual(18, len(data))
             self.assertEqual(self.user.username, data["username"])
             self.assertEqual(self.user.first_name + " " + self.user.last_name, data["name"])
             for empty_field in ("year_of_birth", "level_of_education", "mailing_address", "bio"):
@@ -389,6 +391,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
             self.assertEqual(PRIVATE_VISIBILITY, data["account_privacy"])
             # Badges aren't on by default, so should not be present.
             self.assertEqual(False, data["accomplishments_shared"])
+            self.assertEqual(u"29634", data["zipcode"])
 
         self.client.login(username=self.user.username, password=self.test_password)
         verify_get_own_information(17)
@@ -407,12 +410,13 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         legacy_profile.level_of_education = ""
         legacy_profile.gender = ""
         legacy_profile.bio = ""
+        legacy_profile.zipcode = ""
         legacy_profile.save()
 
         self.client.login(username=self.user.username, password=self.test_password)
         with self.assertNumQueries(17):
             response = self.send_get(self.client)
-        for empty_field in ("level_of_education", "gender", "country", "bio"):
+        for empty_field in ("level_of_education", "gender", "country", "bio", "zipcode"):
             self.assertIsNone(response.data[empty_field])
 
     @ddt.data(
@@ -756,7 +760,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         response = self.send_get(client)
         if has_full_access:
             data = response.data
-            self.assertEqual(17, len(data))
+            self.assertEqual(18, len(data))
             self.assertEqual(self.user.username, data["username"])
             self.assertEqual(self.user.first_name + " " + self.user.last_name, data["name"])
             self.assertEqual(self.user.email, data["email"])
@@ -770,6 +774,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
             self._verify_profile_image_data(data, False)
             self.assertTrue(data["requires_parental_consent"])
             self.assertEqual(PRIVATE_VISIBILITY, data["account_privacy"])
+            self.assertEqual(u"29634", data["zipcode"])
         else:
             self._verify_private_account_response(
                 response, requires_parental_consent=True, account_privacy=PRIVATE_VISIBILITY

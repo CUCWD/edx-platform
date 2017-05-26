@@ -37,7 +37,7 @@ TEST_CS_URL = 'https://comments.service.test:123/'
     REGISTRATION_EXTRA_FIELDS={
         key: "optional"
         for key in [
-            "level_of_education", "gender", "mailing_address", "city", "country", "goals",
+            "zipcode", "level_of_education", "gender", "mailing_address", "city", "country", "goals",
             "year_of_birth"
         ]
     }
@@ -103,6 +103,7 @@ class TestCreateAccount(TestCase):
         self.assertEqual(profile.city, "")
         self.assertEqual(profile.country, "")
         self.assertEqual(profile.goals, "")
+        self.assertEqual(profile.zipcode, "")
         self.assertEqual(
             profile.get_meta(),
             {
@@ -130,6 +131,7 @@ class TestCreateAccount(TestCase):
             "country": "US",
             "goals": "To test this feature",
             "year_of_birth": str(year_of_birth),
+            "zipcode": "29634",
             "extra1": "extra_value1",
             "extra2": "extra_value2",
         })
@@ -144,6 +146,7 @@ class TestCreateAccount(TestCase):
             'address': self.params['mailing_address'],
             'gender': 'Other/Prefer Not to Say',
             'country': self.params['country'],
+            'zipcode': self.params['zipcode'],
         }
 
         self.create_account_and_fetch_profile()
@@ -163,6 +166,7 @@ class TestCreateAccount(TestCase):
             "country": "US",
             "goals": "To test this feature",
             "year_of_birth": "2015",
+            "zipcode": "29634",
             "extra1": "extra_value1",
             "extra2": "extra_value2",
         })
@@ -181,6 +185,7 @@ class TestCreateAccount(TestCase):
             }
         )
         self.assertEqual(profile.year_of_birth, 2015)
+        self.assertEqual(profile.zipcode, "29634")
 
     @unittest.skipUnless(
         "microsite_configuration.middleware.MicrositeMiddleware" in settings.MIDDLEWARE_CLASSES,
@@ -418,6 +423,7 @@ class TestCreateAccountValidation(TestCase):
             "email": "test_email@example.com",
             "password": "test_password",
             "name": "Test Name",
+            "zipcode": "29634",
             "honor_code": "true",
             "terms_of_service": "true",
         }
@@ -643,6 +649,7 @@ class TestCreateAccountValidation(TestCase):
         self.assert_success(params)
 
     @ddt.data(
+        ("zipcode", 5, "A zipcode is required"),
         ("level_of_education", 1, "A level of education is required"),
         ("gender", 1, "Your gender is required"),
         ("year_of_birth", 2, "Your year of birth is required"),
@@ -655,6 +662,9 @@ class TestCreateAccountValidation(TestCase):
     @ddt.unpack
     def test_extra_fields(self, field, min_length, expected_error):
         params = dict(self.minimal_params)
+
+        # Remove zipcode to test this routine.
+        del params["zipcode"]
 
         def assert_extra_field_error():
             """
@@ -676,6 +686,24 @@ class TestCreateAccountValidation(TestCase):
                 params[field] = "a"
                 assert_extra_field_error()
 
+    @ddt.data(
+        ('asdfffff', False),
+        ('00000-bad', False),
+        ('12345', True),
+        ('12345-0000', True),
+    )
+    @ddt.unpack
+    def test_zipcode_pattern_requirements(self, zipcode, expect_success):
+        """
+        Test that there are valid postal U.S. zipcodes used on creation of account.
+        """
+        params = dict(self.minimal_params)
+        params["zipcode"] = zipcode
+        if expect_success:
+            self.assert_success(params)
+        else:
+            self.assert_error(params, "zipcode", "Zip Code: Enter a zip code in the format XXXXX or XXXXX-XXXX.")
+
 
 @mock.patch.dict("student.models.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
 @mock.patch("lms.lib.comment_client.User.base_url", TEST_CS_URL)
@@ -691,6 +719,7 @@ class TestCreateCommentsServiceUser(TransactionTestCase):
             "email": "test@example.org",
             "password": "testpass",
             "name": "Test User",
+            "zipcode": "29634",
             "honor_code": "true",
             "terms_of_service": "true",
         }

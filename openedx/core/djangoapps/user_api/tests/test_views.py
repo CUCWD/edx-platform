@@ -787,6 +787,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
     CITY = "Springfield"
     COUNTRY = "us"
     GOALS = "Learn all the things!"
+    ZIPCODE = "29634"
 
     def setUp(self):
         super(RegistrationViewTest, self).setUp()
@@ -1213,6 +1214,19 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             }
         )
 
+    def test_registration_form_zipcode(self):
+        self._assert_reg_field(
+            {"zipcode": "required"},
+            {
+                "name": "zipcode",
+                "type": "text",
+                "required": True,
+                "label": "Zip Code",
+                "instructions": "The U.S. postal code location of primary residence",
+                "placeholder": "example: 29634",
+            }
+        )
+
     @override_settings(
         MKTG_URLS={"ROOT": "https://www.test.com/", "HONOR": "honor"},
     )
@@ -1368,6 +1382,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             "state": "optional",
             "country": "required",
             "honor_code": "required",
+            "zipcode": "required",
         },
         REGISTRATION_EXTENSION_FORM='openedx.core.djangoapps.user_api.tests.test_helpers.TestCaseForm',
     )
@@ -1385,6 +1400,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             "password",
             "favorite_movie",
             "favorite_editor",
+            "zipcode",
             "city",
             "state",
             "country",
@@ -1396,6 +1412,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             "honor_code",
         ])
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     def test_register(self):
         # Create a new registration
         response = self.client.post(self.url, {
@@ -1431,6 +1448,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
         "mailing_address": "optional",
         "goals": "optional",
         "country": "required",
+        "zipcode": "required",
     })
     def test_register_with_profile_info(self):
         # Register, providing lots of demographic info
@@ -1439,6 +1457,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             "name": self.NAME,
             "username": self.USERNAME,
             "password": self.PASSWORD,
+            "zipcode": self.ZIPCODE,
             "level_of_education": self.EDUCATION,
             "mailing_address": self.ADDRESS,
             "year_of_birth": self.YEAR_OF_BIRTH,
@@ -1459,8 +1478,13 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
         self.assertEqual(account_settings["year_of_birth"], int(self.YEAR_OF_BIRTH))
         self.assertEqual(account_settings["goals"], self.GOALS)
         self.assertEqual(account_settings["country"], self.COUNTRY)
+        self.assertEqual(account_settings["zipcode"], self.ZIPCODE)
 
-    @override_settings(REGISTRATION_EXTENSION_FORM='openedx.core.djangoapps.user_api.tests.test_helpers.TestCaseForm')
+
+    @override_settings(
+        REGISTRATION_EXTENSION_FORM='openedx.core.djangoapps.user_api.tests.test_helpers.TestCaseForm',
+        REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"}
+    )
     @mock.patch('openedx.core.djangoapps.user_api.tests.test_helpers.TestCaseForm.DUMMY_STORAGE', new_callable=dict)
     @mock.patch(
         'openedx.core.djangoapps.user_api.tests.test_helpers.DummyRegistrationExtensionModel',
@@ -1501,6 +1525,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
         response = self.client.get(reverse("dashboard"))
         self.assertHttpOK(response)
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     def test_activation_email(self):
         # Register, which should trigger an activation email
         response = self.client.post(self.url, {
@@ -1525,6 +1550,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             sent_email.body
         )
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     @ddt.data(
         {"email": ""},
         {"email": "invalid"},
@@ -1550,13 +1576,14 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
         self.assertHttpBadRequest(response)
 
     @override_settings(REGISTRATION_EXTRA_FIELDS={"country": "required"})
-    @ddt.data("email", "name", "username", "password", "country")
+    @ddt.data("email", "name", "username", "password", "country", "zipcode")
     def test_register_missing_required_field(self, missing_field):
         data = {
             "email": self.EMAIL,
             "name": self.NAME,
             "username": self.USERNAME,
             "password": self.PASSWORD,
+            "zipcode": self.ZIPCODE,
             "country": self.COUNTRY,
         }
 
@@ -1566,6 +1593,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
         response = self.client.post(self.url, data)
         self.assertHttpBadRequest(response)
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     def test_register_duplicate_email(self):
         # Register the first user
         response = self.client.post(self.url, {
@@ -1601,6 +1629,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             }
         )
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     def test_register_duplicate_username(self):
         # Register the first user
         response = self.client.post(self.url, {
@@ -1636,6 +1665,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             }
         )
 
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"zipcode": "optional"})
     def test_register_duplicate_username_and_email(self):
         # Register the first user
         response = self.client.post(self.url, {
@@ -1679,7 +1709,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             }
         )
 
-    @override_settings(REGISTRATION_EXTRA_FIELDS={"honor_code": "hidden", "terms_of_service": "hidden"})
+    @override_settings(REGISTRATION_EXTRA_FIELDS={"honor_code": "hidden", "terms_of_service": "hidden", "zipcode": "optional"})
     def test_register_hidden_honor_code_and_terms_of_service(self):
         response = self.client.post(self.url, {
             "email": self.EMAIL,
@@ -1705,6 +1735,7 @@ class RegistrationViewTest(ThirdPartyAuthTestMixin, UserAPITestCase):
             {
                 "username": [{"user_message": "Username must be minimum of two characters long"}],
                 "password": [{"user_message": "A valid password is required"}],
+                "zipcode": [{"user_message": "A zipcode is required"}],
             }
         )
 
@@ -1799,6 +1830,7 @@ class ThirdPartyRegistrationTestMixin(ThirdPartyOAuthTestMixin, CacheIsolationTe
             "client_id": self.client_id,
             "honor_code": "true",
             "country": "US",
+            "zipcode": "29634",
             "username": user.username if user else "test_username",
             "name": user.first_name if user else "test name",
             "email": user.email if user else "test@test.com",

@@ -151,6 +151,12 @@ from student.models import UserProfile
   <h2 class="sr">${_("Additional Personal Information")}</h2>
 
   <ol class="list-input">
+    % if settings.REGISTRATION_EXTRA_FIELDS['zipcode'] != 'hidden':
+    <li class="field ${settings.REGISTRATION_EXTRA_FIELDS['zipcode']} text" id="field-zipcode">
+      <label for="zipcode">${_('Zip Code')}</label>
+      <input id="zipcode" type="text" name="zipcode" value="" placeholder="${_('example: 29634')}" aria-describedby="zipcode-tip" ${'required aria-required="true"' if settings.REGISTRATION_EXTRA_FIELDS['zipcode'] == 'required' else ''} />
+    </li>
+    % endif
     % if settings.REGISTRATION_EXTRA_FIELDS['city'] != 'hidden':
     <li class="field ${settings.REGISTRATION_EXTRA_FIELDS['city']} text" id="field-city">
       <label for="city">${_('City')}</label>

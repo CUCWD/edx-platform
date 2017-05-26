@@ -161,6 +161,7 @@ class RegistrationView(APIView):
     DEFAULT_FIELDS = ["email", "name", "username", "password"]
 
     EXTRA_FIELDS = [
+        "zipcode",
         "first_name",
         "last_name",
         "city",
@@ -479,6 +480,36 @@ class RegistrationView(APIView):
                 "min_length": PASSWORD_MIN_LENGTH,
                 "max_length": PASSWORD_MAX_LENGTH,
             },
+            required=required
+        )
+
+    def _add_zipcode_field(self, form_desc, required=True):
+        """Add a zipcode field to a form description.
+
+        Arguments:
+            form_desc: A form description
+
+        Keyword Arguments:
+            required (bool): Whether this field is required; defaults to True
+
+        """
+        # Translators: This label appears above a field on the registration form
+        # meant to hold the user's zipcode.
+        zipcode_label = _(u"Zip Code")
+
+        # Translators: These instructions appear on the registration form, immediately
+        # below a field meant to hold the user's zipcode.
+        zipcode_instructions = _(u"The U.S. postal code location of primary residence")
+
+        # Translators: This example username is used as a placeholder in
+        # a field on the registration form meant to hold the user's username.
+        zipcode_placeholder = _(u"example: 29634")
+
+        form_desc.add_field(
+            "zipcode",
+            label=zipcode_label,
+            instructions=zipcode_instructions,
+            placeholder=zipcode_placeholder,
             required=required
         )
 

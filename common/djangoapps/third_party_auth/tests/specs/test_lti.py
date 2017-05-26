@@ -81,6 +81,7 @@ class IntegrationTestLTI(testutil.TestCase):
                 'email': EMAIL,
                 'name': 'Myself',
                 'username': EDX_USER_ID,
+                'zipcode': '29634',
                 'honor_code': True,
             }
         )

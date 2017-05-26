@@ -112,6 +112,7 @@ class ActivationEmailTests(TestCase):
             'email': 'test_user@example.com',
             'password': 'edx',
             'name': 'Test User',
+            'zipcode': '29634',
             'honor_code': True,
             'terms_of_service': True
         }

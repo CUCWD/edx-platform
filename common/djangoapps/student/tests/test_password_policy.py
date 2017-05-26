@@ -28,6 +28,7 @@ class TestPasswordPolicy(TestCase):
             'username': 'username',
             'email': 'foo_bar@bar.com',
             'name': 'username',
+            'zipcode': '29634',
             'terms_of_service': 'true',
             'honor_code': 'true',
         }
@@ -280,6 +281,7 @@ class TestUsernamePasswordNonmatch(TestCase):
             'username': 'username',
             'email': 'foo_bar@bar.com',
             'name': 'username',
+            'zipcode': '29634',
             'terms_of_service': 'true',
             'honor_code': 'true',
         }

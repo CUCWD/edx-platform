@@ -1591,7 +1591,7 @@ def _do_create_account(form, custom_form=None):
     registration.register(user)
 
     profile_fields = [
-        "name", "level_of_education", "gender", "mailing_address", "city", "country", "goals",
+        "name", "level_of_education", "gender", "mailing_address", "city", "country", "zipcode", "goals",
         "year_of_birth"
     ]
     profile = UserProfile(
@@ -1695,6 +1695,12 @@ def create_account_with_params(request, params):
         not eamap.external_domain.startswith(openedx.core.djangoapps.external_auth.views.SHIBBOLETH_DOMAIN_PREFIX)
     )
 
+    # Enforce zipcode validaty when the field is required or optional when passed into the request params.
+    enforce_zipcode_validity = (
+        registration_fields.get('zipcode') == 'required' or
+        (registration_fields.get('zipcode') == 'optional' and (params.get("zipcode") is not None))
+    )
+
     form = AccountCreationForm(
         data=params,
         extra_fields=extra_fields,
@@ -1702,6 +1708,7 @@ def create_account_with_params(request, params):
         enforce_username_neq_password=True,
         enforce_password_policy=enforce_password_policy,
         tos_required=tos_required,
+        enforce_zipcode_validity=enforce_zipcode_validity,
     )
     custom_form = get_registration_extension_form(data=params)
 
@@ -1777,6 +1784,7 @@ def create_account_with_params(request, params):
                 'address': profile.mailing_address,
                 'gender': profile.gender_display,
                 'country': unicode(profile.country),
+                'zipcode': unicode(profile.zipcode),
             }
         ]
 

@@ -2157,6 +2157,9 @@ INSTALLED_APPS = (
 
     # Unusual migrations
     'database_fixups',
+
+    # Country-specific Django helpers
+    'localflavor',
 )
 
 # Migrations which are not in the standard module "migrations"
@@ -2390,6 +2393,7 @@ REGISTRATION_EXTRA_FIELDS = {
     'terms_of_service': 'hidden',
     'city': 'hidden',
     'country': 'hidden',
+    'zipcode': 'required',
 }
 
 # Optional setting to restrict registration / account creation to only emails
@@ -2812,6 +2816,7 @@ ACCOUNT_VISIBILITY_CONFIGURATION = {
         "requires_parental_consent",
         "account_privacy",
         "accomplishments_shared",
+        "zipcode",
     ]
 }
 
