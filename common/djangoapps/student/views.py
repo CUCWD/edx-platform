@@ -100,6 +100,7 @@ from util.milestones_helpers import (
 )
 
 from util.password_policy_validators import validate_password_strength
+from util.postcode_validators import validate_postcode
 import third_party_auth
 from third_party_auth import pipeline, provider
 from student.helpers import (
@@ -2592,6 +2593,20 @@ def change_email_settings(request):
         )
 
     return JsonResponse({"success": True})
+
+
+def validate_new_zipcode(user_profile, new_zipcode):
+    """
+    Given a new zipcode for a user, does some basic verification of the new address If any issues are encountered
+    with verification a ValueError will be thrown.
+    """
+    try:
+        validate_postcode('US')(new_zipcode)
+    except ValidationError:
+        raise ValueError(_('Valid U.S. Zip Code format XXXXX or XXXXX-XXXX required.'))
+
+    if new_zipcode == user_profile.zipcode:
+        raise ValueError(_('Old Zip Code is the same as the new address.'))
 
 
 class LogoutView(TemplateView):

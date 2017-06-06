@@ -143,6 +143,12 @@ def update_account_settings(requesting_user, update, username=None):
     if "name" in update:
         old_name = existing_user_profile.name
 
+    # If user has requested to change zipcode, we must call the multi-step process to handle this.
+    changing_zipcode = False
+    if "zipcode" in update:
+        changing_zipcode = True
+        new_zipcode = update["zipcode"]
+
     # Check for fields that are not editable. Marking them read-only causes them to be ignored, but we wish to 400.
     read_only_fields = set(update.keys()).intersection(
         AccountUserSerializer.get_read_only_fields() + AccountLegacyProfileSerializer.get_read_only_fields()
@@ -172,6 +178,16 @@ def update_account_settings(requesting_user, update, username=None):
         except ValueError as err:
             field_errors["email"] = {
                 "developer_message": u"Error thrown from validate_new_email: '{}'".format(err.message),
+                "user_message": err.message
+            }
+
+    # If the user asked to change zipcode, validate it.
+    if changing_zipcode:
+        try:
+            student_views.validate_new_zipcode(existing_user_profile, new_zipcode)
+        except ValueError as err:
+            field_errors["zipcode"] = {
+                "developer_message": u"Error thrown from validate_new_zipcode: '{}'".format(err.message),
                 "user_message": err.message
             }
 

@@ -196,6 +196,17 @@
                     );
                 }
             }),
+            PostalCodeFieldView: FieldViews.TextFieldView.extend({
+                fieldTemplate: field_text_account_template,
+                successMessage: function() {
+                    return HtmlUtils.joinHtml(
+                        this.indicators.success,
+                        StringUtils.interpolate(
+                            gettext('We\'ve updated the postal code of your primary residence.')  // eslint-disable-line max-len
+                        )
+                    );
+                }
+            }),
             LanguageProficienciesFieldView: FieldViews.DropdownFieldView.extend({
                 fieldTemplate: field_dropdown_account_template,
                 modelValue: function() {

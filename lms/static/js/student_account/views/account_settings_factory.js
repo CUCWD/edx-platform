@@ -130,6 +130,17 @@
                     title: gettext('Additional Information'),
                     fields: [
                         {
+                            view: new AccountSettingsFieldViews.PostalCodeFieldView({
+                                model: userAccountModel,
+                                title: gettext('Zip Code'),
+                                valueAttribute: 'zipcode',
+                                helpMessage: gettext(
+                                    'The U.S. postal code location of primary residence.'  // eslint-disable-line max-len
+                                ),
+                                persistChanges: true
+                            })
+                        },
+                        {
                             view: new AccountSettingsFieldViews.DropdownFieldView({
                                 model: userAccountModel,
                                 title: gettext('Education Completed'),

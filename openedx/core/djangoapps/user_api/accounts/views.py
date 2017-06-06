@@ -111,6 +111,7 @@ class AccountViewSet(ViewSet):
               profile. Possible values are "all_users" or "private".
             * accomplishments_shared: Signals whether badges are enabled on the
               platform and should be fetched.
+            * zipcode: Valid U.S. Zip Code format XXXXX or XXXXX-XXXX.
 
             For all text fields, plain text instead of HTML is supported. The
             data is stored exactly as specified. Clients must HTML escape

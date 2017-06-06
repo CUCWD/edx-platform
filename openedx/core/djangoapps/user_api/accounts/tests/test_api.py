@@ -133,6 +133,9 @@ class TestAccountApi(UserSettingsEventTestMixin, TestCase):
             update_account_settings(self.user, {"gender": "undecided"})
 
         with self.assertRaises(AccountValidationError):
+            update_account_settings(self.user, {"zipcode": "29634-XXXX"})
+
+        with self.assertRaises(AccountValidationError):
             update_account_settings(
                 self.user,
                 {"profile_image": {"has_image": "not_allowed", "image_url": "not_allowed"}}
