@@ -253,6 +253,19 @@ class UserProfile(models.Model):
     this_year = datetime.now(UTC).year
     VALID_YEARS = range(this_year, this_year - 120, -1)
     year_of_birth = models.IntegerField(blank=True, null=True, db_index=True)
+
+    ETHNIC_GROUPS_CHOICES = (
+        ('w', ugettext_noop('White')),
+        ('hl', ugettext_noop('Hispanic or Latino')),
+        ('ba', ugettext_noop('Black or African American')),
+        ('na', ugettext_noop('Native American or American Indian')),
+        ('api', ugettext_noop('Asian / Pacific Islander')),
+        ('other', ugettext_noop('Other ethnicity'))
+    )
+    ethnicity = models.CharField(
+        blank=True, null=True, max_length=6, db_index=True, choices=ETHNIC_GROUPS_CHOICES
+    )
+
     GENDER_CHOICES = (
         ('m', ugettext_noop('Male')),
         ('f', ugettext_noop('Female')),
@@ -308,6 +321,12 @@ class UserProfile(models.Model):
         year = datetime.now(UTC).year
         if year_of_birth is not None:
             return self._calculate_age(year, year_of_birth)
+
+    @property
+    def ethnicity_display(self):
+        """ Convenience method that returns the human readable ethnicity. """
+        if self.ethnicity:
+            return self.__enumerable_to_display(self.ETHNIC_GROUPS_CHOICES, self.ethnicity)
 
     @property
     def level_of_education_display(self):

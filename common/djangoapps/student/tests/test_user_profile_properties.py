@@ -11,7 +11,7 @@ from openedx.core.djangolib.testing.utils import CacheIsolationTestCase
 
 @ddt.ddt
 class UserProfilePropertiesTest(CacheIsolationTestCase):
-    """Unit tests for age, gender_display, and level_of_education_display properties ."""
+    """Unit tests for age, gender_display, ethnicity_display, and level_of_education_display properties ."""
 
     password = "test"
 
@@ -27,6 +27,13 @@ class UserProfilePropertiesTest(CacheIsolationTestCase):
         Helper method that sets a birth year for the specified user.
         """
         self.profile.year_of_birth = year_of_birth
+        self.profile.save()
+
+    def _set_ethnicity(self, ethnicity):
+        """
+        Helper method that sets an ethnicity for the specified user.
+        """
+        self.profile.ethnicity = ethnicity
         self.profile.save()
 
     def _set_level_of_education(self, level_of_education):
@@ -58,6 +65,18 @@ class UserProfilePropertiesTest(CacheIsolationTestCase):
     def test_age_no_birth_year(self):
         """Verify nothing is returned."""
         self.assertIsNone(self.profile.age)
+
+    @ddt.data(*UserProfile.ETHNIC_GROUPS_CHOICES)
+    @ddt.unpack
+    def test_display_ethnicity(self, ethnicity_enum, display_level):
+        """Verify the ethnicity is displayed correctly."""
+        self._set_ethnicity(ethnicity_enum)
+
+        self.assertEqual(self.profile.ethnicity_display, display_level)
+
+    def test_display_ethnicity_none_set(self):
+        """Verify nothing is returned."""
+        self.assertIsNone(self.profile.ethnicity_display)
 
     @ddt.data(*UserProfile.LEVEL_OF_EDUCATION_CHOICES)
     @ddt.unpack

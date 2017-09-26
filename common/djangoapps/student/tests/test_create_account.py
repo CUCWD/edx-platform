@@ -19,7 +19,7 @@ from openedx.core.djangoapps.lang_pref import LANGUAGE_KEY
 from notification_prefs import NOTIFICATION_PREF_KEY
 from openedx.core.djangoapps.external_auth.models import ExternalAuthMap
 import student
-from student.models import UserAttribute
+from student.models import UserAttribute, UserProfile
 from student.views import REGISTRATION_AFFILIATE_ID, REGISTRATION_UTM_PARAMETERS, REGISTRATION_UTM_CREATED_AT
 from django_comment_common.models import ForumsConfig
 
@@ -37,7 +37,7 @@ TEST_CS_URL = 'https://comments.service.test:123/'
     REGISTRATION_EXTRA_FIELDS={
         key: "optional"
         for key in [
-            "zipcode", "level_of_education", "gender", "mailing_address", "city", "country", "goals",
+            "zipcode", "ethnicity", "level_of_education", "gender", "mailing_address", "city", "country", "goals",
             "year_of_birth"
         ]
     }
@@ -132,6 +132,7 @@ class TestCreateAccount(TestCase):
             "goals": "To test this feature",
             "year_of_birth": str(year_of_birth),
             "zipcode": "29634",
+            "ethnicity": "api",
             "extra1": "extra_value1",
             "extra2": "extra_value2",
         })
@@ -147,6 +148,7 @@ class TestCreateAccount(TestCase):
             'gender': 'Other/Prefer Not to Say',
             'country': self.params['country'],
             'zipcode': self.params['zipcode'],
+            'ethnicity': 'Asian / Pacific Islander',
         }
 
         self.create_account_and_fetch_profile()

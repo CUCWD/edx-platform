@@ -49,6 +49,7 @@ class UserProfileFactory(DjangoModelFactory):
     goals = u'Learn a lot'
     allow_certificate = True
     zipcode = u'29634'
+    ethnicity = None
 
 
 class CourseModeFactory(DjangoModelFactory):

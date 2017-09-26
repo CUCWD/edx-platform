@@ -51,6 +51,7 @@ CACHES_ENABLE_GENERAL['general']['BACKEND'] = 'django.core.cache.backends.locmem
         "city": "hidden",
         "country": "hidden",
         "zipcode": "optional",
+        "ethnicity": "optional",
     })
 class SSLClientTest(ModuleStoreTestCase):
     """

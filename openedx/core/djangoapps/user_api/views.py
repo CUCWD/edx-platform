@@ -169,6 +169,7 @@ class RegistrationView(APIView):
         "country",
         "gender",
         "year_of_birth",
+        "ethnicity",
         "level_of_education",
         "company",
         "title",
@@ -510,6 +511,31 @@ class RegistrationView(APIView):
             label=zipcode_label,
             instructions=zipcode_instructions,
             placeholder=zipcode_placeholder,
+            required=required
+        )
+
+    def _add_ethnicity_field(self, form_desc, required=True):
+        """Add an ethnicity field to a form description.
+
+        Arguments:
+            form_desc: A form description
+
+        Keyword Arguments:
+            required (bool): Whether this field is required; defaults to True
+
+        """
+        # Translators: This label appears above a dropdown menu on the registration
+        # form used to select the user's ethnicity.
+        ethnicity_label = _(u"Ethnicity")
+
+        # The labels are marked for translation in UserProfile model definition.
+        options = [(name, _(label)) for name, label in UserProfile.ETHNIC_GROUPS_CHOICES]  # pylint: disable=translation-of-non-string
+        form_desc.add_field(
+            "ethnicity",
+            label=ethnicity_label,
+            field_type="select",
+            options=options,
+            include_default_option=True,
             required=required
         )
 

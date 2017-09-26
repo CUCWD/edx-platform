@@ -2394,6 +2394,7 @@ REGISTRATION_EXTRA_FIELDS = {
     'city': 'hidden',
     'country': 'hidden',
     'zipcode': 'required',
+    'ethnicity': 'optional',
 }
 
 # Optional setting to restrict registration / account creation to only emails
