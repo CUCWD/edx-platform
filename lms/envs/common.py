@@ -32,6 +32,7 @@ Longer TODO:
 import imp
 import sys
 import os
+from datetime import date
 
 from path import Path as path
 from warnings import simplefilter
@@ -47,6 +48,9 @@ from lms.djangoapps.lms_xblock.mixin import LmsBlockMixin
 # The display name of the platform to be used in templates/emails/etc.
 PLATFORM_NAME = "Your Platform Name Here"
 CC_MERCHANT_NAME = PLATFORM_NAME
+
+# Shows up in the platform footer, eg "(c) COPYRIGHT_YEAR"
+COPYRIGHT_YEAR = str(date.today().year)
 
 PLATFORM_FACEBOOK_ACCOUNT = "http://www.facebook.com/YourPlatformFacebookAccount"
 PLATFORM_TWITTER_ACCOUNT = "@YourPlatformTwitterAccount"
@@ -245,6 +249,11 @@ FEATURES = {
     # redirected to the dashboard - this is default Open edX behavior. Set to
     # False to not redirect the user
     'ALWAYS_REDIRECT_HOMEPAGE_TO_DASHBOARD_FOR_AUTHENTICATED_USER': True,
+
+    # When an non logged in user (Anonymous) goes to the homepage ('/') shoud the user be
+    # redirected to the dashboard - this is default Microsite behaviour for EducateWorkforce.
+    # Set to False to not redirect the user.
+    'ALWAYS_REDIRECT_HOMEPAGE_TO_LOGIN_FOR_UNAUTHENTICATED_USER': False,
 
     # When a user goes to the homepage ('/') the user sees the
     # courses listed in the announcement dates order - this is default Open edX behavior.
