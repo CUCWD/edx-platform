@@ -3176,6 +3176,12 @@ HELP_TOKENS_BOOKS = {
 # These configuration settings are specific to the Enterprise service and you should
 # not find references to them within the edx-platform project.
 
+# Todo: Need to remove this when we setup ecommerce.
+# Disabling this to avoid 500 error on registration page to edx-platform/openedx/features/enterprise_support/api.py - fetch_enterprise_learner_data failing with this
+# error since /edx/app/ecommerce service is not installed and running.
+#ConnectionError: HTTPSConnectionPool(host='localhost', port=80): Max retries exceeded with url: /enterprise/api/v1/enterprise-learner/?username=ZacharyStudent (Caused by NewConnectionError('<requests.packages.urllib3.connection.VerifiedHTTPSConnection object at 0x7f7049f01250>: Failed to establish a new connection: [Errno 111] Connection refused',))
+ENABLE_ENTERPRISE_INTEGRATION = False
+
 ENTERPRISE_ENROLLMENT_API_URL = LMS_ROOT_URL + "/api/enrollment/v1/"
 ENTERPRISE_PUBLIC_ENROLLMENT_API_URL = ENTERPRISE_ENROLLMENT_API_URL
 ENTERPRISE_COURSE_ENROLLMENT_AUDIT_MODES = ['audit', 'honor']
