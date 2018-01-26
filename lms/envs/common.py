@@ -1348,6 +1348,11 @@ main_vendor_js = base_vendor_js + [
     'js/vendor/jquery-ui.min.js',
     'js/vendor/jquery.qtip.min.js',
     'js/vendor/jquery.ba-bbq.min.js',
+
+    # Used for Glossary on LMS
+    'js/vendor/jquery.easytabs.js',
+    'js/vendor/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo-1.4.2-min.js',
 ]
 
 # Common files used by both RequireJS code and non-RequireJS code
