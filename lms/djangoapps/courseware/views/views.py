@@ -146,7 +146,7 @@ def courses(request):
     courses_list = []
     programs_list = []
     course_discovery_meanings = getattr(settings, 'COURSE_DISCOVERY_MEANINGS', {})
-    if not settings.FEATURES.get('ENABLE_COURSE_DISCOVERY'):
+    if not configuration_helpers.get_value('ENABLE_COURSE_DISCOVERY', settings.FEATURES.get('ENABLE_COURSE_DISCOVERY')):
         courses_list = get_courses(request.user)
 
         if configuration_helpers.get_value("ENABLE_COURSE_SORTING_BY_START_DATE",
