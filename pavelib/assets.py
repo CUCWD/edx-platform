@@ -186,6 +186,16 @@ def get_theme_sass_dirs(system, theme_dir):
             ],
         })
 
+        if system == 'lms':
+            dirs.append({
+                "sass_source_dir": theme_dir / system / "static" / "certificates" / "sass",
+                "css_destination_dir": theme_dir / system / "static" / "certificates" / "css",
+                "lookup_paths": [
+                    sass_dir / "partials",
+                    sass_dir
+                ],
+            })
+
     return dirs
 
 
