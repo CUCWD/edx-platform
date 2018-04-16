@@ -1340,7 +1340,10 @@ base_vendor_js = [
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',
     'js/vendor/URI.min.js',
-    'common/js/vendor/backbone.js'
+    'common/js/vendor/backbone.js',
+
+    # OwlCarousel
+    'common/js/vendor/owl.carousel.js'
 ]
 
 main_vendor_js = base_vendor_js + [
@@ -1460,6 +1463,13 @@ PIPELINE_CSS = {
             'css/vendor/jquery.qtip.min.css',
         ],
         'output_filename': 'css/lms-style-vendor.css',
+    },
+    'style-vendor-owlcarousel': {
+        'source_filenames': [
+            'css/vendor/owl.carousel/owl.carousel.css',
+            'css/vendor/owl.carousel/owl.theme.default.css',
+        ],
+        'output_filename': 'css/lms-style-vendor-owlcarousel.css',
     },
     'style-vendor-tinymce-content': {
         'source_filenames': [

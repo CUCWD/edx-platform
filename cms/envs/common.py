@@ -631,6 +631,13 @@ PIPELINE_CSS = {
         ],
         'output_filename': 'css/cms-style-vendor.css',
     },
+    'style-vendor-owlcarousel': {
+        'source_filenames': [
+            'css/vendor/owl.carousel/owl.carousel.css',
+            'css/vendor/owl.carousel/owl.theme.default.css',
+        ],
+        'output_filename': 'css/cms-style-vendor-owlcarousel.css',
+    },
     'style-vendor-tinymce-content': {
         'source_filenames': [
             'css/tinymce-studio-content-fonts.css',
@@ -706,7 +713,10 @@ base_vendor_js = [
     'edx-ui-toolkit/js/utils/html-utils.js',
 
     # Finally load RequireJS
-    'common/js/vendor/require.js'
+    'common/js/vendor/require.js',
+
+    # OwlCarousel
+    'common/js/vendor/owl.carousel.js'
 ]
 
 # test_order: Determines the position of this chunk of javascript on
