@@ -20,6 +20,7 @@
     "jquery.scrollto": "~2.1.2",
     "moment": "^2.15.1",
     "moment-timezone": "~0.5.5",
+    "owl.carousel": "~2.3.3",
     "picturefill": "~3.0.2",
     "raw-loader": "^0.5.1",
     "requirejs": "~2.3.2",
