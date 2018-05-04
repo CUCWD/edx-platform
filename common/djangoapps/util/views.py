@@ -352,6 +352,70 @@ def _record_feedback_in_zendesk(
     return True
 
 
+def _record_feedback_in_email(
+        realname,
+        email,
+        subject,
+        details,
+        tags,
+        additional_info,
+        group_name=None,
+        require_update=False,
+        support_email=None,
+        custom_fields=None
+):
+    """
+    Create a new user-requested Email.
+
+    Once created, the email body will be updated with a comment containing
+    additional information from the browser and server, such as HTTP headers
+    and user state. Returns a boolean value indicating whether email creation
+    was successful.
+    """
+
+    additional_info_string = (
+        "\n".join("          - %s: %s" % (key, value) for (key, value) in additional_info.items() if value is not None)
+    )
+
+    # Setup custom fields Application, Location.
+    # Todo: Course Id is not a custom field in our Jira instance since it would require manually inserting the course-v1:{ORG}+{COURSE_NAME}+{COURSE_TERM} into the dropdown field.
+    custom_field_application = custom_fields.pop("system", None)
+    custom_field_domain = configuration_helpers.get_value('domain_prefix', None)
+    custom_field_course_id = custom_fields.pop("course_id", None)
+    custom_fields_issue_type = custom_fields.pop("issue_type", None)
+    custom_fields_issue_type_detail = custom_fields.pop("issue_type_detail", None)
+
+    context = {
+        'name': realname,
+        'ticket_submitter': email,
+        'issue_type': custom_fields_issue_type,
+        'issue_type_detail': custom_fields_issue_type_detail,
+        'problem_description_brief': ''.join(subject.splitlines()),
+        'problem_description_details': details,
+        'application': custom_field_application,
+        'location': custom_field_domain,
+        'course_id': custom_field_course_id,
+        'additional_info': additional_info_string,
+        'troubleshooting_documentation': configuration_helpers.get_value("feedback_troubleshooting_guide", settings.FEEDBACK_TROUBLESHOOTING_GUIDE)
+    }
+
+    # composes activation email
+    # Todo: 'Email This Issue' Jira addon uses the following RegEx to create issue accordingly (e.g. Subject: "IssueType : Application Location, {District} "). EW-78
+    subject = (" " + custom_fields_issue_type_detail if custom_fields_issue_type_detail else "") + (" " + custom_fields_issue_type if custom_fields_issue_type != "problem" else "") + " :" + \
+              (" " + custom_field_application if custom_field_application else "") + \
+              (" " + custom_field_domain if custom_field_domain else "")
+    subject = subject.strip()
+    message = render_to_string('emails/helpdesk_email.txt', context)
+
+    try:
+        send_mail(subject, message, from_email=email, recipient_list=[support_email], fail_silently=False)
+    except Exception:  # pylint: disable=broad-except
+        log.error(u'Error sending helpdesk support email from "%s"', support_email, exc_info=True)
+        return False
+
+    return True
+
+
 def _record_feedback_in_datadog(tags):
     datadog_tags = [u"{k}:{v}".format(k=k, v=v) for k, v in tags.items()]
     dog_stats_api.increment(DATADOG_FEEDBACK_METRIC, tags=datadog_tags)
@@ -443,18 +507,29 @@ def submit_feedback(request):
     if enterprise_learner_data:
         context["tags"]["learner_type"] = "enterprise_learner"
 
-    support_backend = configuration_helpers.get_value('CONTACT_FORM_SUBMISSION_BACKEND', SUPPORT_BACKEND_ZENDESK)
+    if settings.CONTACT_FORM_SUBMISSION_BACKEND:
+        context["support_email"] = configuration_helpers.get_value('email_submission_feedback', settings.FEEDBACK_SUBMISSION_EMAIL)
+        support_backend = configuration_helpers.get_value('CONTACT_FORM_SUBMISSION_BACKEND', settings.CONTACT_FORM_SUBMISSION_BACKEND)
+    else:
+        support_backend = configuration_helpers.get_value('CONTACT_FORM_SUBMISSION_BACKEND', SUPPORT_BACKEND_ZENDESK)
 
     if support_backend == SUPPORT_BACKEND_EMAIL:
         try:
-            send_mail(
-                subject=render_to_string('emails/contact_us_feedback_email_subject.txt', context),
-                message=render_to_string('emails/contact_us_feedback_email_body.txt', context),
-                from_email=context["support_email"],
-                recipient_list=[context["support_email"]],
-                fail_silently=False
+            custom_fields = dict(
+                [(tag, request.POST[tag]) for tag in ["system", "issue_type", "issue_type_detail", "course_id"] if
+                 tag in request.POST]
             )
-            success = True
+
+            success = _record_feedback_in_email(
+                context["realname"],
+                context["email"],
+                context["subject"],
+                context["details"],
+                context["tags"],
+                context["additional_info"],
+                support_email=context["support_email"],
+                custom_fields=custom_fields
+            )
         except SMTPException:
             log.exception('Error sending feedback to contact_us email address.')
             success = False
