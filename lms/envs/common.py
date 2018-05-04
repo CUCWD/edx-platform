@@ -889,6 +889,9 @@ ACTIVATION_EMAIL_FROM_ADDRESS = ''
 ADMINS = ()
 MANAGERS = ADMINS
 
+# Feedback Documentation
+FEEDBACK_TROUBLESHOOTING_GUIDE = 'http://educateworkforce.readthedocs.org/projects/educateworkforce-user-guide/en/latest/sfd_troubleshooting/index.html'
+
 # Static content
 STATIC_URL = '/static/'
 STATIC_ROOT = ENV_ROOT / "staticfiles"
@@ -1053,6 +1056,10 @@ WIKI_LINK_DEFAULT_LEVEL = 2
 
 ##### Feedback submission mechanism #####
 FEEDBACK_SUBMISSION_EMAIL = None
+
+##### Contact Form Backends #####
+# Values: 'email', 'support_ticket'
+CONTACT_FORM_SUBMISSION_BACKEND = None
 
 ##### Zendesk #####
 ZENDESK_URL = None
