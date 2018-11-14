@@ -401,6 +401,9 @@ FEATURES = {
     # Whether to check the "Notify users by email" checkbox in the batch enrollment form
     # in the instructor dashboard.
     'BATCH_ENROLLMENT_NOTIFY_USERS_DEFAULT': True,
+
+    # Defines whether or not the LMS dashboard courses are sorted by course_id ascending or not.
+    'DASHBOARD_SORT_BY_COURSE_ID_ASCENDING': False,
 }
 
 # Settings for the course reviews tool template and identification key, set either to None to disable course reviews
