@@ -643,6 +643,10 @@ def dashboard(request):
     activation_email_support_link = configuration_helpers.get_value(
         'ACTIVATION_EMAIL_SUPPORT_LINK', settings.ACTIVATION_EMAIL_SUPPORT_LINK
     ) or settings.SUPPORT_SITE_LINK
+    dashboard_sort_by_course_id_ascending = configuration_helpers.get_value(
+        'DASHBOARD_SORT_BY_COURSE_ID_ASCENDING',
+        settings.FEATURES.get('DASHBOARD_SORT_BY_COURSE_ID_ASCENDING', False)
+    )
 
     # Let's filter out any courses in an "org" that has been declared to be
     # in a configuration
@@ -664,8 +668,13 @@ def dashboard(request):
     # understanding of usage patterns on prod.
     monitoring_utils.accumulate('num_courses', len(course_enrollments))
 
-    # sort the enrollment pairs by the enrollment date
-    course_enrollments.sort(key=lambda x: x.created, reverse=True)
+    # Sort the course order displayed to the end user.
+    if dashboard_sort_by_course_id_ascending:
+        # sort the enrollment pairs by the course_id ascending
+        course_enrollments.sort(key=lambda x: x.course_id, reverse=False)
+    else:
+        # sort the enrollment pairs by the enrollment date
+        course_enrollments.sort(key=lambda x: x.created, reverse=True)
 
     # Retrieve the course modes for each course
     enrolled_course_ids = [enrollment.course_id for enrollment in course_enrollments]
