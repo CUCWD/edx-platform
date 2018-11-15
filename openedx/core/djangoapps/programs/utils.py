@@ -26,6 +26,7 @@ from openedx.core.djangoapps.catalog.utils import get_programs
 from openedx.core.djangoapps.commerce.utils import ecommerce_api_client
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.credentials.utils import get_credentials
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from student.models import CourseEnrollment
 from util.date_utils import strftime_localized
 from xmodule.modulestore.django import modulestore
@@ -74,7 +75,19 @@ class ProgramProgressMeter(object):
         self.user = user
 
         self.enrollments = enrollments or list(CourseEnrollment.enrollments_for_user(self.user))
-        self.enrollments.sort(key=lambda e: e.created, reverse=True)
+
+        dashboard_sort_by_course_id_ascending = configuration_helpers.get_value(
+            'DASHBOARD_SORT_BY_COURSE_ID_ASCENDING',
+            settings.FEATURES.get('DASHBOARD_SORT_BY_COURSE_ID_ASCENDING', False)
+        )
+
+        # Sort the course order displayed to the end user.
+        if dashboard_sort_by_course_id_ascending:
+            # sort the enrollment pairs by the course_id ascending
+            self.enrollments.sort(key=lambda e: e.course_id, reverse=False)
+        else:
+            # sort the enrollment pairs by the enrollment date
+            self.enrollments.sort(key=lambda e: e.created, reverse=True)
 
         self.enrolled_run_modes = {}
         self.course_run_ids = []
