@@ -721,6 +721,13 @@ PIPELINE_CSS = {
         ],
         'output_filename': 'css/cms-style-vendor.css',
     },
+    'style-vendor-owlcarousel': {
+        'source_filenames': [
+            'css/vendor/owl.carousel/assets/owl.carousel.css',
+            'css/vendor/owl.carousel/assets/owl.theme.default.css',
+        ],
+        'output_filename': 'css/style-vendor-owlcarousel.css',
+    },
     'style-vendor-tinymce-content': {
         'source_filenames': [
             'css/tinymce-studio-content-fonts.css',
@@ -800,7 +807,8 @@ base_vendor_js = [
     'common/js/vendor/bootstrap.js',
 
     # Finally load RequireJS
-    'common/js/vendor/require.js'
+    'common/js/vendor/require.js',
+    'common/js/vendor/owl.carousel.js'
 ]
 
 # test_order: Determines the position of this chunk of javascript on
