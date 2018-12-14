@@ -1513,6 +1513,13 @@ PIPELINE_CSS = {
         ],
         'output_filename': 'css/lms-style-vendor.css',
     },
+    'style-vendor-owlcarousel': {
+        'source_filenames': [
+            'css/vendor/owl.carousel/assets/owl.carousel.css',
+            'css/vendor/owl.carousel/assets/owl.theme.default.css',
+        ],
+        'output_filename': 'css/style-vendor-owlcarousel.css',
+    },
     'style-vendor-tinymce-content': {
         'source_filenames': [
             'js/vendor/tinymce/js/tinymce/skins/studio-tmce4/content.min.css'
