@@ -1100,4 +1100,5 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.LMS, plugin_c
 
 ########################## Derive Any Derived Settings  #######################
 
-derive_settings(__name__)
+if os.environ['DJANGO_SETTINGS_MODULE'] != 'lms.envs.devstack_docker':
+    derive_settings(__name__)
