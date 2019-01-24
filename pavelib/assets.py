@@ -168,6 +168,8 @@ def get_theme_sass_dirs(system, theme_dir):
     system_sass_dir = path(system) / "static" / "sass"
     sass_dir = theme_dir / system / "static" / "sass"
     css_dir = theme_dir / system / "static" / "css"
+    sass_dir_certs = theme_dir / system / "static" / "certificates" / "sass"
+    css_dir_certs = theme_dir / system / "static" / "certificates" / "css"
 
     dependencies = SASS_LOOKUP_DEPENDENCIES.get(system, [])
     if sass_dir.isdir():
@@ -194,6 +196,16 @@ def get_theme_sass_dirs(system, theme_dir):
                 system_sass_dir,
             ],
         })
+
+        if system == 'lms':
+            dirs.append({
+                "sass_source_dir": sass_dir_certs,
+                "css_destination_dir": css_dir_certs,
+                "lookup_paths": [
+                    sass_dir_certs / "partials",
+                    sass_dir_certs
+                ],
+            })
 
     return dirs
 
