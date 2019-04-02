@@ -17,8 +17,8 @@ class CourseBadgesTab(EnrolledTab):
     type = 'course_badges'
     # priority = None
     title = ugettext_noop('Badges')
-    view_name = 'openedx.course_badges.home'
-    # tab_id = 'openedx.course_badges.home'
+    view_name = 'openedx.course_badges.progress'
+    # tab_id = 'openedx.course_badges.progress'
     is_default = True
     is_movable = True
     is_hideable = True

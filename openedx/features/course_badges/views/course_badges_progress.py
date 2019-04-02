@@ -24,7 +24,7 @@ from util.views import ensure_valid_course_key
 from lms.djangoapps.badges.api import urls
 
 
-class CourseBadgesView(View):
+class CourseBadgesProgressView(View):
     """
     View showing the user's badges for a course.
     """
@@ -46,7 +46,7 @@ class CourseBadgesView(View):
         course_url = reverse(course_url_name, kwargs={'course_id': unicode(course.id)})
 
         # Render the badges list as a fragment
-        badges_fragment = CourseBadgesFragmentView().render_to_fragment(request, course_id=course_id)
+        badges_fragment = CourseBadgesProgressFragmentView().render_to_fragment(request, course_id=course_id)
 
         # Render the course badges page
         context = {
@@ -61,7 +61,7 @@ class CourseBadgesView(View):
         return render_to_response('course_badges/course-badges.html', context)
 
 
-class CourseBadgesFragmentView(EdxFragmentView):
+class CourseBadgesProgressFragmentView(EdxFragmentView):
     """
     Fragment view that shows a user's badges for a course.
     """
@@ -80,11 +80,9 @@ class CourseBadgesFragmentView(EdxFragmentView):
             'badges_api_url': reverse("badges_api:user_assertions", kwargs={'username': request.user}),
             'language_preference': language,
         }
-        html = render_to_string('course_badges/course-badges-fragment.html', context)
-        inline_js = render_to_string('course_badges/course_badges_js.template', context)
+        html = render_to_string('course_badges/course-badges-progress-fragment.html', context)
         fragment = Fragment(html)
         self.add_fragment_resource_urls(fragment)
-        fragment.add_javascript(inline_js)
         return fragment
 
     def standalone_page_title(self, request, fragment, **kwargs):

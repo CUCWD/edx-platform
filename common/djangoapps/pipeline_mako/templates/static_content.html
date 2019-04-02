@@ -96,6 +96,37 @@ engine = Engine(dirs=dirs)
 source, template_path = Loader(engine).load_template_source(path)
 %>${source | n, decode.utf8}</%def>
 
+<%def name="badgesfrontend(entry)">
+    <%doc>
+        Loads a badges-frontend page, with the necessary context. Context is expected
+        as a dictionary in the body of this tag.
+    </%doc>
+    <%
+        body = capture(caller.body)
+        body_dict = json.loads(body)
+        locale = body_dict['lang']
+
+        messages = load_sfe_i18n_messages(locale)
+    %>
+    <script type="application/json" id="SFE_i18n_data">
+      {
+        "locale": "${ locale | n, decode.utf8}",
+        "messages": ${ messages | n, decode.utf8}
+      }
+    </script>
+    <script type="application/javascript" id='courseContext'>
+        var badgeContext = ${ body | n, decode.utf8};
+    </script>
+    <div id="root" class="SFE"></div>
+    % if settings.LMS_FRONTEND_BADGES_CONTAINER_URL:
+        <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/${entry}.js"></script>
+    % else:
+        <script type="text/javascript" src="${url('common/js/vendor/runtime.min.js')}"></script>
+        <script type="text/javascript" src="${url('common/js/vendor/common.min.js')}"></script>
+        <script type="text/javascript" src="${url('common/js/vendor/{}.min.js'.format(entry))}"></script>
+    % endif
+</%def>
+
 <%def name="studiofrontend(entry)">
     <%doc>
         Loads a studio-frontend page, with the necessary context. Context is expected
