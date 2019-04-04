@@ -13,11 +13,12 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_noop
 from jsonfield import JSONField
 from lazy import lazy
 from model_utils.models import TimeStampedModel
 from opaque_keys import InvalidKeyError
-from opaque_keys.edx.django.models import CourseKeyField
+from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys.edx.keys import CourseKey
 
 from badges.utils import deserialize_count_specs
@@ -338,3 +339,38 @@ class CourseEventBadgesConfiguration(ConfigurationModel):
 
     class Meta(object):
         app_label = "badges"
+
+
+class BlockEventBadgesConfiguration(models.Model):
+    """
+    Contains the assignment of BadgeClass to a specific block (chapter, sequential, etc).
+    """
+
+    course_id = CourseKeyField(max_length=255, db_index=True)
+
+    usage_key = UsageKeyField(max_length=255, db_index=True, help_text=_(u'The course block identifier.'))
+
+    badge_class = models.ForeignKey(BadgeClass, on_delete=models.CASCADE)
+
+    EVENT_TYPE_CHOICES = (
+        ('chapter_complete', ugettext_noop('Chapter Complete')),
+    )
+    event_type = models.CharField(
+        max_length=32, choices=EVENT_TYPE_CHOICES, default='chapter_complete', db_index=True
+    )
+
+    @classmethod
+    def badgeclass_for_block_event(cls, course_id, event_type):
+        """
+        Return all records matching course identifier and event type.
+        """
+        try:
+            return cls.objects.get(course_id=course_id, event_type=event_type).badge_class
+        except cls.DoesNotExist:
+            # Fall back to default, if there is one.
+            return None
+
+    class Meta(object):
+        app_label = "badges"
+        unique_together = ('course_id', 'usage_key', 'event_type')
+
