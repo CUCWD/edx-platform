@@ -22,6 +22,8 @@ from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfiguration
 
 from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
 from django.contrib.auth.models import User
+from branding import api as branding_api
+
 
 class InvalidCourseKeyError(APIException):
     """
@@ -249,7 +251,9 @@ class UserBadgeProgress(generics.ListAPIView):
                         "course_id": CourseKeyField(source='course_key').to_representation(blockEventBadgeConfig.badge_class.course_id),
                         "description": blockEventBadgeConfig.badge_class.description,
                         "criteria": blockEventBadgeConfig.badge_class.criteria,
-                        "image": serializers.ImageField(source='image').to_representation(blockEventBadgeConfig.badge_class.image),
+                        "image": branding_api.get_base_url(request.is_secure()) +
+                                    serializers.ImageField(source='image').to_representation(
+                                        blockEventBadgeConfig.badge_class.image),
                     },
                     "assertion": {
                         "image_url": (block_event_assertion.image_url if block_event_assertion else ""),
