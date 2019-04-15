@@ -4,6 +4,7 @@ Views to show a course's badges.
 
 import six
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.template.context_processors import csrf
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -85,6 +86,7 @@ class CourseBadgesProgressFragmentView(EdxFragmentView):
                 kwargs={'username': request.user}
                 ),
             'language_preference': language,
+            'user': User.objects.get(id=request.user.id)
         }
         html = render_to_string('course_badges/course-badges-progress-fragment.html', context)
         fragment = Fragment(html)

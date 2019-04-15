@@ -127,7 +127,7 @@ if not source:
       }
     </script>
     <script type="application/javascript" id='courseContext'>
-        var badgeContext = ${ body | n, decode.utf8};
+        var lmsContext = ${ body | n, decode.utf8};
     </script>
     <div id="root" class="SFE"></div>
     % if settings.LMS_FRONTEND_BADGES_CONTAINER_URL:

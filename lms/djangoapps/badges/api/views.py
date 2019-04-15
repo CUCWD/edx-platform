@@ -2,9 +2,9 @@
 API views for badges
 """
 
+import logging
+from django.contrib.auth.models import User
 
-from edx_rest_framework_extensions.auth.session.authentication import \
-    SessionAuthenticationAllowInactiveUser
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.django.models import CourseKeyField
 from opaque_keys.edx.keys import CourseKey
@@ -13,20 +13,20 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework import serializers
 
+from lms.djangoapps.badges.api.serializers import \
+    BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer
 from lms.djangoapps.badges.models import BadgeAssertion, BlockEventBadgesConfiguration
+from lms.djangoapps.branding import api as branding_api
 from openedx.core.djangoapps.user_api.permissions import is_field_shared_factory
-from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
+# from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
 from openedx.core.lib.api.authentication import (
     BearerAuthenticationAllowInactiveUser,
-    OAuth2AuthenticationAllowInactiveUser,
-    SessionAuthenticationAllowInactiveUser
+    OAuth2AuthenticationAllowInactiveUser
 )
 from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
 
-from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer
+log = logging.getLogger(__name__)
 
-from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
-from django.contrib.auth.models import User
 
 class InvalidCourseKeyError(APIException):
     """
@@ -105,8 +105,7 @@ class UserBadgeAssertions(generics.ListAPIView):
     """
     serializer_class = BadgeAssertionSerializer
     authentication_classes = (
-        BearerAuthenticationAllowInactiveUser,
-        SessionAuthenticationAllowInactiveUser
+        BearerAuthenticationAllowInactiveUser
     )
     permission_classes = (is_field_shared_factory("accomplishments_shared"),)
 
@@ -211,14 +210,15 @@ class UserBadgeProgress(generics.ListAPIView):
         ]
     """
     authentication_classes = (
-        OAuth2AuthenticationAllowInactiveUser,
-        SessionAuthenticationAllowInactiveUser
+        OAuth2AuthenticationAllowInactiveUser
     )
     permission_classes = (is_field_shared_factory("accomplishments_shared"),)
 
 
-    def list(self, request, username, course_id, *args, **kwargs):
-
+    def list(self, request, username, course_id, *args, **kwargs):  # pylint: disable=unused-argument
+        """
+        Return a list of badge progress for the learner.
+        """
         try:
             course_key = CourseKey.from_string(course_id)
         except InvalidKeyError:
@@ -230,31 +230,33 @@ class UserBadgeProgress(generics.ListAPIView):
 
         progress_to_show = []
 
-        for blockEventBadgeConfig in BlockEventBadgesConfiguration.config_for_block_event(
+        for block_event_badge_config in BlockEventBadgesConfiguration.config_for_block_event(
             course_id=course_key, event_type='chapter_complete'
         ):
             block_event_assertion = None
-            if blockEventBadgeConfig.badge_class:
+            if block_event_badge_config.badge_class:
                 user_course_assertions = BadgeAssertion.assertions_for_user(User.objects.get(username=username),
                                                                             course_id=course_key)
                 for assertion in user_course_assertions:
-                    if assertion.badge_class == blockEventBadgeConfig.badge_class:
+                    if assertion.badge_class == block_event_badge_config.badge_class:
                         block_event_assertion = assertion
-                        pass
+                        pass  # pylint: disable=unnecessary-pass
 
             progress_to_show.append(
                 {
                     "course_id": CourseKeyField(source='course_key').to_representation(course_key),
-                    "block_id": UsageKeyField(source='usage_key').to_representation(blockEventBadgeConfig.usage_key),
-                    "event_type": blockEventBadgeConfig.event_type,
+                    "block_id": UsageKeyField(source='usage_key').to_representation(block_event_badge_config.usage_key),
+                    "event_type": block_event_badge_config.event_type,
                     "badge_class": {
-                        "slug": blockEventBadgeConfig.badge_class.slug,
-                        "issuing_component": blockEventBadgeConfig.badge_class.issuing_component,
-                        "display_name": blockEventBadgeConfig.badge_class.display_name,
-                        "course_id": CourseKeyField(source='course_key').to_representation(blockEventBadgeConfig.badge_class.course_id),
-                        "description": blockEventBadgeConfig.badge_class.description,
-                        "criteria": blockEventBadgeConfig.badge_class.criteria,
-                        "image": serializers.ImageField(source='image').to_representation(blockEventBadgeConfig.badge_class.image),
+                        "slug": block_event_badge_config.badge_class.slug,
+                        "issuing_component": block_event_badge_config.badge_class.issuing_component,
+                        "display_name": block_event_badge_config.badge_class.display_name,
+                        "course_id": CourseKeyField(source='course_key').to_representation(block_event_badge_config.badge_class.course_id),
+                        "description": block_event_badge_config.badge_class.description,
+                        "criteria": block_event_badge_config.badge_class.criteria,
+                        "image": branding_api.get_base_url(request.is_secure()) +
+                                    serializers.ImageField(source='image').to_representation(
+                                        block_event_badge_config.badge_class.image),
                     },
                     "assertion": {
                         "image_url": (block_event_assertion.image_url if block_event_assertion else ""),
