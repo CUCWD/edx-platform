@@ -4,6 +4,7 @@ Badge Awarding backend for Badgr-Server.
 import hashlib
 import logging
 import mimetypes
+import json
 
 import requests
 from django.conf import settings
@@ -101,16 +102,28 @@ class BadgrBackend(BadgeBackend):
                 u"Filename was: {}".format(image.name)
             )
         files = {'image': (image.name, image, content_type)}
+
         data = {
             'name': badge_class.display_name,
             'criteria': badge_class.criteria,
             'slug': self._slugify(badge_class),
-            'description': badge_class.description,
+            'description': badge_class.description
         }
+
         result = requests.post(
             self._badge_create_url, headers=self._get_headers(), data=data, files=files,
             timeout=settings.BADGR_TIMEOUT
         )
+
+        # result = requests.post(
+        #     self._badge_create_url, headers=self._get_headers(), data=data,
+        #     image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+        #     description='Description of the new Badge',
+        #     criteria_url='https://tinybuddha.com/blog/30-accomplishments-to-be-proud-of/',
+        #     criteria_text='Do something both small and meaningful',
+        #     timeout=settings.BADGR_TIMEOUT
+        # )
+
         self._log_if_raised(result, data)
 
     def _send_assertion_created_event(self, user, assertion):
@@ -159,6 +172,27 @@ class BadgrBackend(BadgeBackend):
         """
         Headers to send along with the request-- used for authentication.
         """
+
+        # Todo: Remove refresh logic when we get OAuth2 tokens to avoid performance or other issues with accesing the API.
+        # ====================================================================
+        refresh_token_url = "{}/o/token".format(settings.BADGR_BASE_URL)
+
+        data = {
+            'grant_type': 'refresh_token',
+            'refresh_token': settings.BADGR_API_REFRESH_TOKEN,
+            'scope': 'rw:profile rw:issuer rw:backpack'
+        }
+
+        result = requests.post(
+            refresh_token_url, params=data,
+            timeout=settings.BADGR_TIMEOUT
+        )
+        # self._log_if_raised(result, data)
+        content = result.json()
+        settings.BADGR_API_TOKEN = content['access_token']
+        settings.BADGR_API_REFRESH_TOKEN = content['refresh_token']
+        # ====================================================================
+
         return {'Authorization': 'Token {}'.format(settings.BADGR_API_TOKEN)}
 
     def _ensure_badge_created(self, badge_class):

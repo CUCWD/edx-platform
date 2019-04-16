@@ -22,6 +22,8 @@ from openedx.core.djangoapps.user_api.models import UserPreference
 from openedx.features.course_experience import default_course_url_name
 from util.views import ensure_valid_course_key
 
+from ..handlers import award_section_badges
+
 from lms.djangoapps.badges.api import urls
 
 
@@ -33,7 +35,7 @@ class CourseBadgesProgressView(View):
     @method_decorator(ensure_csrf_cookie)
     @method_decorator(cache_control(no_cache=True, no_store=True, must_revalidate=True))
     @method_decorator(ensure_valid_course_key)
-    def get(self, request, course_id):
+    def get(self, request, course_id, **kwargs):
         """
         Displays the user's badges for the specified course.
 
@@ -45,6 +47,9 @@ class CourseBadgesProgressView(View):
         course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=True)
         course_url_name = default_course_url_name(course.id)
         course_url = reverse(course_url_name, kwargs={'course_id': unicode(course.id)})
+
+        # Award badges to course chapters if they haven't already been done.
+        award_section_badges(course_id, request)
 
         # Render the badges list as a fragment
         badges_fragment = CourseBadgesProgressFragmentView().render_to_fragment(request, course_id=course_id)
