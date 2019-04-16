@@ -27,6 +27,14 @@ from openedx.features.course_experience import course_home_page_title
 
 <%include file="../courseware/course_navigation.html" args="active_page='course_badges'" />
 
+<%block name="header_extras">
+  <style type="text/css">
+      #footer-openedx {
+          max-width: 1920px;
+      }
+  </style>
+</%block>
+
 <%block name="head_extra">
 <%static:css group='style-course-vendor'/>
 <%static:css group='style-course'/>
