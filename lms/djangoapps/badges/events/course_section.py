@@ -2,44 +2,20 @@
 Events which have to do with a user completing a section of content within a course.
 """
 
-from badges.models import BadgeClass, CourseEventBadgesConfiguration
 from badges.models import BlockEventBadgesConfiguration
 from badges.utils import requires_badges_enabled
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
-# def award_badge(config, count, user):
-#     """
-#     Given one of the configurations for enrollments or completions, award
-#     the appropriate badge if one is configured.
-#
-#     config is a dictionary with integer keys and course keys as values.
-#     count is the key to retrieve from this dictionary.
-#     user is the user to award the badge to.
-#
-#     Example config:
-#         {3: 'slug_for_badge_for_three_enrollments', 5: 'slug_for_badge_with_five_enrollments'}
-#     """
-#     slug = config.get(count)
-#     if not slug:
-#         return
-#     # badge_class = BadgeClass.get_badge_class(
-#     #     slug=slug, issuing_component='openedx__course', create=False,
-#     # )
-#     #
-#     badge_class = BlockEventBadgesConfiguration.get_badgeclass_for_block_event(
-#         course_id=course_id, event_type="chapter_complete"
-#     )
-#
-#     if not badge_class:
-#         return
-#     if not badge_class.get_for_user(user):
-#         badge_class.award(user)
-
-
-def award_section_badge(course_id, user, section_id):
+@requires_badges_enabled
+def award_section_badge(user, course_id, section_id):
     """
     Awards badges based on the user after the section completion api checks have been checked.
+
+    Todo: It appears that there is no signal for when a course completion event occurs other than just problems type.
+      Should a event occur we should listen for the signal using a @receiver decorator and award the badge right away
+      for the given section. Right now we are checking on outline and badge courseware tab loads whether or not we need
+      to award the section badge.
     """
 
     badge_class = BlockEventBadgesConfiguration.get_badgeclass_for_chapter_complete(CourseKey.from_string(course_id),
@@ -53,6 +29,4 @@ def award_section_badge(course_id, user, section_id):
     if not badge_class.get_for_user(user):
         badge_class.award(user)
 
-    # config = CourseEventBadgesConfiguration.current().enrolled_settings
-    # enrollments = user.courseenrollment_set.filter(is_active=True).count()
 
