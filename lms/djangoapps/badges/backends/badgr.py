@@ -2,6 +2,7 @@
 Badge Awarding backend for Badgr-Server.
 """
 import hashlib
+import json
 import logging
 import mimetypes
 import json
@@ -115,15 +116,6 @@ class BadgrBackend(BadgeBackend):
             timeout=settings.BADGR_TIMEOUT
         )
 
-        # result = requests.post(
-        #     self._badge_create_url, headers=self._get_headers(), data=data,
-        #     image='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-        #     description='Description of the new Badge',
-        #     criteria_url='https://tinybuddha.com/blog/30-accomplishments-to-be-proud-of/',
-        #     criteria_text='Do something both small and meaningful',
-        #     timeout=settings.BADGR_TIMEOUT
-        # )
-
         self._log_if_raised(result, data)
 
     def _send_assertion_created_event(self, user, assertion):
@@ -167,33 +159,33 @@ class BadgrBackend(BadgeBackend):
         self._send_assertion_created_event(user, assertion)
         return assertion
 
-    @staticmethod
-    def _get_headers():
+    def _get_v2_auth_token(self):
+        """ Get a Badgr auth token from cache or generate and return a new one for both v1 and v2 APIs.
+        """
+        cache = settings.CACHES['default']
+        cache_key = 'badgr_api_auth_token'
+        cached = cache.get(cache_key)
+        if cached:
+            return cached
+        else:
+            # get a new auth token using Badgr refresh token
+            data = {'grant_type': 'refresh_token', 'refresh_token': settings.BADGR_API_TOKEN}
+            token_url = '{}/o/token'.format(settings.BADGR_BASE_URL)
+            response = requests.post(token_url, data=data, timeout=settings.BADGR_TIMEOUT)
+            if response.ok:
+                token = response.json().get('access_token')
+                cache.set(cache_key, token, getattr(settings, 'BADGR_API_TOKEN_EXPIRATION', 86400))  #24h
+                return token
+            else:
+                response.raise_for_status()
+
+    def _get_headers(self):
         """
         Headers to send along with the request-- used for authentication.
         """
-
-        # Todo: Remove refresh logic when we get OAuth2 tokens to avoid performance or other issues with accesing the API.
-        # ====================================================================
-        refresh_token_url = "{}/o/token".format(settings.BADGR_BASE_URL)
-
-        data = {
-            'grant_type': 'refresh_token',
-            'refresh_token': settings.BADGR_API_REFRESH_TOKEN,
-            'scope': 'rw:profile rw:issuer rw:backpack'
-        }
-
-        result = requests.post(
-            refresh_token_url, params=data,
-            timeout=settings.BADGR_TIMEOUT
-        )
-        # self._log_if_raised(result, data)
-        content = result.json()
-        settings.BADGR_API_TOKEN = content['access_token']
-        settings.BADGR_API_REFRESH_TOKEN = content['refresh_token']
-        # ====================================================================
-
-        return {'Authorization': 'Token {}'.format(settings.BADGR_API_TOKEN)}
+        # if using v2 or later Badgr API get new auth token if expired
+        if settings.BADGR_API_VERSION == 'v1' or settings.BADGR_API_VERSION == 'v2':
+            return {'Authorization': 'Bearer {}'.format(self._get_v2_auth_token())}
 
     def _ensure_badge_created(self, badge_class):
         """
