@@ -18,6 +18,7 @@ from badges.models import BadgeAssertion
 from eventtracking import tracker
 
 MAX_SLUG_LENGTH = 255
+BADGR_TOKEN_CACHE_KEY = 'badgr_api_auth_token'
 LOGGER = logging.getLogger(__name__)
 
 
@@ -37,7 +38,7 @@ class BadgrBackend(BadgeBackend):
         """
         Base URL for all API requests.
         """
-        return "{}/v1/issuer/issuers/{}".format(settings.BADGR_BASE_URL, settings.BADGR_ISSUER_SLUG)
+        return "{}/{}/issuer/issuers/{}".format(settings.BADGR_BASE_URL, settings.BADGR_API_VERSION, settings.BADGR_ISSUER_SLUG)
 
     @lazy
     def _badge_create_url(self):
@@ -162,9 +163,8 @@ class BadgrBackend(BadgeBackend):
     def _get_v2_auth_token(self):
         """ Get a Badgr auth token from cache or generate and return a new one for both v1 and v2 APIs.
         """
-        cache = settings.CACHES['default']
-        cache_key = 'badgr_api_auth_token'
-        cached = cache.get(cache_key)
+        cache = settings.CACHES['default']        
+        cached = cache.get(BADGR_TOKEN_CACHE_KEY)
         if cached:
             return cached
         else:
@@ -183,6 +183,7 @@ class BadgrBackend(BadgeBackend):
         """
         Headers to send along with the request-- used for authentication.
         """
+        # v1 is deprecated by Badgr.io
         # if using v2 or later Badgr API get new auth token if expired
         if settings.BADGR_API_VERSION == 'v1' or settings.BADGR_API_VERSION == 'v2':
             return {'Authorization': 'Bearer {}'.format(self._get_v2_auth_token())}
