@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('badges', '0003_schema__add_event_configuration'),
+        ('badges', '0004_auto_20190404_1154'),
     ]
 
     operations = [
