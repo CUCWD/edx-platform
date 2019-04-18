@@ -20,7 +20,6 @@ from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
 
 from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer
 
-from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
 from django.contrib.auth.models import User
 from branding import api as branding_api
 
