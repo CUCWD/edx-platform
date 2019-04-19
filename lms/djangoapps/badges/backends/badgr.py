@@ -127,21 +127,27 @@ class BadgrBackend(BadgeBackend):
         try:  # TODO: eventually we should pass both
             validator = URLValidator()
             validator(badge_class.criteria)
-            criteria_type = 'criteria_url'
+            criteria_type_key = 'criteria_url' if self.api_ver == 'v1' else 'criteriaUrl'
+            criteria_type = criteria_type_key
         except ValidationError:
-            criteria_type = 'criteria_text'
+            criteria_type_key = 'criteria_text' if self.api_ver == 'v1' else 'criteriaNarrative'
+            criteria_type = criteria_type_key
         data = {
             'name': badge_class.display_name,
             criteria_type: badge_class.criteria,
             'description': badge_class.description,
         }
 
-        result = requests.post(
+        response = requests.post(
             self._badge_create_url, headers=self._get_headers(), data=data, files=files,
             timeout=settings.BADGR_TIMEOUT
         )
+        self._log_if_raised(response, data)
 
-        self._log_if_raised(result, data)
+        if response.ok:
+            badge_class.slug = response.json()['result'][0]['entityId']
+            badge_class.save()
+
 
     def _send_assertion_created_event(self, user, assertion):
         """
