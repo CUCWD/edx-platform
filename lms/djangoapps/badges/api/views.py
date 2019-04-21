@@ -15,6 +15,7 @@ from openedx.core.djangoapps.user_api.permissions import is_field_shared_factory
 from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
 from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
+from openedx.features.course_experience.utils import get_course_outline_block_tree
 
 from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer
 
@@ -186,6 +187,7 @@ class UserBadgeProgress(generics.ListAPIView):
             {
                 "course_id": "course-v1:edX+DemoX+Demo_Course",
                 "block_id": "block-v1:edX+DemoX+Demo_Course+type@chapter+block@dc1e160e5dc348a48a98fa0f4a6e8675",
+                "block_display_name": "Example Week 1: Getting Started",
                 "event_type": "chapter_complete",
                 "badge_class": {
                     "slug": "special_award",
@@ -224,6 +226,27 @@ class UserBadgeProgress(generics.ListAPIView):
 
         progress_to_show = []
 
+        # For all sections in course map the id to the display_name.
+        course_block_tree = get_course_outline_block_tree(request, course_id)
+        if not course_block_tree:
+            return None
+
+        course_sections = course_block_tree.get('children')
+
+        course_section_mapping = {}
+        course_section_mapping_id = 0;
+        for section in course_sections:
+            course_section_mapping.update(
+                {
+                    section['id']:
+                        {
+                            'block_order': course_section_mapping_id,
+                            'display_name': section['display_name']
+                        }
+                })
+
+            course_section_mapping_id += 1
+
         for blockEventBadgeConfig in BlockEventBadgesConfiguration.config_for_block_event(
             course_id=course_key, event_type='chapter_complete'
         ):
@@ -240,6 +263,8 @@ class UserBadgeProgress(generics.ListAPIView):
                 {
                     "course_id": CourseKeyField(source='course_key').to_representation(course_key),
                     "block_id": UsageKeyField(source='usage_key').to_representation(blockEventBadgeConfig.usage_key),
+                    "block_display_name": course_section_mapping.get(UsageKeyField(source='usage_key').to_representation(blockEventBadgeConfig.usage_key), '').get('display_name', ''),
+                    "block_order": course_section_mapping.get(UsageKeyField(source='usage_key').to_representation(blockEventBadgeConfig.usage_key), '').get('block_order', ''),
                     "event_type": blockEventBadgeConfig.event_type,
                     "badge_class": {
                         "slug": blockEventBadgeConfig.badge_class.slug,
