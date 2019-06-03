@@ -42,14 +42,12 @@ course_sections = blocks.get('children')
                         <span class="fa fa-chevron-right ${ 'fa-rotate-90' if section_is_auto_opened else '' }" aria-hidden="true"></span>
                         <h3 class="section-title">${ section['display_name'] }</h3>
             % if section.get('complete'):
-                        <%
-                        award_section_badge(user, course_id, section['id'])
-                        %>
-
-                        <span class="complete-checkmark fa fa-check"></span>
+                    <span class="complete-checkmark fa fa-check"></span>
+                    % if award_section_badge(user, course_id, section['id']):
                         <button class="btn btn-secondary section-badge" onclick="window.location.href = '${reverse('openedx.course_badges.progress', args=[course_id])}'">
                             <span>${_("View Badge")}</span>
                         </button>
+                    % endif
             % endif
                     </button>
                     <ol class="outline-item accordion-panel ${ '' if section_is_auto_opened else 'is-hidden' }"
