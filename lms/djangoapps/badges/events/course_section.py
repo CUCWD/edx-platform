@@ -23,10 +23,10 @@ def award_section_badge(user, course_id, section_id):
 
     # Continue without awarding badge if no configuration is found in BlockEventBadgesConfiguration
     if not badge_class:
-        return
+        return False
 
     # Award badge to user.
     if not badge_class.get_for_user(user):
         badge_class.award(user)
 
-
+    return True
