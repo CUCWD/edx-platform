@@ -39,7 +39,10 @@ def fake_support_backend_values(name, default=None):  # pylint: disable=unused-a
     """
     config_dict = {
         "CONTACT_FORM_SUBMISSION_BACKEND": "email",
+        "domain_prefix": "greermade",
         "email_from_address": TEST_SUPPORT_EMAIL,
+        "email_submission_feedback": TEST_SUPPORT_EMAIL,
+        "feedback_troubleshooting_guide": "http://educateworkforce.readthedocs.org/projects/educateworkforce-user-guide/en/latest/sfd_troubleshooting/index.html",
     }
     return config_dict[name]
 
