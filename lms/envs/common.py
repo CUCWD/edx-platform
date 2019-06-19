@@ -943,6 +943,9 @@ CONTACT_MAILING_ADDRESS = ''
 # Account activation email sender address
 ACTIVATION_EMAIL_FROM_ADDRESS = ''
 
+# Feedback Documentation
+FEEDBACK_TROUBLESHOOTING_GUIDE = 'http://educateworkforce.readthedocs.org/projects/educateworkforce-user-guide/en/latest/sfd_troubleshooting/index.html'
+
 ADMINS = ()
 MANAGERS = ADMINS
 
@@ -1124,6 +1127,10 @@ WIKI_LINK_DEFAULT_LEVEL = 2
 
 ##### Feedback submission mechanism #####
 FEEDBACK_SUBMISSION_EMAIL = None
+
+##### Contact Form Backends #####
+# Values: 'email', 'support_ticket'
+CONTACT_FORM_SUBMISSION_BACKEND = None
 
 ##### Zendesk #####
 ZENDESK_URL = None
