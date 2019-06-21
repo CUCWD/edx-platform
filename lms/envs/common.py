@@ -1420,6 +1420,9 @@ base_vendor_js = [
     'common/js/jquery.easytabs.js',
     'common/js/jquery.hashchange.js',
     'common/js/vendor/jquery.scrollTo.js',
+
+    # Avada
+    'css/vendor/wordpress-overrides/fusion-scripts.min.js',
 ]
 
 main_vendor_js = base_vendor_js + [
@@ -1538,6 +1541,9 @@ PIPELINE_CSS = {
             'css/vendor/jquery.qtip.min.css',
             'common/css/vendor/owl.carousel.css',
             'common/css/vendor/owl.theme.default.css',
+            'css/vendor/Avada/assets/css/style.min.css',
+            'css/vendor/wordpress-overrides/avada-styles.css',
+            'css/vendor/wordpress-overrides/fusion-styles.min.css'
         ],
         'output_filename': 'css/lms-style-vendor.css',
     },
