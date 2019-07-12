@@ -1420,9 +1420,6 @@ base_vendor_js = [
     'common/js/jquery.easytabs.js',
     'common/js/jquery.hashchange.js',
     'common/js/vendor/jquery.scrollTo.js',
-
-    # Avada
-    'css/vendor/wordpress-overrides/fusion-scripts.min.js',
 ]
 
 main_vendor_js = base_vendor_js + [
@@ -1534,18 +1531,27 @@ credit_web_view_js = [
     'js/src/logger.js',
 ]
 
+avada_theme_js = [
+    'css/vendor/wordpress-overrides/fusion-scripts.min.js',
+]
+
 PIPELINE_CSS = {
     'style-vendor': {
         'source_filenames': [
             'css/vendor/font-awesome.css',
             'css/vendor/jquery.qtip.min.css',
             'common/css/vendor/owl.carousel.css',
-            'common/css/vendor/owl.theme.default.css',
+            'common/css/vendor/owl.theme.default.css'
+        ],
+        'output_filename': 'css/lms-style-vendor.css',
+    },
+    'style-vendor-avada-theme': {
+        'source_filenames': [
             'css/vendor/Avada/assets/css/style.min.css',
             'css/vendor/wordpress-overrides/avada-styles.css',
             'css/vendor/wordpress-overrides/fusion-styles.min.css'
         ],
-        'output_filename': 'css/lms-style-vendor.css',
+        'output_filename': 'css/avada-theme-vendor.css',
     },
     'style-vendor-tinymce-content': {
         'source_filenames': [
@@ -1818,6 +1824,10 @@ PIPELINE_JS = {
     'credit_wv': {
         'source_filenames': credit_web_view_js,
         'output_filename': 'js/credit/web_view.js'
+    },
+    'avada_theme': {
+        'source_filenames': avada_theme_js,
+        'output_filename': 'js/avada-theme.js'
     }
 }
 
