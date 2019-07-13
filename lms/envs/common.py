@@ -254,6 +254,11 @@ FEATURES = {
     # False to not redirect the user
     'ALWAYS_REDIRECT_HOMEPAGE_TO_DASHBOARD_FOR_AUTHENTICATED_USER': True,
 
+    # When an non logged in user (Anonymous) goes to the homepage ('/') shoud the user be
+    # redirected to the dashboard - this is default Microsite behaviour for EducateWorkforce.
+    # Set to False to not redirect the user.
+    'ALWAYS_REDIRECT_HOMEPAGE_TO_LOGIN_FOR_UNAUTHENTICATED_USER': False,
+
     # When a user goes to the homepage ('/') the user sees the
     # courses listed in the announcement dates order - this is default Open edX behavior.
     # Set to True to change the course sorting behavior by their start dates, latest first.
@@ -938,6 +943,9 @@ CONTACT_MAILING_ADDRESS = ''
 # Account activation email sender address
 ACTIVATION_EMAIL_FROM_ADDRESS = ''
 
+# Feedback Documentation
+FEEDBACK_TROUBLESHOOTING_GUIDE = 'http://educateworkforce.readthedocs.org/projects/educateworkforce-user-guide/en/latest/sfd_troubleshooting/index.html'
+
 ADMINS = ()
 MANAGERS = ADMINS
 
@@ -1119,6 +1127,10 @@ WIKI_LINK_DEFAULT_LEVEL = 2
 
 ##### Feedback submission mechanism #####
 FEEDBACK_SUBMISSION_EMAIL = None
+
+##### Contact Form Backends #####
+# Values: 'email', 'support_ticket'
+CONTACT_FORM_SUBMISSION_BACKEND = None
 
 ##### Zendesk #####
 ZENDESK_URL = None
@@ -1388,6 +1400,11 @@ base_vendor_js = [
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
 
+    'js/Markdown.Converter.js',
+
+    # Load Owl Carousel
+    'common/js/vendor/owl.carousel.js',
+
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
     'edx-ui-toolkit/js/utils/string-utils.js',
@@ -1397,7 +1414,12 @@ base_vendor_js = [
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',
     'js/vendor/URI.min.js',
-    'common/js/vendor/backbone.js'
+    'common/js/vendor/backbone.js',
+
+    #Used for Glossary
+    'common/js/jquery.easytabs.js',
+    'common/js/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo.js',
 ]
 
 main_vendor_js = base_vendor_js + [
@@ -1494,8 +1516,12 @@ certificates_web_view_js = [
     'common/js/vendor/jquery.js',
     'common/js/vendor/jquery-migrate.js',
     'js/vendor/jquery.cookie.js',
+    'js/vendor/jquery-ui.min.js',
+    'common/js/vendor/moment-with-locales.js',
+    'common/js/vendor/moment-timezone-with-data.js',
     'js/src/logger.js',
     'js/utils/facebook.js',
+    'js/Markdown.Converter.js',
 ]
 
 credit_web_view_js = [
@@ -1505,13 +1531,27 @@ credit_web_view_js = [
     'js/src/logger.js',
 ]
 
+avada_theme_js = [
+    'css/vendor/wordpress-overrides/fusion-scripts.min.js',
+]
+
 PIPELINE_CSS = {
     'style-vendor': {
         'source_filenames': [
             'css/vendor/font-awesome.css',
             'css/vendor/jquery.qtip.min.css',
+            'common/css/vendor/owl.carousel.css',
+            'common/css/vendor/owl.theme.default.css'
         ],
         'output_filename': 'css/lms-style-vendor.css',
+    },
+    'style-vendor-avada-theme': {
+        'source_filenames': [
+            'css/vendor/Avada/assets/css/style.min.css',
+            'css/vendor/wordpress-overrides/avada-styles.css',
+            'css/vendor/wordpress-overrides/fusion-styles.min.css'
+        ],
+        'output_filename': 'css/avada-theme-vendor.css',
     },
     'style-vendor-tinymce-content': {
         'source_filenames': [
@@ -1784,6 +1824,10 @@ PIPELINE_JS = {
     'credit_wv': {
         'source_filenames': credit_web_view_js,
         'output_filename': 'js/credit/web_view.js'
+    },
+    'avada_theme': {
+        'source_filenames': avada_theme_js,
+        'output_filename': 'js/avada-theme.js'
     }
 }
 
@@ -2301,6 +2345,7 @@ INSTALLED_APPS = [
     'lms.djangoapps.course_goals',
 
     # Features
+    'openedx.features.course_badges',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',
@@ -2585,12 +2630,21 @@ CERT_NAME_LONG = "Certificate of Achievement"
 BADGING_BACKEND = 'badges.backends.badgr.BadgrBackend'
 
 # Be sure to set up images for course modes using the BadgeImageConfiguration model in the certificates app.
+BADGR_API_VERSION = "v2"
+BADGR_API_USERNAME = None # only used for v1 autgh
 BADGR_API_TOKEN = None
-# Do not add the trailing slash here.
+BADGR_API_TOKEN_EXPIRATION = 86400  # 24h
+BADGR_API_TOKEN_CACHE = 'badgr_api_token_cache'
+BADGR_API_REFRESH_TOKEN = None
+BADGR_API_NOTIFICATIONS_ENABLED = False
+# Do not add the trailing slash here.  Base API URL
 BADGR_BASE_URL = "http://localhost:8005"
+# for login and public access to Backpack, etc
+BADGR_PUBLIC_URL = "http://localhost:8005"
 BADGR_ISSUER_SLUG = "example-issuer"
 # Number of seconds to wait on the badging server when contacting it before giving up.
 BADGR_TIMEOUT = 10
+BADGR_OAUTH_CLIENT_ID = 'public'
 
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
@@ -3471,6 +3525,11 @@ FERNET_KEYS = [
 ############### Settings for user-state-client ##################
 # Maximum number of rows to fetch in XBlockUserStateClient calls. Adjust for performance
 USER_STATE_BATCH_SIZE = 5000
+
+
+############## Settings for Frontend #########################
+# Setup for badges-frontend
+LMS_FRONTEND_BADGES_CONTAINER_URL = None
 
 
 ############## Plugin Django Apps #########################

@@ -43,9 +43,9 @@ JWT_AUTH.update({
 
 FEATURES.update({
     'AUTOMATIC_AUTH_FOR_TESTING': True,
-    'ENABLE_COURSEWARE_SEARCH': False,
-    'ENABLE_COURSE_DISCOVERY': False,
-    'ENABLE_DASHBOARD_SEARCH': False,
+    #'ENABLE_COURSEWARE_SEARCH': False,
+    #'ENABLE_COURSE_DISCOVERY': False,
+    #'ENABLE_DASHBOARD_SEARCH': False,
     'ENABLE_DISCUSSION_SERVICE': True,
     'SHOW_HEADER_LANGUAGE_SELECTOR': True,
     'ENABLE_ENTERPRISE_INTEGRATION': False,
@@ -83,3 +83,7 @@ MKTG_URLS = {
 CREDENTIALS_SERVICE_USERNAME = 'credentials_worker'
 
 COURSE_CATALOG_API_URL = 'http://edx.devstack.discovery:18381/api/v1/'
+
+########################## Derive Any Derived Settings  #######################
+
+derive_settings(__name__)

@@ -1,0 +1,37 @@
+<%!
+from django.conf import settings
+from django.utils.translation import ugettext as _
+%>
+
+${_("*Ticket Details* \n"
+    "     {color_start}Ticket Submitter:{color_end} {realname}<{ticket_submitter}> \n"
+    "     {color_start}Issue Type:{color_end} {issue_type} \n"
+    "     {color_start}Issue Type Detail:{color_end} {issue_type_detail} \n"
+    "     {color_start}Problem Description Brief:{color_end} {problem_description_brief} \n"
+    "     {color_start}Problem Description Details:{color_end} {problem_description_details} \n"
+    "     {color_start}Application:{color_end} {application} \n"
+    "     {color_start}Location:{color_end} {location} \n"
+    "     {color_start}Course Id:{color_end} {course_id} \n"
+    "     {color_start}Additional Information:{color_end}\n {additional_info}").format(
+      realname=name,
+      ticket_submitter=ticket_submitter,
+      issue_type=issue_type,
+      issue_type_detail=issue_type_detail,
+      problem_description_brief=problem_description_brief,
+      problem_description_details=problem_description_details,
+      application=application,
+      location=location,
+      course_id=course_id,
+      additional_info=additional_info,
+      color_start="{color:gray}",
+      color_end="{color}"
+    )}
+
+% if issue_type == "problem":
+    ${_("\nPlease read over the Troubleshooting Documentation pages while support looks in "
+        "your issue.\n{troubleshooting_guide}"
+    ).format(
+        troubleshooting_guide=troubleshooting_documentation
+    )}
+% endif
+
