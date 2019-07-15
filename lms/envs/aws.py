@@ -25,6 +25,7 @@ import dateutil
 from .common import *
 from openedx.core.lib.derived import derive_settings
 from openedx.core.lib.logsettings import get_logger_config
+from os.path import abspath, dirname, join
 import os
 
 from path import Path as path
