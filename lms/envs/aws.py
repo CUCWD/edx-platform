@@ -1126,3 +1126,9 @@ BADGR_PUBLIC_URL = ENV_TOKENS.get('BADGR_PUBLIC_URL', BADGR_PUBLIC_URL)
 BADGR_ISSUER_SLUG = ENV_TOKENS.get('BADGR_ISSUER_SLUG', BADGR_ISSUER_SLUG)
 BADGR_TIMEOUT = ENV_TOKENS.get('BADGR_TIMEOUT', BADGR_TIMEOUT)
 BADGR_OAUTH_CLIENT_ID = AUTH_TOKENS.get('BADGR_OAUTH_CLIENT_ID', BADGR_OAUTH_CLIENT_ID)
+
+
+#####################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
