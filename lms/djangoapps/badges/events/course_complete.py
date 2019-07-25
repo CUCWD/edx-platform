@@ -68,6 +68,7 @@ def get_completion_badge(course_id, user):
     if not course.issue_badges:
         return None
     return BadgeClass.get_badge_class(
+        issuing_component='openedx__course',
         criteria=criteria(course_id),
         description=badge_description(course, mode),
         course_id=course_id,
