@@ -17,6 +17,7 @@ from .common import *
 
 from openedx.core.lib.derived import derive_settings
 from openedx.core.lib.logsettings import get_logger_config
+from os.path import abspath, dirname, join
 import os
 
 from path import Path as path
@@ -586,6 +587,11 @@ RETIREMENT_SERVICE_WORKER_USERNAME = ENV_TOKENS.get(
     RETIREMENT_SERVICE_WORKER_USERNAME
 )
 RETIREMENT_STATES = ENV_TOKENS.get('RETIREMENT_STATES', RETIREMENT_STATES)
+
+#####################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
 
 ####################### Plugin Settings ##########################
 

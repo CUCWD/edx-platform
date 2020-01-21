@@ -25,6 +25,7 @@ import dateutil
 from .common import *
 from openedx.core.lib.derived import derive_settings
 from openedx.core.lib.logsettings import get_logger_config
+from os.path import abspath, dirname, join
 import os
 
 from path import Path as path
@@ -1126,3 +1127,9 @@ BADGR_PUBLIC_URL = ENV_TOKENS.get('BADGR_PUBLIC_URL', BADGR_PUBLIC_URL)
 BADGR_ISSUER_SLUG = ENV_TOKENS.get('BADGR_ISSUER_SLUG', BADGR_ISSUER_SLUG)
 BADGR_TIMEOUT = ENV_TOKENS.get('BADGR_TIMEOUT', BADGR_TIMEOUT)
 BADGR_OAUTH_CLIENT_ID = AUTH_TOKENS.get('BADGR_OAUTH_CLIENT_ID', BADGR_OAUTH_CLIENT_ID)
+
+
+#####################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import

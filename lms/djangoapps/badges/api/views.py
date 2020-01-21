@@ -4,7 +4,7 @@ API views for badges
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.django.models import CourseKeyField
 from opaque_keys.edx.keys import CourseKey
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.exceptions import APIException, AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated

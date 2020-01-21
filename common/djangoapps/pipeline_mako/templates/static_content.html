@@ -2,6 +2,7 @@
 <%!
 import logging
 import json
+import os
 from django.contrib.staticfiles.storage import staticfiles_storage
 from pipeline_mako import compressed_css, compressed_js
 from pipeline_mako.helpers.badgesfrontend import load_bfe_i18n_messages
@@ -114,11 +115,32 @@ source, template_path = Loader(engine).load_template_source(path)
     </script>
     <div id="root" class="BFE"></div>
     % if settings.LMS_FRONTEND_BADGES_CONTAINER_URL:
-        <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/${entry}.js"></script>
+        ## At this time all the /dist files exclude the [chunkhash].js extension to make this code easier to call
+        ## the corresponding code on the micro-frontend site. Extension is set to `*.min.js` instead.
+
+        % if os.environ['DJANGO_SETTINGS_MODULE'] == 'lms.envs.devstack_docker':
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/app.js"></script>
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/${entry}.js"></script>
+        % elif os.environ['DJANGO_SETTINGS_MODULE'] == 'lms.envs.aws':
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/runtime.min.js"></script>
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/vendors~app~progress.min.js"></script>
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/vendors~app.min.js"></script>
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/app.min.js"></script>
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/vendors~progress.min.js"></script>
+            <script type="text/javascript" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/${entry}.min.js"></script>
+
+            <link href="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/app.min.css" rel="stylesheet">
+            <link href="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/${entry}.min.css" rel="stylesheet">
+        % endif
     % else:
-        <script type="text/javascript" src="${url('common/js/vendor/runtime.min.js')}"></script>
-        <script type="text/javascript" src="${url('common/js/vendor/common.min.js')}"></script>
-        <script type="text/javascript" src="${url('common/js/vendor/{}.min.js'.format(entry))}"></script>
+        ## At the moment I have not included this setup should you add this `badges-frontend` app to
+        ## `NPM_INSTALLED_LIBRARIES` under `edx-platform/pavelib/assets.py`. When the call to `process_npm_assets()`
+        ## gets made it will install all npm installed libraries at `/common/static/common/js/vendor/`.
+        ## When doing it this way it seemed to have a conflict with `studio-frontend` so keeping this application
+        ## out of the platform at separate NGINX site seemed to work just fine and setting the
+        ## `LMS_FRONTEND_BADGES_CONTAINER_URL` value seemed to allow for that.
+        <p>Please set the <strong>settings.LMS_FRONTEND_BADGES_CONTAINER_URL</strong> to configure the
+            <em>`badges-frontend`</em> micro-frontend application.</p>
     % endif
 </%def>
 
