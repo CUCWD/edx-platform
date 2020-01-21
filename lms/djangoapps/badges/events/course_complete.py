@@ -40,7 +40,7 @@ def evidence_url(user_id, course_key):
     Generates a URL to the user's Certificate HTML view, along with a GET variable that will signal the evidence visit
     event.
     """
-    return site_prefix() + reverse(
+    return site_prefix(course_key.org) + reverse(
         'certificates:html_view', kwargs={'user_id': user_id, 'course_id': unicode(course_key)}) + '?evidence_visit=1'
 
 
@@ -49,7 +49,7 @@ def criteria(course_key):
     Constructs the 'criteria' URL from the course about page.
     """
     about_path = reverse('about_course', kwargs={'course_id': unicode(course_key)})
-    return u'{}{}'.format(site_prefix(), about_path)
+    return u'{}{}'.format(site_prefix(course_key.org), about_path)
 
 
 def get_completion_badge(course_id, user):
