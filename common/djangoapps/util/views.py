@@ -260,6 +260,31 @@ def _get_zendesk_custom_field_context(request, **kwargs):
         enterprise_customer_name = enterprise_learner_data[0]['enterprise_customer']['name']
         context["enterprise_customer_name"] = enterprise_customer_name
 
+    ticket_type_detail = request.POST.get("issue_type_detail")
+    if ticket_type_detail:
+        switch_ticket_type_detail = {
+            "acct-registration": "account_registration",
+            "acct-activation": "account_activation",
+            "acct-login": "account_login",
+            "acct-provider-linking": "account_provider_linking",
+            "page-error": "page_error",
+            "course-content": "course_content",
+            "course-problem": "course_problem",
+            "other": "other"
+        }
+        context["type_detail"] = switch_ticket_type_detail.get(ticket_type_detail, "")
+
+    ticket_application = request.POST.get("system")
+    if ticket_application:
+        switch_ticket_application = {
+            "cms": "cms",
+            "lms": "lms",
+            "lms-frontend": "lms-frontend",
+            "insights": "insights",
+            "readthedocs": "readthedocs"
+        }
+        context["application"] = switch_ticket_application.get(ticket_application, "")
+
     return context
 
 
@@ -286,7 +311,8 @@ def _record_feedback_in_zendesk(
         group_name=None,
         require_update=False,
         support_email=None,
-        custom_fields=None
+        custom_fields=None,
+        type=None
 ):
     """
     Create a new user-requested Zendesk ticket.
@@ -325,7 +351,8 @@ def _record_feedback_in_zendesk(
             "requester": {"name": realname, "email": email},
             "subject": subject,
             "comment": {"body": details},
-            "tags": zendesk_tags
+            "tags": zendesk_tags,
+            "type": type if type is not None else ""
         }
     }
 
@@ -523,13 +550,10 @@ def submit_feedback(request):
     if enterprise_learner_data:
         context["tags"]["learner_type"] = "enterprise_learner"
 
-    if settings.CONTACT_FORM_SUBMISSION_BACKEND:
-        context["support_email"] = configuration_helpers.get_value('email_submission_feedback', settings.FEEDBACK_SUBMISSION_EMAIL)
-        support_backend = configuration_helpers.get_value('CONTACT_FORM_SUBMISSION_BACKEND', settings.CONTACT_FORM_SUBMISSION_BACKEND)
-    else:
-        support_backend = configuration_helpers.get_value('CONTACT_FORM_SUBMISSION_BACKEND', SUPPORT_BACKEND_ZENDESK)
-
+    support_backend = configuration_helpers.get_value('CONTACT_FORM_SUBMISSION_BACKEND', settings.CONTACT_FORM_SUBMISSION_BACKEND)
     if support_backend == SUPPORT_BACKEND_EMAIL:
+        context["support_email"] = configuration_helpers.get_value('email_submission_feedback', settings.FEEDBACK_SUBMISSION_EMAIL)
+
         try:
             custom_fields = dict(
                 [(tag, request.POST[tag]) for tag in ["system", "issue_type", "issue_type_detail", "course_id"] if
@@ -549,8 +573,7 @@ def submit_feedback(request):
         except SMTPException:
             log.exception('Error sending feedback to contact_us email address.')
             success = False
-
-    else:
+    elif support_backend == SUPPORT_BACKEND_ZENDESK:
         if not settings.ZENDESK_URL or not settings.ZENDESK_USER or not settings.ZENDESK_API_KEY:
             raise Exception("Zendesk enabled but not configured")
 
@@ -558,6 +581,17 @@ def submit_feedback(request):
         if settings.ZENDESK_CUSTOM_FIELDS:
             custom_field_context = _get_zendesk_custom_field_context(request, learner_data=enterprise_learner_data)
             custom_fields = _format_zendesk_custom_fields(custom_field_context)
+
+        ticket_type = request.POST.get("issue_type");
+        if ticket_type:
+            # Default field values are 'Questions, Incidents, Problems, Tasks' defined
+            # https://educateworkforce.zendesk.com/agent/admin/ticket_fields/360037880134
+            switch_ticket_type = {
+                "problem": "incident",
+                "suggestion": "question",
+                "question": "question"
+            }
+            context["type"] = switch_ticket_type.get(ticket_type, "")
 
         success = _record_feedback_in_zendesk(
             context["realname"],
@@ -567,8 +601,11 @@ def submit_feedback(request):
             context["tags"],
             context["additional_info"],
             support_email=context["support_email"],
-            custom_fields=custom_fields
+            custom_fields=custom_fields,
+            type=context["type"]
         )
+    else:
+        raise Exception("Support backend missing (Email, Zendesk)")
 
     _record_feedback_in_datadog(context["tags"])
 
