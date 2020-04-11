@@ -1231,6 +1231,10 @@ CREDIT_NOTIFICATION_CACHE_TIMEOUT = 5 * 60 * 60
 ################################# Middleware ###################################
 
 MIDDLEWARE_CLASSES = [
+    # Avoid issue with https://blog.heroku.com/chrome-changes-samesite-cookie
+    # Override was found here https://github.com/django/django/pull/11894
+    'django_cookies_samesite.middleware.CookiesSameSite',
+
     'crum.CurrentRequestUserMiddleware',
 
     'openedx.core.djangoapps.request_cache.middleware.RequestCache',
