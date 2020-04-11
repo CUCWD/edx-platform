@@ -72,7 +72,7 @@ def learner_profile(request, username):
         )
 
         if message_viewed:
-            response.set_cookie('profile-message-viewed', 'True')
+            response.set_cookie('profile-message-viewed', 'True', secure=request.is_secure())
         return response
     except (UserNotAuthorized, UserNotFound, ObjectDoesNotExist):
         raise Http404
