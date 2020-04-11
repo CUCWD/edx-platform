@@ -91,6 +91,7 @@ django-babel==0.6.2
 django-braces==1.13.0
 django-classy-tags==0.8.0
 django-config-models==0.1.8
+django-cookies-samesite==0.5.1
 django-cors-headers==2.1.0
 django-countries==4.6.1
 django-crum==0.7.2

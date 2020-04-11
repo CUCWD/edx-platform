@@ -86,7 +86,7 @@ def set_logged_in_cookies(request, response, user):
     response.set_cookie(
         settings.EDXMKTG_LOGGED_IN_COOKIE_NAME.encode('utf-8'),
         'true',
-        secure=None,
+        secure=request.is_secure(),
         **cookie_settings
     )
 

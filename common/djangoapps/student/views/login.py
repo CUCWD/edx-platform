@@ -721,7 +721,7 @@ def auto_auth(request):
             'user_id': user.id,  # pylint: disable=no-member
             'anonymous_id': anonymous_id_for_user(user, None),
         })
-    response.set_cookie('csrftoken', csrf(request)['csrf_token'])
+    response.set_cookie('csrftoken', csrf(request)['csrf_token'], secure=request.is_secure())
     return response
 
 
