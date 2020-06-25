@@ -1326,7 +1326,7 @@ MIDDLEWARE_CLASSES = [
 X_FRAME_OPTIONS = 'ALLOW'
 
 # Platform for Privacy Preferences header
-P3P_HEADER = 'CP="Open EdX does not have a P3P policy."'
+P3P_HEADER = 'CP="EducateWorkforce does not have a P3P policy."'
 
 ############################### PIPELINE #######################################
 
