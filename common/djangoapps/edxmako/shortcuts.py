@@ -38,7 +38,7 @@ def marketing_link(name):
     """
     # link_map maps URLs from the marketing site to the old equivalent on
     # the Django site
-    link_map = settings.MKTG_URL_LINK_MAP
+    link_map = configuration_helpers.get_value('MKTG_URL_LINK_MAP', settings.MKTG_URL_LINK_MAP)
     enable_mktg_site = configuration_helpers.get_value(
         'ENABLE_MKTG_SITE',
         settings.FEATURES.get('ENABLE_MKTG_SITE', False)
@@ -56,7 +56,11 @@ def marketing_link(name):
         # a site ROOT, but still specify absolute URLs for other marketing
         # URLs in the MKTG_URLS setting
         # e.g. urljoin('http://marketing.com', 'http://open-edx.org/about') >>> 'http://open-edx.org/about'
-        return urljoin(marketing_urls.get('ROOT'), marketing_urls.get(name))
+        if marketing_urls[name] is not None:
+            return urljoin(marketing_urls.get('ROOT'), marketing_urls.get(name))
+        else:
+            log.debug("Cannot find corresponding link for name: %s", name)
+            return '#'
     # only link to the old pages when the marketing site isn't on
     elif not enable_mktg_site and name in link_map:
         # don't try to reverse disabled marketing links
