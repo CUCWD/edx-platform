@@ -137,7 +137,7 @@ class StudentAccountDeletionConfirmationModal extends React.Component {
                       <Icon id="delete-confirmation-body-warning-icon" className={['fa', 'fa-exclamation-triangle']} />
                     </div>
                     <div className="alert-content">
-                      <h3 className="alert-title">{ gettext('You have selected “Delete my account.” Deletion of your account and personal data is permanent and cannot be undone. EdX will not be able to recover your account or the data that is deleted.') }</h3>
+                      <h3 className="alert-title">{ gettext('You have selected “Delete my account.” Deletion of your account and personal data is permanent and cannot be undone. EducateWorkforce will not be able to recover your account or the data that is deleted.') }</h3>
                       <p>{ gettext('If you proceed, you will be unable to use this account to take courses on the EducateWorkforce app, educateworkforce.com, or any other site hosted by EducateWorkforce.') }</p>
                       <p dangerouslySetInnerHTML={{ __html: loseAccessText }} />
                     </div>
