@@ -2296,6 +2296,7 @@ INSTALLED_APPS = [
     'lms.djangoapps.course_goals',
 
     # Features
+    'openedx.features.course_badges',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',
@@ -3501,6 +3502,12 @@ FERNET_KEYS = [
 ############### Settings for user-state-client ##################
 # Maximum number of rows to fetch in XBlockUserStateClient calls. Adjust for performance
 USER_STATE_BATCH_SIZE = 5000
+
+
+############## Settings for Frontend #########################
+# Setup for badges-frontend
+LMS_FRONTEND_BADGES_CONTAINER_URL = None
+
 
 ############## Plugin Django Apps #########################
 
