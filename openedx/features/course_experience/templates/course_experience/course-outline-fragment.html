@@ -10,6 +10,8 @@ from datetime import date
 from django.utils.translation import ugettext as _
 
 from openedx.core.djangolib.markup import HTML, Text
+
+from lms.djangoapps.badges.events.course_section import award_section_badge
 %>
 
 <%
@@ -39,7 +41,13 @@ course_sections = blocks.get('children')
                         <span class="fa fa-chevron-right ${ 'fa-rotate-90' if section_is_auto_opened else '' }" aria-hidden="true"></span>
                         <h3 class="section-title">${ section['display_name'] }</h3>
             % if section.get('complete'):
-                            <span class="complete-checkmark fa fa-check"></span>
+                        <%
+                        award_section_badge(course_id,user,section['id'])
+                        %>
+                        <a href="https://badgr.io/public/assertions/vsDktqmrT3GJLbNhBvqLig">
+                            <button style=" border: 2px solid #008100;margin-left: 80%; color: #000b0d;display: inline">View Badge</button>
+                        </a>
+                        <span class="complete-checkmark fa fa-check"></span>
             % endif
                     </button>
                     <ol class="outline-item accordion-panel ${ '' if section_is_auto_opened else 'is-hidden' }"

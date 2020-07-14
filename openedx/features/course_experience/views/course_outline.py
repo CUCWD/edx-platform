@@ -52,11 +52,14 @@ class CourseOutlineFragmentView(EdxFragmentView):
             'course': course_overview,
             'due_date_display_format': course.due_date_display_format,
             'blocks': course_block_tree,
+            'user': request.user,
+            'course_id': course_id
             'enable_links': user_is_enrolled or course.course_visibility == COURSE_VISIBILITY_PUBLIC,
         }
 
         resume_block = get_resume_block(course_block_tree) if user_is_enrolled else None
 
+        print(course_block_tree)
         if not resume_block:
             self.mark_first_unit_to_resume(course_block_tree)
 
@@ -65,7 +68,7 @@ class CourseOutlineFragmentView(EdxFragmentView):
 
         context['gated_content'] = gated_content
         context['xblock_display_names'] = xblock_display_names
-
+        #badge can be issued here on complete status. An error occured here
         html = render_to_string('course_experience/course-outline-fragment.html', context)
         return Fragment(html)
 
