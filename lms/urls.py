@@ -642,6 +642,14 @@ urlpatterns += [
         include('openedx.features.course_search.urls'),
     ),
 
+    # Course badges UI in LMS
+    url(
+        r'^courses/{}/badges/'.format(
+            settings.COURSE_ID_PATTERN,
+        ),
+        include('openedx.features.course_badges.urls'),
+    ),
+
     # Learner profile
     url(
         r'^u/',
