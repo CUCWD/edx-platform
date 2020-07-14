@@ -639,7 +639,8 @@ Preferences._readFromStorage = function (prefObj) {
     // Also intercept Cmd/Ctrl + Shift + P in Chrome and Opera
     if (event.keyCode === 80/*P*/ && (event.ctrlKey || event.metaKey) &&
         !event.altKey && (!event.shiftKey || window.chrome || window.opera)) {
-      window.print();
+      // Disable printing with ctrl+p
+      // window.print();
       if (hasAttachEvent) {
         // Only attachEvent can cancel Ctrl + P dialog in IE <=10
         // attachEvent is gone in IE11, so the dialog will re-appear in IE11.
@@ -1732,10 +1733,10 @@ var SecondaryToolbar = {
     // Define the toolbar buttons.
     this.toggleButton = options.toggleButton;
     this.presentationModeButton = options.presentationModeButton;
-    this.openFile = options.openFile;
-    this.print = options.print;
-    this.download = options.download;
-    this.viewBookmark = options.viewBookmark;
+    //this.openFile = options.openFile;
+    //this.print = options.print;
+    //this.download = options.download;
+    //this.viewBookmark = options.viewBookmark;
     this.firstPage = options.firstPage;
     this.lastPage = options.lastPage;
     this.pageRotateCw = options.pageRotateCw;
@@ -1750,10 +1751,10 @@ var SecondaryToolbar = {
       // (except for toggleHandTool, hand_tool.js is responsible for it):
       { element: this.presentationModeButton,
         handler: this.presentationModeClick },
-      { element: this.openFile, handler: this.openFileClick },
-      { element: this.print, handler: this.printClick },
-      { element: this.download, handler: this.downloadClick },
-      { element: this.viewBookmark, handler: this.viewBookmarkClick },
+      //{ element: this.openFile, handler: this.openFileClick },
+      //{ element: this.print, handler: this.printClick },
+      //{ element: this.download, handler: this.downloadClick },
+      //{ element: this.viewBookmark, handler: this.viewBookmarkClick },
       { element: this.firstPage, handler: this.firstPageClick },
       { element: this.lastPage, handler: this.lastPageClick },
       { element: this.pageRotateCw, handler: this.pageRotateCwClick },
@@ -1776,7 +1777,7 @@ var SecondaryToolbar = {
     this.close();
   },
 
-  openFileClick: function secondaryToolbarOpenFileClick(evt) {
+  /*openFileClick: function secondaryToolbarOpenFileClick(evt) {
     document.getElementById('fileInput').click();
     this.close();
   },
@@ -1793,7 +1794,7 @@ var SecondaryToolbar = {
 
   viewBookmarkClick: function secondaryToolbarViewBookmarkClick(evt) {
     this.close();
-  },
+  },*/
 
   firstPageClick: function secondaryToolbarFirstPageClick(evt) {
     PDFViewerApplication.page = 1;
@@ -4661,10 +4662,10 @@ var PDFViewerApplication = {
       toggleButton: document.getElementById('secondaryToolbarToggle'),
       presentationModeButton:
         document.getElementById('secondaryPresentationMode'),
-      openFile: document.getElementById('secondaryOpenFile'),
-      print: document.getElementById('secondaryPrint'),
-      download: document.getElementById('secondaryDownload'),
-      viewBookmark: document.getElementById('secondaryViewBookmark'),
+      //openFile: document.getElementById('secondaryOpenFile'),
+      //print: document.getElementById('secondaryPrint'),
+      //download: document.getElementById('secondaryDownload'),
+      //viewBookmark: document.getElementById('secondaryViewBookmark'),
       firstPage: document.getElementById('firstPage'),
       lastPage: document.getElementById('lastPage'),
       pageRotateCw: document.getElementById('pageRotateCw'),
@@ -5314,9 +5315,9 @@ var PDFViewerApplication = {
           for (var i = 0, ii = javaScript.length; i < ii; i++) {
             var js = javaScript[i];
             if (js && regex.test(js)) {
-              setTimeout(function() {
+              /*setTimeout(function() {
                 window.print();
-              });
+              });*/
               return;
             }
           }
@@ -6187,8 +6188,8 @@ function webViewerInitialized() {
   document.body.appendChild(fileInput);
 
   if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
-    document.getElementById('openFile').setAttribute('hidden', 'true');
-    document.getElementById('secondaryOpenFile').setAttribute('hidden', 'true');
+    //document.getElementById('openFile').setAttribute('hidden', 'true');
+    //document.getElementById('secondaryOpenFile').setAttribute('hidden', 'true');
   } else {
     document.getElementById('fileInput').value = null;
   }
@@ -6258,10 +6259,10 @@ function webViewerInitialized() {
 
   mozL10n.setLanguage(locale);
 
-  if (!PDFViewerApplication.supportsPrinting) {
+  /*if (!PDFViewerApplication.supportsPrinting) {
     document.getElementById('print').classList.add('hidden');
     document.getElementById('secondaryPrint').classList.add('hidden');
-  }
+  }*/
 
   if (!PDFViewerApplication.supportsFullscreen) {
     document.getElementById('presentationMode').classList.add('hidden');
@@ -6357,14 +6358,14 @@ function webViewerInitialized() {
   document.getElementById('presentationMode').addEventListener('click',
     SecondaryToolbar.presentationModeClick.bind(SecondaryToolbar));
 
-  document.getElementById('openFile').addEventListener('click',
+  /*document.getElementById('openFile').addEventListener('click',
     SecondaryToolbar.openFileClick.bind(SecondaryToolbar));
 
   document.getElementById('print').addEventListener('click',
     SecondaryToolbar.printClick.bind(SecondaryToolbar));
 
   document.getElementById('download').addEventListener('click',
-    SecondaryToolbar.downloadClick.bind(SecondaryToolbar));
+    SecondaryToolbar.downloadClick.bind(SecondaryToolbar));*/
 
 
   if (file && file.lastIndexOf('file:', 0) === 0) {
@@ -6450,8 +6451,8 @@ window.addEventListener('updateviewarea', function () {
     });
   });
   var href = PDFViewerApplication.getAnchorUrl(location.pdfOpenParams);
-  document.getElementById('viewBookmark').href = href;
-  document.getElementById('secondaryViewBookmark').href = href;
+  //document.getElementById('viewBookmark').href = href;
+  //document.getElementById('secondaryViewBookmark').href = href;
 
   // Update the current bookmark in the browsing history.
   PDFHistory.updateCurrentBookmark(location.pdfOpenParams, location.pageNumber);
@@ -6512,11 +6513,11 @@ window.addEventListener('change', function webViewerChange(evt) {
   PDFViewerApplication.setTitleUsingUrl(file.name);
 
   // URL does not reflect proper document location - hiding some icons.
-  document.getElementById('viewBookmark').setAttribute('hidden', 'true');
-  document.getElementById('secondaryViewBookmark').
+  //document.getElementById('viewBookmark').setAttribute('hidden', 'true');
+  //document.getElementById('secondaryViewBookmark').
     setAttribute('hidden', 'true');
-  document.getElementById('download').setAttribute('hidden', 'true');
-  document.getElementById('secondaryDownload').setAttribute('hidden', 'true');
+  //document.getElementById('download').setAttribute('hidden', 'true');
+  //document.getElementById('secondaryDownload').setAttribute('hidden', 'true');
 }, true);
 
 function selectScaleOption(value) {
