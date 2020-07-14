@@ -7,13 +7,21 @@ from opaque_keys.edx.django.models import CourseKeyField
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import generics
 from rest_framework.exceptions import APIException
+from rest_framework.response import Response
+from rest_framework import serializers
 
-from badges.models import BadgeAssertion
+from badges.models import BadgeAssertion, BlockEventBadgesConfiguration
 from openedx.core.djangoapps.user_api.permissions import is_field_shared_factory
-from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from openedx.core.lib.api.authentication import (
+    OAuth2AuthenticationAllowInactiveUser,
+    SessionAuthenticationAllowInactiveUser
+)
+from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
 
-from .serializers import BadgeAssertionSerializer
+from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer
 
+from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
+from django.contrib.auth.models import User
 
 class InvalidCourseKeyError(APIException):
     """
@@ -134,3 +142,121 @@ class UserBadgeAssertions(generics.ListAPIView):
                 badge_class__issuing_component=self.request.query_params.get('issuing_component', '')
             )
         return queryset
+
+
+class UserBadgeProgress(generics.ListAPIView):
+    """
+    ** Use cases **
+
+        Request a list of block event badge configuration for a user, optionally constrained to a course.
+
+    ** Example Requests **
+
+        GET /api/badges/v1/progress/user/{username}/courses/{course_id}/
+
+    ** Response Values **
+
+        Body comprised of a list of objects with the following fields:
+
+        * course_id: The course key of the course this badge progress is scoped to.
+        * block_id: The usage key of the course this badge progress is scoped to.
+        * event_type: The block event associated with how the badge was issued.
+        * badge_class: The badge class assigned to the course block id. Represented as an object
+          with the following fields:
+            * slug: The identifier for the badge class
+            * issuing_component: The software component responsible for issuing this badge.
+            * display_name: The display name of the badge.
+            * course_id: The course key of the course this badge is scoped to, or null if it isn't scoped to a course.
+            * description: A description of the award and its significance.
+            * criteria: A description of what is needed to obtain this award.
+            * image_url: A URL to the icon image used to represent this award.
+        * assertion: The assertion this badge progress is scoped to.
+            * image_url: The baked assertion image derived from the badge_class icon-- contains metadata about the award
+              in its headers.
+            * assertion_url: The URL to the OpenBadges BadgeAssertion object, for verification by compatible tools
+              and software.
+
+    ** Returns **
+
+        * 200 on success, with a list of badge progress objects.
+        * 403 if a user who does not have permission to masquerade as
+          another user specifies a username other than their own.
+        * 404 if the specified user does not exist
+
+        [
+            {
+                "course_id": "course-v1:edX+DemoX+Demo_Course",
+                "block_id": "block-v1:edX+DemoX+Demo_Course+type@chapter+block@dc1e160e5dc348a48a98fa0f4a6e8675",
+                "event_type": "chapter_complete",
+                "badge_class": {
+                    "slug": "special_award",
+                    "issuing_component": "openedx__course",
+                    "display_name": "Very Special Award",
+                    "course_id": "course-v1:edX+DemoX+Demo_Course",
+                    "description": "Awarded for people who did something incredibly special",
+                    "criteria": "Do something incredibly special.",
+                    "image": "http://example.com/media/badge_classes/badges/special_xdpqpBv_9FYOZwN.png"
+                },
+                "assertion": {
+                    "image_url": "http://badges.example.com/media/issued/cd75b69fc1c979fcc1697c8403da2bdf.png",
+                    "assertion_url": "http://badges.example.com/public/assertions/07020647-e772-44dd-98b7-d13d34335ca6"
+                },
+            },
+            ...
+        ]
+    """
+    authentication_classes = (
+        OAuth2AuthenticationAllowInactiveUser,
+        SessionAuthenticationAllowInactiveUser
+    )
+    permission_classes = (is_field_shared_factory("accomplishments_shared"),)
+
+
+    def list(self, request, username, course_id, *args, **kwargs):
+
+        try:
+            course_key = CourseKey.from_string(course_id)
+        except InvalidKeyError:
+            log.warning('Course ID string "%s" is not valid', course_id)
+            return Response(
+                status=404,
+                data={'error_code': 'course_id_not_valid'}
+            )
+
+        progress_to_show = []
+
+        for blockEventBadgeConfig in BlockEventBadgesConfiguration.config_for_block_event(
+            course_id=course_key, event_type='chapter_complete'
+        ):
+            block_event_assertion = None
+            if blockEventBadgeConfig.badge_class:
+                user_course_assertions = BadgeAssertion.assertions_for_user(User.objects.get(username=username),
+                                                                            course_id=course_key)
+                for assertion in user_course_assertions:
+                    if assertion.badge_class == blockEventBadgeConfig.badge_class:
+                        block_event_assertion = assertion
+                        pass
+
+            progress_to_show.append(
+                {
+                    "course_id": CourseKeyField(source='course_key').to_representation(course_key),
+                    "block_id": UsageKeyField(source='usage_key').to_representation(blockEventBadgeConfig.usage_key),
+                    "event_type": blockEventBadgeConfig.event_type,
+                    "badge_class": {
+                        "slug": blockEventBadgeConfig.badge_class.slug,
+                        "issuing_component": blockEventBadgeConfig.badge_class.issuing_component,
+                        "display_name": blockEventBadgeConfig.badge_class.display_name,
+                        "course_id": CourseKeyField(source='course_key').to_representation(blockEventBadgeConfig.badge_class.course_id),
+                        "description": blockEventBadgeConfig.badge_class.description,
+                        "criteria": blockEventBadgeConfig.badge_class.criteria,
+                        "image": serializers.ImageField(source='image').to_representation(blockEventBadgeConfig.badge_class.image),
+                    },
+                    "assertion": {
+                        "image_url": (block_event_assertion.image_url if block_event_assertion else ""),
+                        "assertion_url": (block_event_assertion.assertion_url if block_event_assertion else ""),
+                    },
+                }
+            )
+
+        return Response(progress_to_show)
+

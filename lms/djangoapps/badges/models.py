@@ -340,12 +340,12 @@ class BlockEventBadgesConfiguration(models.Model):
     )
 
     @classmethod
-    def badgeclass_for_block_event(cls, course_id, event_type):
+    def config_for_block_event(cls, course_id, event_type):
         """
         Return all records matching course identifier and event type.
         """
         try:
-            return cls.objects.get(course_id=course_id, event_type=event_type).badge_class
+            return cls.objects.filter(course_id=course_id, event_type=event_type)
         except cls.DoesNotExist:
             # Fall back to default, if there is one.
             return None
