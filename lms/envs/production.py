@@ -21,6 +21,7 @@ import datetime
 import json
 
 import os
+from os.path import abspath, dirname, join
 import dateutil
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -1121,3 +1122,8 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.LMS, plugin_c
 ########################## Derive Any Derived Settings  #######################
 
 derive_settings(__name__)
+
+#####################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
