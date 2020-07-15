@@ -12,10 +12,8 @@ from rest_framework import serializers
 
 from badges.models import BadgeAssertion, BlockEventBadgesConfiguration
 from openedx.core.djangoapps.user_api.permissions import is_field_shared_factory
-from openedx.core.lib.api.authentication import (
-    OAuth2AuthenticationAllowInactiveUser,
-    SessionAuthenticationAllowInactiveUser
-)
+from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
 from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
 
 from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer

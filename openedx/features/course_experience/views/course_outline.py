@@ -53,7 +53,7 @@ class CourseOutlineFragmentView(EdxFragmentView):
             'due_date_display_format': course.due_date_display_format,
             'blocks': course_block_tree,
             'user': request.user,
-            'course_id': course_id
+            'course_id': course_id,
             'enable_links': user_is_enrolled or course.course_visibility == COURSE_VISIBILITY_PUBLIC,
         }
 

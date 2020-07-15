@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.crypto import get_random_string
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext_noop
 from jsonfield import JSONField
@@ -94,8 +95,8 @@ class BadgeClass(models.Model):
             if not create:
                 return None
         badge_class = cls(
-            slug=slug,
-            issuing_component=issuing_component,
+            slug=(slug if slug else 'edx_' + get_random_string(22)),
+            issuing_component=(issuing_component if issuing_component else ''),
             display_name=display_name,
             course_id=course_id,
             mode=mode,
@@ -122,7 +123,7 @@ class BadgeClass(models.Model):
         if course_id is defined
         """
         if self.course_id is not None and str(self.course_id).strip() != '':
-            if BadgeClass.objects.filter(course_id=self.course_id, mode=self.mode).exists():
+            if BadgeClass.objects.filter(course_id=self.course_id, mode=self.mode).count() > 1:
                 raise ValidationError("A BadgeClass already exists with the same Course ID and enrollment mode.")
 
     def get_for_user(self, user):

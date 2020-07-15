@@ -73,6 +73,7 @@ def get_completion_badge(course_id, user):
         course_id=course_id,
         mode=mode,
         display_name=course.display_name,
+        issuing_component='openedx__course',
         image_file_handle=CourseCompleteImageConfiguration.image_for_mode(mode)
     )
 
