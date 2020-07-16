@@ -143,6 +143,7 @@ def learner_profile_context(request, profile_username, user_is_staff):
         'disable_courseware_js': True,
         'nav_hidden': True,
         'records_url': get_credentials_records_url(),
+        'uses_bootstrap': True
     }
 
     if badges_enabled():
