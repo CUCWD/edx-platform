@@ -161,6 +161,21 @@ class BadgeAssertion(TimeStampedModel):
             issuing_component=self.badge_class.issuing_component,
         )
 
+    @lazy
+    def badge_backend(self):
+        """
+        Loads the badging backend.
+        """
+        module, klass = settings.BADGING_BACKEND.rsplit('.', 1)
+        module = import_module(module)
+        return getattr(module, klass)()
+
+    def assertion_issuer(self):
+        """
+        Get issuer information for specific assertion issuer passed.
+        """
+        return self.badge_backend.get_issuer(self)
+
     @classmethod
     def assertions_for_user(cls, user, course_id=None):
         """
