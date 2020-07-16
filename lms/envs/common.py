@@ -1396,6 +1396,8 @@ base_vendor_js = [
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
 
+    'js/Markdown.Converter.js',
+
     # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
 
@@ -1509,8 +1511,12 @@ certificates_web_view_js = [
     'common/js/vendor/jquery.js',
     'common/js/vendor/jquery-migrate.js',
     'js/vendor/jquery.cookie.js',
+    'js/vendor/jquery-ui.min.js',
+    'common/js/vendor/moment-with-locales.js',
+    'common/js/vendor/moment-timezone-with-data.js',
     'js/src/logger.js',
     'js/utils/facebook.js',
+    'js/Markdown.Converter.js',
 ]
 
 credit_web_view_js = [
@@ -2598,8 +2604,10 @@ BADGR_API_TOKEN_EXPIRATION = 86400  # 24h
 BADGR_API_TOKEN_CACHE = 'badgr_api_token_cache'
 BADGR_API_REFRESH_TOKEN = None
 BADGR_API_NOTIFICATIONS_ENABLED = False
-# Do not add the trailing slash here.
+# Do not add the trailing slash here.  Base API URL
 BADGR_BASE_URL = "http://localhost:8005"
+# for login and public access to Backpack, etc
+BADGR_PUBLIC_URL = "http://localhost:8005"
 BADGR_ISSUER_SLUG = "example-issuer"
 # Number of seconds to wait on the badging server when contacting it before giving up.
 BADGR_TIMEOUT = 10

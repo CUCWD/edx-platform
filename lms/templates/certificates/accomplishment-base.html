@@ -38,7 +38,7 @@ course_mode_class = course_mode if course_mode else ''
 
     <%include file="_assets-secondary.html" />
     %if badge:
-        <%include file="_badges-modal.html" />
+        <%include file="_badges-modal.html" args="badge_assertion=badge.data, badge_class=badge.badge_class.__dict__, badge_meta=badge_meta" />
     %endif
 </body>
 </html>

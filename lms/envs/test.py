@@ -221,6 +221,8 @@ CACHES = {
     }
 }
 
+BADGR_API_TOKEN_CACHE = 'default'
+
 # Dummy secret key for dev
 SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 
