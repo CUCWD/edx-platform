@@ -5,7 +5,7 @@ from edx_rest_framework_extensions.auth.session.authentication import SessionAut
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.django.models import CourseKeyField
 from opaque_keys.edx.keys import CourseKey
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.exceptions import APIException, AuthenticationFailed
 from rest_framework.permissions import IsAuthenticated
@@ -19,6 +19,7 @@ from badges.models import BadgeAssertion, BlockEventBadgesConfiguration
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.user_api.permissions import is_field_shared_factory
 from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
+from openedx.core.lib.api import permissions
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
 from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
