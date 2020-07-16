@@ -1,11 +1,9 @@
 """
 Helper functions for the course complete event that was originally included with the Badging MVP.
 """
-import hashlib
 import logging
 
 from django.urls import reverse
-from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
 from badges.models import BadgeAssertion, BadgeClass, CourseCompleteImageConfiguration
@@ -17,21 +15,6 @@ LOGGER = logging.getLogger(__name__)
 
 # NOTE: As these functions are carry-overs from the initial badging implementation, they are used in
 # migrations. Please check the badge migrations when changing any of these functions.
-
-
-def course_slug(course_key, mode):
-    """
-    Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility with the original badge
-    type, awarded on course completion.
-
-    Slug ought to be deterministic and limited in size so it's not too big for Badgr.
-
-    Badgr's max slug length is 255.
-    """
-    # Seven digits should be enough to realistically avoid collisions. That's what git services use.
-    digest = hashlib.sha256(u"{}{}".format(unicode(course_key), unicode(mode))).hexdigest()[:7]
-    base_slug = slugify(unicode(course_key) + u'_{}_'.format(mode))[:248]
-    return base_slug + digest
 
 
 def badge_description(course, mode):
@@ -85,13 +68,12 @@ def get_completion_badge(course_id, user):
     if not course.issue_badges:
         return None
     return BadgeClass.get_badge_class(
-        slug=course_slug(course_id, mode),
-        issuing_component='',
         criteria=criteria(course_id),
         description=badge_description(course, mode),
         course_id=course_id,
         mode=mode,
         display_name=course.display_name,
+        issuing_component='openedx__course',
         image_file_handle=CourseCompleteImageConfiguration.image_for_mode(mode)
     )
 
