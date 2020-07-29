@@ -22,6 +22,7 @@ import codecs
 import copy
 import datetime
 import os
+from os.path import abspath, dirname, join
 
 import dateutil
 import yaml
@@ -944,3 +945,8 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.LMS, plugin_c
 ########################## Derive Any Derived Settings  #######################
 
 derive_settings(__name__)
+
+#####################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
