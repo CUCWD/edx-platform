@@ -61,7 +61,7 @@
                     <tr>
                         <td width="70">
                             <a href="{% with_link_tracking homepage_url %}"><img
-                                    src="https://media.sailthru.com/595/1k1/8/o/599f355101b3f.png" width="70"
+                                    src="{% with_link_tracking logo_image_url %}" width="70"
                                     height="30" alt="{% blocktrans %}Go to {{ platform_name }} Home Page{% endblocktrans %}"/></a>
                         </td>
                         <td align="right" style="text-align: {{ LANGUAGE_BIDI|yesno:"left,right" }};">
@@ -171,8 +171,10 @@
                         <td>
                             &copy; {% now "Y" %} {{ platform_name }}, {% trans "All rights reserved" %}.<br/>
                             <br/>
-                            {% trans "Our mailing address is" %}:<br/>
-                            {{ contact_mailing_address }}
+                            {% if contact_mailing_address %}
+                                {% trans "Our mailing address is" %}:<br/>
+                                {{ contact_mailing_address }}
+                            {% endif %}
                         </td>
                     </tr>
                 </table>
