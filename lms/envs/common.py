@@ -1646,6 +1646,9 @@ base_vendor_js = [
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
 
+    # Load Owl Carousel
+    'common/js/vendor/owl.carousel.js',
+
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
     'edx-ui-toolkit/js/utils/string-utils.js',
@@ -1766,6 +1769,8 @@ PIPELINE['STYLESHEETS'] = {
         'source_filenames': [
             'css/vendor/font-awesome.css',
             'css/vendor/jquery.qtip.min.css',
+            'common/css/vendor/owl.carousel.css',
+            'common/css/vendor/owl.theme.default.css',
         ],
         'output_filename': 'css/lms-style-vendor.css',
     },
