@@ -2539,6 +2539,7 @@ INSTALLED_APPS = [
 
     # Features
     'openedx.features.calendar_sync',
+    'openedx.features.course_badges',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',
@@ -3867,6 +3868,12 @@ USER_STATE_BATCH_SIZE = 5000
 
 ############### Settings for edx-rbac  ###############
 SYSTEM_WIDE_ROLE_CLASSES = []
+
+
+############## Settings for Frontend #########################
+# Setup for badges-frontend
+LMS_FRONTEND_BADGES_CONTAINER_URL = None
+
 
 ############## Plugin Django Apps #########################
 
