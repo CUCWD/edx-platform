@@ -2,31 +2,35 @@
 API views for badges
 """
 
+import logging
 
-from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
+from django.contrib.auth.models import User
+from edx_rest_framework_extensions import permissions
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.django.models import CourseKeyField
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import generics
 from rest_framework.exceptions import APIException
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework import serializers
 
-from badges.models import BadgeAssertion, BlockEventBadgesConfiguration
-from openedx.core.djangoapps.user_api.permissions import is_field_shared_factory
+from openedx.core.djangoapps.user_api.accounts.api import visible_fields
 from openedx.core.lib.api.authentication import BearerAuthenticationAllowInactiveUser
-from openedx.core.lib.api.authentication import (
-    BearerAuthenticationAllowInactiveUser,
-    OAuth2AuthenticationAllowInactiveUser,
-    SessionAuthenticationAllowInactiveUser
+from openedx.core.lib.api.serializers import (
+    CourseKeyField as CourseKeyFieldSerializer,
+    UsageKeyField as UsageKeyFieldSerializer
 )
-from openedx.core.lib.api.serializers import CourseKeyField, UsageKeyField
+from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
+
+from branding import api as branding_api
+
+from badges.models import BadgeAssertion, BlockEventBadgesConfiguration
 
 from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer
 
-from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
-from django.contrib.auth.models import User
-from branding import api as branding_api
+log = logging.getLogger(__name__)
 
 
 class InvalidCourseKeyError(APIException):
@@ -36,7 +40,7 @@ class InvalidCourseKeyError(APIException):
     status_code = 400
     default_detail = "The course key provided was invalid."
 
-
+@view_auth_classes()
 class UserBadgeAssertions(generics.ListAPIView):
     """
     **Use Cases**
@@ -105,11 +109,7 @@ class UserBadgeAssertions(generics.ListAPIView):
         }
     """
     serializer_class = BadgeAssertionSerializer
-    authentication_classes = (
-        BearerAuthenticationAllowInactiveUser,
-        SessionAuthenticationAllowInactiveUser
-    )
-    permission_classes = (is_field_shared_factory("accomplishments_shared"),)
+    permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
 
     def filter_queryset(self, queryset):
         """
@@ -149,44 +149,53 @@ class UserBadgeAssertions(generics.ListAPIView):
             )
         return queryset
 
-
-class UserBadgeProgress(generics.ListAPIView):
+@view_auth_classes()
+class UserBadgeProgressListView(DeveloperErrorViewMixin, APIView):
     """
-    ** Use cases **
+    REST API endpoints for listing badge progress.
+    
+    **Use Cases**
 
-        Request a list of block event badge configuration for a user, optionally constrained to a course.
+        Get the list of viewable course badges for a specific user.
 
-    ** Example Requests **
+    **Example Requests**
 
-        GET /api/badges/v1/progress/user/{username}/courses/{course_id}/
+        GET /api/badges/v1/badges/progress/user/{username}/courses/{course_id}
 
-    ** Response Values **
+    **Response Values**
 
-        Body comprised of a list of objects with the following fields:
+        If the request for information about the user's badges is successful,
+        an HTTP 200 "OK" response is returned.
 
-        * course_id: The course key of the course this badge progress is scoped to.
+        The HTTP 200 response contains a list of objects with the following fields.
+
+        * course_id: The course key of the course this badge progress is scoped to.    
         * block_id: The usage key of the course this badge progress is scoped to.
         * event_type: The block event associated with how the badge was issued.
-        * badge_class: The badge class assigned to the course block id. Represented as an object
-          with the following fields:
+        * badge_class: The badge class assigned to the course block id. Represented as an object with the following fields:
             * slug: The identifier for the badge class
             * issuing_component: The software component responsible for issuing this badge.
             * display_name: The display name of the badge.
             * course_id: The course key of the course this badge is scoped to, or null if it isn't scoped to a course.
             * description: A description of the award and its significance.
             * criteria: A description of what is needed to obtain this award.
-            * image_url: A URL to the icon image used to represent this award.
-        * assertion: The assertion this badge progress is scoped to.
+            * image: A URL to the icon image used to represent this award.
+        * assertion: The assertion this badge progress is scoped to. Represented as an object with the following fields:
             * image_url: The baked assertion image derived from the badge_class icon-- contains metadata about the award
-              in its headers.
+                in its headers.
             * assertion_url: The URL to the OpenBadges BadgeAssertion object, for verification by compatible tools
-              and software.
+                and software.
 
-    ** Returns **
+    **Params**
+
+        * username: A string representation of an user's username passed in the request.
+        * course_id: A string representation of a Course ID.
+
+    **Returns**
 
         * 200 on success, with a list of badge progress objects.
         * 403 if a user who does not have permission to masquerade as
-          another user specifies a username other than their own.
+        another user specifies a username other than their own.
         * 404 if the specified user does not exist
 
         [
@@ -211,15 +220,12 @@ class UserBadgeProgress(generics.ListAPIView):
             ...
         ]
     """
-    authentication_classes = (
-        OAuth2AuthenticationAllowInactiveUser,
-        SessionAuthenticationAllowInactiveUser
-    )
-    permission_classes = (is_field_shared_factory("accomplishments_shared"),)
+    permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
 
-
-    def list(self, request, username, course_id, *args, **kwargs):
-
+    def get(self, request, username, course_id, *args, **kwargs):  # pylint: disable=arguments-differ        
+        """
+        Returns a user's viewable badge progress sorted by course name.
+        """
         try:
             course_key = CourseKey.from_string(course_id)
         except InvalidKeyError:
@@ -245,14 +251,14 @@ class UserBadgeProgress(generics.ListAPIView):
 
             progress_to_show.append(
                 {
-                    "course_id": CourseKeyField(source='course_key').to_representation(course_key),
-                    "block_id": UsageKeyField(source='usage_key').to_representation(blockEventBadgeConfig.usage_key),
+                    "course_id": CourseKeyFieldSerializer(source='course_key').to_representation(course_key),
+                    "block_id": UsageKeyFieldSerializer(source='usage_key').to_representation(blockEventBadgeConfig.usage_key),
                     "event_type": blockEventBadgeConfig.event_type,
                     "badge_class": {
                         "slug": blockEventBadgeConfig.badge_class.slug,
                         "issuing_component": blockEventBadgeConfig.badge_class.issuing_component,
                         "display_name": blockEventBadgeConfig.badge_class.display_name,
-                        "course_id": CourseKeyField(source='course_key').to_representation(blockEventBadgeConfig.badge_class.course_id),
+                        "course_id": CourseKeyFieldSerializer(source='course_key').to_representation(blockEventBadgeConfig.badge_class.course_id),
                         "description": blockEventBadgeConfig.badge_class.description,
                         "criteria": blockEventBadgeConfig.badge_class.criteria,
                         "image": branding_api.get_base_url(request.is_secure()) +
@@ -267,4 +273,3 @@ class UserBadgeProgress(generics.ListAPIView):
             )
 
         return Response(progress_to_show)
-

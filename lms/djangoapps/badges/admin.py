@@ -2,6 +2,7 @@
 Admin registration for Badge Models
 """
 
+import six
 
 from config_models.admin import ConfigurationModelAdmin
 from django.contrib import admin
@@ -37,7 +38,7 @@ class CourseIdFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):
         return (
-            (overview.id, unicode(overview.id)) for overview in CourseOverview.objects.all().order_by('id')
+            (overview.id, six.text_type(overview.id)) for overview in CourseOverview.objects.all().order_by('id')
         )
 
     def queryset(self, request, queryset):
@@ -56,7 +57,7 @@ class CourseIdFilter(admin.SimpleListFilter):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup,
-                'value': unicode(lookup),
+                'value': six.text_type(lookup),
                 'display': title,
             }
 

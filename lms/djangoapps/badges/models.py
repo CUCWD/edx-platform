@@ -68,9 +68,12 @@ class BadgeClass(models.Model):
     image = models.ImageField(upload_to=u'badge_classes', validators=[validate_badge_image])
 
     def __str__(self):
-        return HTML(u"<Badge '{slug}' for '{issuing_component}'>").format(
-            slug=HTML(self.slug), issuing_component=HTML(self.issuing_component)
-        )
+        return HTML(u"Badge '{slug}' for '{issuing_component}' – {course_id} – {mode}").format(
+            slug=HTML(self.slug),
+            issuing_component=HTML(self.issuing_component),
+            course_id=HTML(six.text_type(self.course_id)),
+            mode=self.mode
+            )
 
     @classmethod
     def get_badge_class(
@@ -360,7 +363,7 @@ class BlockEventBadgesConfiguration(models.Model):
     )
 
     @classmethod
-    def config_for_block_event(cls, course_id, event_type):
+    def config_for_block_event(cls, course_id, event_type=None):
         """
         Return all records matching course identifier and event type.
         """
