@@ -22,7 +22,7 @@ from openedx.core.djangoapps.user_api.models import UserPreference
 from openedx.features.course_experience import default_course_url_name
 from util.views import ensure_valid_course_key
 
-from lms.djangoapps.badges.api import urls
+from lms.djangoapps.badges.apis import urls
 
 
 class CourseBadgesHomeView(View):

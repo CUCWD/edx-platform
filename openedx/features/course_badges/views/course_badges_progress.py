@@ -4,6 +4,7 @@ Views to show a course's badges.
 
 import six
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.template.context_processors import csrf
 from django.urls import reverse
 from django.shortcuts import render_to_response
@@ -22,7 +23,7 @@ from openedx.core.djangoapps.user_api.models import UserPreference
 from openedx.features.course_experience import default_course_url_name
 from util.views import ensure_valid_course_key
 
-from lms.djangoapps.badges.api import urls
+from lms.djangoapps.badges.apis import urls
 
 
 class CourseBadgesProgressView(View):
@@ -80,6 +81,7 @@ class CourseBadgesProgressFragmentView(EdxFragmentView):
             'course': course,
             'badges_api_url': reverse("badges_api:user_assertions", kwargs={'username': request.user}),
             'language_preference': language,
+            'user': User.objects.get(id=request.user.id)
         }
         html = render_to_string('course_badges/course-badges-progress-fragment.html', context)
         fragment = Fragment(html)
