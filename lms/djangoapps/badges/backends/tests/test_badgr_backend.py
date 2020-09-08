@@ -39,6 +39,9 @@ class BadgrBackendTestCase(ModuleStoreTestCase, EventTrackingTestCase):
     Tests the BadgeHandler object
     """
 
+    ENABLED_CACHES = ['default', 'mongo_metadata_inheritance', 'loc_cache', 'badgr_api_token_cache']
+    shard = 4
+
     def setUp(self):
         """
         Create a course and user to test with.
