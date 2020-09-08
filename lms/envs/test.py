@@ -225,6 +225,9 @@ CACHES = {
         'LOCATION': 'edx_loc_mem_cache',
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     },
+    'badgr_api_token_cache': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    },
 }
 
 ############################### BLOCKSTORE #####################################
