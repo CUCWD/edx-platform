@@ -13,6 +13,8 @@ import six
 from django.conf import settings
 from django.core.cache import caches
 from django.core.exceptions import ImproperlyConfigured
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 from eventtracking import tracker
 from lazy import lazy
 from requests.packages.urllib3.exceptions import HTTPError
@@ -90,20 +92,6 @@ class BadgrBackend(BadgeBackend):
         else:
             return "{}/badgeclasses/{}/assertions".format(self._base_url, slug)
 
-    def _slugify(self, badge_class):
-        """
-        Get a compatible badge slug from the specification.
-        """
-        slug = badge_class.issuing_component + badge_class.slug
-        if badge_class.issuing_component and badge_class.course_id:
-            # Make this unique to the course, and down to 64 characters.
-            # We don't do this to badges without issuing_component set for backwards compatibility.
-            slug = hashlib.sha256((slug + six.text_type(badge_class.course_id)).encode('utf-8')).hexdigest()
-        if len(slug) > MAX_SLUG_LENGTH:
-            # Will be 64 characters.
-            slug = hashlib.sha256(slug).hexdigest()
-        return slug
-
     def _log_if_raised(self, response, data):
         """
         Log server response if there was an error.
@@ -135,12 +123,15 @@ class BadgrBackend(BadgeBackend):
                 u"Filename was: {}".format(image.name)
             )
         files = {'image': (image.name, image, content_type)}
-
+        try:  # TODO: eventually we should pass both
+            URLValidator(badge_class.criteria)
+            criteria_type = 'criteria_url'
+        except ValidationError:
+            criteria_type = 'criteria_text'
         data = {
             'name': badge_class.display_name,
-            'criteria': badge_class.criteria,
-            'slug': self._slugify(badge_class),
-            'description': badge_class.description
+            criteria_type: badge_class.criteria,
+            'description': badge_class.description,
         }
 
         result = requests.post(
@@ -250,7 +241,7 @@ class BadgrBackend(BadgeBackend):
         """
         Verify a badge has been created for this badge class, and create it if not.
         """
-        slug = self._slugify(badge_class)
+        slug = badge_class.slug
         if slug in BadgrBackend.badges:
             return
         response = requests.get(self._badge_url(slug), headers=self._get_headers(), timeout=settings.BADGR_TIMEOUT)
