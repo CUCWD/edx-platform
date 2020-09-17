@@ -10,7 +10,7 @@ from django.conf import settings
 from django.test.utils import override_settings
 from six.moves import range
 
-from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory
+from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
 from openedx.core.lib.api.test_utils import ApiTestCase
 from student.tests.factories import UserFactory
 from util.testing import UrlResetMixin
@@ -65,8 +65,8 @@ class UserAssertionTestCase(UrlResetMixin, ModuleStoreTestCase, ApiTestCase):
         """
         if check_course:
             mode = str(random())  # need a random mode for uniqueness constraints on course id + mode
-            return BadgeClassFactory.create(course_id=self.course.location.course_key, **kwargs)
-        return BadgeClassFactory.create(**kwargs)
+            return RandomBadgeClassFactory.create(course_id=self.course.location.course_key, **kwargs)
+        return RandomBadgeClassFactory.create(**kwargs)
 
     def get_qs_args(self, check_course, badge_class):
         """
@@ -77,7 +77,7 @@ class UserAssertionTestCase(UrlResetMixin, ModuleStoreTestCase, ApiTestCase):
             'slug': badge_class.slug,
         }
         if check_course:
-            qs_args['course_id'] = badge_class.course_id
+            qs_args['course_id'] = six.text_type(badge_class.course_id)
         return qs_args
 
 
@@ -117,7 +117,7 @@ class TestUserCourseBadgeAssertions(UserAssertionTestCase):
         Verify we can get assertions via the course_id and username.
         """
         course_key = self.course.location.course_key
-        badge_class = BadgeClassFactory.create(course_id=course_key)
+        badge_class = RandomBadgeClassFactory.create(course_id=course_key)
         for dummy in range(3):
             BadgeAssertionFactory.create(user=self.user, badge_class=badge_class)
         # Should not be included, as they don't share the target badge class.
@@ -126,10 +126,10 @@ class TestUserCourseBadgeAssertions(UserAssertionTestCase):
         # Also should not be included, as they don't share the same user.
         for dummy in range(6):
             BadgeAssertionFactory.create(badge_class=badge_class)
-        response = self.get_json(self.url(), data={'course_id': course_key})
+        response = self.get_json(self.url(), data={'course_id': str(course_key)})
         self.assertEqual(len(response['results']), 3)
         unused_course = CourseFactory.create()
-        response = self.get_json(self.url(), data={'course_id': unused_course.location.course_key})
+        response = self.get_json(self.url(), data={'course_id': str(unused_course.location.course_key)})
         self.assertEqual(len(response['results']), 0)
 
     def test_assertion_structure(self):

@@ -15,7 +15,7 @@ from mock import Mock, call, patch
 
 from badges.backends.badgr import BadgrBackend
 from badges.models import BadgeAssertion
-from badges.tests.factories import BadgeClassFactory
+from badges.tests.factories import RandomBadgeClassFactory
 from openedx.core.lib.tests.assertions.events import assert_event_matches
 from student.tests.factories import CourseEnrollmentFactory, UserFactory
 from track.tests import EventTrackingTestCase
@@ -69,11 +69,8 @@ class BadgrBackendTestCase(ModuleStoreTestCase, EventTrackingTestCase):
         CourseEnrollmentFactory.create(user=self.user, course_id=self.course.location.course_key, mode='honor')
         # Need to empty this on each run.
         BadgrBackend.badges = []
-        self.badge_class = BadgeClassFactory.create(course_id=self.course.location.course_key)
-        self.legacy_badge_class = BadgeClassFactory.create(
-            course_id=self.course.location.course_key, issuing_component=''
-        )
-        self.no_course_badge_class = BadgeClassFactory.create()
+        self.badge_class = RandomBadgeClassFactory.create(course_id=self.course.location.course_key)
+        self.no_course_badge_class = RandomBadgeClassFactory.create()
 
     @lazy
     def handler(self):
@@ -116,15 +113,18 @@ class BadgrBackendTestCase(ModuleStoreTestCase, EventTrackingTestCase):
 
 
     @patch('requests.post')
-    @patch('requests.get')
     @override_settings(**BADGR_SETTINGS_API_V1)
-    def test_create_badge(self, get, post):
+    def test_create_badge(self, post):
         """
         Verify badge spec creation works.
         """
+        result = {
+            'result': [{'entityId': BADGR_SETTINGS_API_V1['BADGR_ISSUER_SLUG']}],
+        }
         response = Mock()
-        response.status_code = 404
-        get.return_value = response
+        response.status_code = 200
+        response.json.return_value = result
+        post.return_value = response
         self.handler._create_badge(self.badge_class)
         args, kwargs = post.call_args
         self.assertEqual(args[0], 'https://example.com/v1/issuer/issuers/test-issuer/badges')
@@ -232,7 +232,7 @@ class BadgrBackendTestCase(ModuleStoreTestCase, EventTrackingTestCase):
         #     'name': 'edx.badge.assertion.created',
         #     'data': {
         #         'user_id': self.user.id,
-        #         'course_id': unicode(self.course.location.course_key),
+        #         'course_id': six.text_type(self.course.location.course_key),
         #         'enrollment_mode': 'honor',
         #         'assertion_id': assertion.id,
         #         'badge_name': 'Test Badge',

@@ -85,8 +85,9 @@ def course_group_check(user, course_key):
 
     for award in awards:
         badge_class = BadgeClass.get_badge_class(
-            slug=slug, create=False,
+            slug=award[0], create=False,
         )
+
         if badge_class and not badge_class.get_for_user(user):
             try:
                 badge_class.award(user, evidence_url=award[1])

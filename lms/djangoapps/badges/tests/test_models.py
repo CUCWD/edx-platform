@@ -20,7 +20,7 @@ from badges.models import (
     CourseCompleteImageConfiguration,
     validate_badge_image
 )
-from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, BadgeClassFactory
+from badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
 from certificates.tests.test_models import TEST_DATA_ROOT
 from student.tests.factories import UserFactory
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
@@ -290,7 +290,7 @@ class BadgeAssertionTest(ModuleStoreTestCase):
         assertions = [BadgeAssertionFactory.create(user=user).id for _i in range(3)]
         course = CourseFactory.create()
         course_key = course.location.course_key
-        course_badges = [BadgeClassFactory(course_id=course_key) for _i in range(3)]
+        course_badges = [RandomBadgeClassFactory(course_id=course_key) for _i in range(3)]
         course_assertions = [
             BadgeAssertionFactory.create(user=user, badge_class=badge_class).id for badge_class in course_badges
         ]
