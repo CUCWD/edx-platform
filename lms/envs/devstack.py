@@ -403,3 +403,12 @@ if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
 # ]
 # TEMPLATES[1]["DIRS"] = _make_mako_template_dirs
 # derive_settings(__name__)
+
+# badges app using Badgr backend need a real cache to store refresh
+# tokens persistently.  Let's also cache the auth tokens
+if FEATURES['ENABLE_OPENBADGES'] is True:
+    BADGR_API_REFRESH_TOKEN = AUTH_TOKENS.get('BADGR_API_REFRESH_TOKEN', BADGR_API_REFRESH_TOKEN)
+    CACHES[BADGR_API_TOKEN_CACHE] = {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'badges_backends_api_tokens'
+    }

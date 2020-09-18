@@ -1,6 +1,7 @@
 """
 Tests for the badges API views.
 """
+from random import random
 
 
 import six
@@ -58,24 +59,16 @@ class UserAssertionTestCase(UrlResetMixin, ModuleStoreTestCase, ApiTestCase):
         self.assertEqual(assertion.assertion_url, json_assertion['assertion_url'])
         self.check_class_structure(assertion.badge_class, json_assertion['badge_class'])
 
-    def get_course_id(self, wildcard, badge_class):
-        """
-        Used for tests which may need to test for a course_id or a wildcard.
-        """
-        if wildcard:
-            return '*'
-        else:
-            return six.text_type(badge_class.course_id)
-
     def create_badge_class(self, check_course, **kwargs):
         """
         Create a badge class, using a course id if it's relevant to the URL pattern.
         """
         if check_course:
+            mode = str(random())  # need a random mode for uniqueness constraints on course id + mode
             return RandomBadgeClassFactory.create(course_id=self.course.location.course_key, **kwargs)
         return RandomBadgeClassFactory.create(**kwargs)
 
-    def get_qs_args(self, check_course, wildcard, badge_class):
+    def get_qs_args(self, check_course, badge_class):
         """
         Get a dictionary to be serialized into querystring params based on class settings.
         """
@@ -84,7 +77,7 @@ class UserAssertionTestCase(UrlResetMixin, ModuleStoreTestCase, ApiTestCase):
             'slug': badge_class.slug,
         }
         if check_course:
-            qs_args['course_id'] = self.get_course_id(wildcard, badge_class)
+            qs_args['course_id'] = six.text_type(badge_class.course_id)
         return qs_args
 
 
@@ -124,7 +117,7 @@ class TestUserCourseBadgeAssertions(UserAssertionTestCase):
         Verify we can get assertions via the course_id and username.
         """
         course_key = self.course.location.course_key
-        badge_class = BadgeClassFactory.create(course_id=course_key)
+        badge_class = RandomBadgeClassFactory.create(course_id=course_key)
         for dummy in range(3):
             BadgeAssertionFactory.create(user=self.user, badge_class=badge_class)
         # Should not be included, as they don't share the target badge class.
@@ -155,23 +148,16 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
     """
     Test the Badge Assertions view with the badge class filter.
     """
+    shard = 3
 
-    @unpack
-    @data((False, False), (True, False), (True, True))
-    def test_get_assertions(self, check_course, wildcard):
+    @data(False, True)
+    def test_get_assertions(self, check_course):
         """
         Verify we can get assertions via the badge class and username.
         """
         badge_class = self.create_badge_class(check_course)
         for dummy in range(3):
             BadgeAssertionFactory.create(user=self.user, badge_class=badge_class)
-        if badge_class.course_id:
-            # Also create a version of this badge under a different course.
-            alt_class = BadgeClassFactory.create(
-                slug=badge_class.slug, issuing_component=badge_class.issuing_component,
-                course_id=CourseFactory.create().location.course_key
-            )
-            BadgeAssertionFactory.create(user=self.user, badge_class=alt_class)
         # Same badge class, but different user. Should not show up in the list.
         for dummy in range(5):
             BadgeAssertionFactory.create(badge_class=badge_class)
@@ -181,40 +167,36 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
 
         response = self.get_json(
             self.url(),
-            data=self.get_qs_args(check_course, wildcard, badge_class),
+            data=self.get_qs_args(check_course, badge_class),
         )
-        if wildcard:
-            expected_length = 4
-        else:
-            expected_length = 3
+        expected_length = 3
+        # pylint: disable=no-member
         self.assertEqual(len(response['results']), expected_length)
         unused_class = self.create_badge_class(check_course, slug='unused_slug', issuing_component='unused_component')
 
         response = self.get_json(
             self.url(),
-            data=self.get_qs_args(check_course, wildcard, unused_class),
+            data=self.get_qs_args(check_course, unused_class),
         )
         self.assertEqual(len(response['results']), 0)
 
-    def check_badge_class_assertion(self, check_course, wildcard, badge_class):
+    def check_badge_class_assertion(self, check_course, badge_class):
         """
         Given a badge class, create an assertion for the current user and fetch it, checking the structure.
         """
         assertion = BadgeAssertionFactory.create(badge_class=badge_class, user=self.user)
         response = self.get_json(
             self.url(),
-            data=self.get_qs_args(check_course, wildcard, badge_class),
+            data=self.get_qs_args(check_course, badge_class),
         )
         self.check_assertion_structure(assertion, response['results'][0])
 
-    @unpack
-    @data((False, False), (True, False), (True, True))
-    def test_assertion_structure(self, check_course, wildcard):
-        self.check_badge_class_assertion(check_course, wildcard, self.create_badge_class(check_course))
+    @data(False, True)
+    def test_assertion_structure(self, check_course):
+        self.check_badge_class_assertion(check_course, self.create_badge_class(check_course))
 
-    @unpack
-    @data((False, False), (True, False), (True, True))
-    def test_empty_issuing_component(self, check_course, wildcard):
+    @data(False, True)
+    def test_empty_issuing_component(self, check_course):
         self.check_badge_class_assertion(
-            check_course, wildcard, self.create_badge_class(check_course, issuing_component='')
+            check_course, self.create_badge_class(check_course, issuing_component='')
         )

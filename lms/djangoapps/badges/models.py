@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils.crypto import get_random_string
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext_noop
@@ -57,11 +58,12 @@ class BadgeClass(models.Model):
 
     .. no_pii:
     """
-    slug = models.SlugField(max_length=255, validators=[validate_lowercase])
+    slug = models.SlugField(max_length=255, unique=True)
     issuing_component = models.SlugField(max_length=50, default=u'', blank=True, validators=[validate_lowercase])
     display_name = models.CharField(max_length=255)
     course_id = CourseKeyField(max_length=255, blank=True, default=None)
     description = models.TextField()
+    # Badgr and Open Badges spec can take both text and url criteria
     criteria = models.TextField()
     # Mode a badge was awarded for. Included for legacy/migration purposes.
     mode = models.CharField(max_length=100, default=u'', blank=True)
@@ -77,11 +79,11 @@ class BadgeClass(models.Model):
 
     @classmethod
     def get_badge_class(
-            cls, slug, issuing_component, display_name=None, description=None, criteria=None, image_file_handle=None,
+            cls, slug=None, issuing_component=None, display_name=None, description=None, criteria=None, image_file_handle=None,
             mode='', course_id=None, create=True
     ):
         """
-        Looks up a badge class by its slug, issuing component, and course_id and returns it should it exist.
+        Looks up a badge class by its slug, or combination of mode and course_id and returns it should it exist.
         If it does not exist, and create is True, creates it according to the arguments. Otherwise, returns None.
 
         The expectation is that an XBlock or platform developer should not need to concern themselves with whether
@@ -89,20 +91,24 @@ class BadgeClass(models.Model):
         and it will 'do the right thing'. It should be the exception, rather than the common case, that a badge class
         would need to be looked up without also being created were it missing.
         """
-        slug = slug.lower()
-        issuing_component = issuing_component.lower()
         if course_id and not modulestore().get_course(course_id).issue_badges:
             raise CourseBadgesDisabledError("This course does not have badges enabled.")
         if not course_id:
             course_id = CourseKeyField.Empty
         try:
-            return cls.objects.get(slug=slug, issuing_component=issuing_component, course_id=course_id)
+            if slug:
+                return cls.objects.get(slug=slug)
+            else:
+                if mode:
+                    return cls.objects.get(mode=mode, course_id=course_id)
+                else:  # allow setting a BadgeClass with no mode, can be used for all modes
+                    return cls.objects.get(course_id=course_id)
         except cls.DoesNotExist:
             if not create:
                 return None
         badge_class = cls(
-            slug=slug,
-            issuing_component=issuing_component,
+            slug=(slug if slug else 'edx_' + get_random_string(22)),
+            issuing_component=(issuing_component if issuing_component else ''),
             display_name=display_name,
             course_id=course_id,
             mode=mode,
@@ -123,6 +129,15 @@ class BadgeClass(models.Model):
         module = import_module(module)
         return getattr(module, klass)()
 
+    def clean(self):
+        """
+        Checks that there are no duplicate combinations of course_id and mode
+        if course_id is defined
+        """
+        if self.course_id is not None and str(self.course_id).strip() != '':
+            if BadgeClass.objects.filter(course_id=self.course_id, mode=self.mode).count() > 1:
+                raise ValidationError("A BadgeClass already exists with the same Course ID and enrollment mode.")
+
     def get_for_user(self, user):
         """
         Get the assertion for this badge class for this user, if it has been awarded.
@@ -135,17 +150,9 @@ class BadgeClass(models.Model):
         """
         return self.backend.award(self, user, evidence_url=evidence_url)
 
-    def save(self, **kwargs):
-        """
-        Slugs must always be lowercase.
-        """
-        self.slug = self.slug and self.slug.lower()
-        self.issuing_component = self.issuing_component and self.issuing_component.lower()
-        super(BadgeClass, self).save(**kwargs)
 
     class Meta(object):
         app_label = "badges"
-        unique_together = (('slug', 'issuing_component', 'course_id'),)
         verbose_name_plural = "Badge Classes"
 
 

@@ -225,6 +225,9 @@ CACHES = {
         'LOCATION': 'edx_loc_mem_cache',
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     },
+    'badgr_api_token_cache': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    },
 }
 
 ############################### BLOCKSTORE #####################################
@@ -233,6 +236,8 @@ RUN_BLOCKSTORE_TESTS = os.environ.get('EDXAPP_RUN_BLOCKSTORE_TESTS', 'no').lower
 BLOCKSTORE_API_URL = os.environ.get('EDXAPP_BLOCKSTORE_API_URL', "http://edx.devstack.blockstore-test:18251/api/v1/")
 BLOCKSTORE_API_AUTH_TOKEN = os.environ.get('EDXAPP_BLOCKSTORE_API_AUTH_TOKEN', 'edxapp-test-key')
 XBLOCK_RUNTIME_V2_EPHEMERAL_DATA_CACHE = 'blockstore'  # This must be set to a working cache for the tests to pass
+
+BADGR_API_TOKEN_CACHE = 'badgr_api_token_cache'
 
 # Dummy secret key for dev
 SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
