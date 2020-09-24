@@ -204,6 +204,7 @@ class BadgrBackend(BadgeBackend):
         )
         self._log_if_raised(response, data)
 
+        import pdb;pdb.set_trace()
         assertion, __ = BadgeAssertion.objects.get_or_create(user=user, badge_class=badge_class)
         assertion.data = response.json() if self.api_ver == 'v1' else response.json()['result'][0]
         assertion.backend = 'BadgrBackend'
@@ -265,3 +266,22 @@ class BadgrBackend(BadgeBackend):
         """
         self._ensure_badge_created(badge_class)
         return self._create_assertion(badge_class, user, evidence_url)
+
+    def get_issuer(self, badge_assertion):
+        """
+        Get a single Issuer. No need to pass in the entity_id since this is defined in settings.
+        """
+        if not badge_assertion.data.get('issuer'):
+            return None
+
+        params = {
+            'entity_id': badge_assertion.data['issuer']
+        }
+        response = requests.get(
+            self._issuer_base_url, headers=self._get_headers(), params=params,
+            timeout=settings.BADGR_TIMEOUT
+        )
+        self._log_if_raised(response, params)
+
+        if response.ok:
+            return response.json()['result'][0]
