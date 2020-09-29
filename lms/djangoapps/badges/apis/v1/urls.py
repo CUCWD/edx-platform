@@ -16,11 +16,17 @@ BADGES_URLS = ([
         views.UserBadgeAssertions.as_view(), name='user_assertions'
     ),
     url(
-        r'^progress/user/{username}/courses/{course_id}/$'.format(
-            username=settings.USERNAME_PATTERN,
+        r'^progress/courses/{course_id}/$'.format(
             course_id=settings.COURSE_ID_PATTERN
         ),
-        views.UserBadgeProgressListView.as_view(), name='user_progress'
+        views.CourseBadgeProgressListView.as_view(), name='course_progress'
+    ),
+    url(
+        r'^progress/courses/{course_id}/user/{username}/$'.format(
+            course_id=settings.COURSE_ID_PATTERN,
+            username=settings.USERNAME_PATTERN
+        ),
+        views.UserBadgeProgressListView.as_view(), name='course_progress_user'
     ),
 ], 'badges')
 
