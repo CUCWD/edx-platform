@@ -1646,6 +1646,8 @@ base_vendor_js = [
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
 
+    'js/Markdown.Converter.js',
+
     # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
 
@@ -1758,8 +1760,12 @@ certificates_web_view_js = [
     'common/js/vendor/jquery.js',
     'common/js/vendor/jquery-migrate.js',
     'js/vendor/jquery.cookie.js',
+    'js/vendor/jquery-ui.min.js',
+    'common/js/vendor/moment-with-locales.js',
+    'common/js/vendor/moment-timezone-with-data.js',
     'js/src/logger.js',
     'js/utils/facebook.js',
+    'js/Markdown.Converter.js',
 ]
 
 credit_web_view_js = [
