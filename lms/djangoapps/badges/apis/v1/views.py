@@ -513,6 +513,12 @@ class UserBadgeProgressListView(BadgeProgressViewMixin, APIView):
             ...
         ]
     """
+    authentication_classes = (
+        JwtAuthentication,
+        BearerAuthenticationAllowInactiveUser,
+        SessionAuthenticationAllowInactiveUser,
+    )
+    
     permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
 
     def get(self, request, course_id=None, username=None, *args, **kwargs):  # pylint: disable=arguments-differ        
