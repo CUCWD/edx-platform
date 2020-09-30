@@ -84,7 +84,7 @@ class CourseBadgesProgressFragmentView(EdxFragmentView):
         context = {
             'csrf': csrf(request)['csrf_token'],
             'course': course,
-            'badges_api_url': reverse("badges_api:user_assertions", kwargs={'username': request.user}),
+            'badges_api_url': reverse("badges_api:v1:badges:user_assertions", kwargs={'username': request.user}),
             'language_preference': language,
             'user': User.objects.get(id=request.user.id)
         }
