@@ -22,6 +22,7 @@ from requests.packages.urllib3.exceptions import HTTPError
 from badges.backends.base import BadgeBackend
 from badges.models import BadgeAssertion
 
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 MAX_SLUG_LENGTH = 255
 BADGR_API_AUTH_TOKEN_CACHE_KEY = 'badgr_api_auth_token'
@@ -71,7 +72,7 @@ class BadgrBackend(BadgeBackend):
         URL for generating a new Badge specification
         """
         badges_path = "badges" if self.api_ver == 'v1' else "badgeclasses"
-        return "{}/{}/{}".format(self._issuer_base_url, settings.BADGR_ISSUER_SLUG, badges_path)
+        return "{}/{}/{}".format(self._issuer_base_url, configuration_helpers.get_value("BADGR_ISSUER_SLUG", settings.BADGR_ISSUER_SLUG), badges_path)
 
     def _badge_url(self, slug):
         """
@@ -89,7 +90,7 @@ class BadgrBackend(BadgeBackend):
         # v1: /v1/issuer/issuers/{issuer slug}/badges/{badge slug}/assertions
         # v2: /v2/badgeclasses/{badge slug}/assertions
         if self.api_ver == 'v1':
-            return "{}/{}/badges/{}/assertions".format(self._issuer_base_url, settings.BADGR_ISSUER_SLUG, slug)
+            return "{}/{}/badges/{}/assertions".format(self._issuer_base_url, configuration_helpers.get_value("BADGR_ISSUER_SLUG", settings.BADGR_ISSUER_SLUG), slug)
         else:
             return "{}/badgeclasses/{}/assertions".format(self._base_url, slug)
 
@@ -284,4 +285,9 @@ class BadgrBackend(BadgeBackend):
         self._log_if_raised(response, params)
 
         if response.ok:
-            return response.json()['result'][0]
+            for issuer in response.json()['result']:
+                if issuer.get("entityId", "") == badge_assertion.data['issuer']:
+                    return issuer
+
+            return None
+
