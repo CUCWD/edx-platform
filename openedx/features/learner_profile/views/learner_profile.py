@@ -104,9 +104,9 @@ def learner_profile_context(request, profile_username, user_is_staff):
             'country_options': list(countries),
             'find_courses_url': marketing_link('COURSES'),
             'language_options': settings.ALL_LANGUAGES,
-            'badges_logo': staticfiles_storage.url('certificates/images/backpack-logo.png'),
-            'badges_icon': staticfiles_storage.url('certificates/images/ico-mozillaopenbadges.png'),
-            'backpack_ui_img': staticfiles_storage.url('certificates/images/backpack-ui.png'),
+            'badges_badgr_logo': staticfiles_storage.url('badges/images/badgr-logo.svg'),
+            'badges_openbadges_icon': staticfiles_storage.url('badges/images/ico-mozillaopenbadges.png'),
+            'badges_backend_public_url': settings.BADGR_PUBLIC_URL,
             'platform_name': configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME),
             'social_platforms': settings.SOCIAL_PLATFORMS,
         },
@@ -115,6 +115,7 @@ def learner_profile_context(request, profile_username, user_is_staff):
         'disable_courseware_js': True,
         'nav_hidden': True,
         'records_url': get_credentials_records_url(),
+        'uses_bootstrap': True
     }
 
     if own_profile or user_is_staff:
@@ -126,6 +127,6 @@ def learner_profile_context(request, profile_username, user_is_staff):
         context['achievements_fragment'] = achievements_fragment
 
     if badges_enabled():
-        context['data']['badges_api_url'] = reverse("badges_api:user_assertions", kwargs={'username': profile_username})
+        context['data']['badges_api_url'] = reverse("badges_api:v1:badges:user_assertions", kwargs={'username': profile_username})
 
     return context
