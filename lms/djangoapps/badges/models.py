@@ -1,8 +1,7 @@
 """
 Database models for the badges app
 """
-
-
+import hashlib
 from importlib import import_module
 
 import six
@@ -11,6 +10,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.template.defaultfilters import slugify
 from django.utils.crypto import get_random_string
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
@@ -78,6 +78,19 @@ class BadgeClass(models.Model):
             )
 
     @classmethod
+    def get_legacy_course_slug(cls, course_key, mode):
+        """
+        Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility with the original badge
+        type, awarded on course completion.
+         Slug ought to be deterministic and limited in size so it's not too big for Badgr.
+         Badgr's max slug length is 255.
+        """
+        # Seven digits should be enough to realistically avoid collisions. That's what git services use.
+        digest = hashlib.sha256(u"{}{}".format(six.text_type(course_key), six.text_type(mode))).hexdigest()[:7]
+        base_slug = slugify(six.text_type(course_key) + u'_{}_'.format(mode))[:248]
+        return base_slug + digest
+
+    @classmethod
     def get_badge_class(
             cls, slug=None, issuing_component=None, display_name=None, description=None, criteria=None, image_file_handle=None,
             mode='', course_id=None, create=True
@@ -107,7 +120,7 @@ class BadgeClass(models.Model):
             if not create:
                 return None
         badge_class = cls(
-            slug=(slug if slug else 'edx_' + get_random_string(22)),
+            slug=cls.get_legacy_course_slug(course_key=course_id, mode=mode),
             issuing_component=(issuing_component if issuing_component else ''),
             display_name=display_name,
             course_id=course_id,
@@ -115,7 +128,7 @@ class BadgeClass(models.Model):
             description=description,
             criteria=criteria,
         )
-        badge_class.image.save(image_file_handle.name, image_file_handle)
+        badge_class.image.save(image_file_handle.name, image_file_handle, save=False)
         badge_class.full_clean()
         badge_class.save()
         return badge_class
@@ -135,7 +148,7 @@ class BadgeClass(models.Model):
         if course_id is defined
         """
         if self.course_id is not None and str(self.course_id).strip() != '':
-            if BadgeClass.objects.filter(course_id=self.course_id, mode=self.mode).count() > 1:
+            if BadgeClass.objects.filter(course_id=self.course_id, mode=self.mode).exists():
                 raise ValidationError("A BadgeClass already exists with the same Course ID and enrollment mode.")
 
     def get_for_user(self, user):
