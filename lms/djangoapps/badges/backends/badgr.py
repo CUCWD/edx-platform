@@ -205,7 +205,6 @@ class BadgrBackend(BadgeBackend):
         )
         self._log_if_raised(response, data)
 
-        import pdb;pdb.set_trace()
         assertion, __ = BadgeAssertion.objects.get_or_create(user=user, badge_class=badge_class)
         assertion.data = response.json() if self.api_ver == 'v1' else response.json()['result'][0]
         assertion.backend = 'BadgrBackend'
