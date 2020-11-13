@@ -1,0 +1,35 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%namespace name='static' file='/static_content.html'/>
+
+<%page args="section_data"/>
+
+<div class="resources-wrapper">
+    <h2>${_("Handouts")}</h2>
+
+    % if section_data['instructor_handouts_count'] == 0 and section_data['student_handouts_count'] == 0:
+        <p>There is no current additional resources for this course.</p>
+    % else:
+        <p>This area contains additional resources for the course. The links below are downloadable PDFs for instructor use.</p>
+        <br/>
+
+        % if section_data['student_handouts_count'] > 0:
+            <h3>${_("Student Materials")}</h3>
+
+            <ul style="list-style-type: square; line-height: 1.5em;">
+                %for r in section_data['student_handouts']:
+                    <li><a href="${ r.get('resource-url') }" target="_blank">${ r.get('resource-name') }</a></li>
+                %endfor
+            </ul>
+        % endif
+
+        % if section_data['instructor_handouts_count'] > 0:
+            <h3>${_("Instructor Materials")}</h3>
+            <ul style="list-style-type: square; line-height: 1.5em;">
+                %for r in section_data['instructor_handouts']:
+                    <li><a href="${ r.get('resource-url') }" target="_blank">${ r.get('resource-name') }</a></li>
+                %endfor
+            </ul>
+        % endif
+    % endif
+</div>
+<hr>

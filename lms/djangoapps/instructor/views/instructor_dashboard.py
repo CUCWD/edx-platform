@@ -135,6 +135,7 @@ def instructor_dashboard_2(request, course_id):
     if access['staff']:
         sections.extend([
             _section_course_info(course, access),
+            _section_resources(course, access),
             _section_membership(course, access),
             _section_cohort_management(course, access),
             _section_discussions_management(course, access),
@@ -142,6 +143,7 @@ def instructor_dashboard_2(request, course_id):
         ])
     if access['data_researcher']:
         sections.append(_section_data_download(course, access))
+
 
     analytics_dashboard_message = None
     if show_analytics_dashboard_message(course_key) and (access['staff'] or access['instructor']):
@@ -518,6 +520,32 @@ def _section_course_info(course, access):
         section_data['course_errors'] = [(escape(a), '') for (a, _unused) in modulestore().get_course_errors(course.id)]
     except Exception:  # pylint: disable=broad-except
         section_data['course_errors'] = [('Error fetching errors', '')]
+
+    return section_data
+
+def _section_resources(course, access):
+    """ Provide data for the corresponding dashboard section """
+    course_key = course.id
+
+    section_data = {
+        'section_key': 'resources',
+        'section_display_name': _('Resources'),
+        'access': access,
+        'course_id': course_key,
+        'course_display_name': course.display_name,
+        'has_started': course.has_started(),
+        'has_ended': course.has_ended(),
+        'instructor_handouts': course.instructor_dashboard_resources_instructor,
+        'instructor_handouts_count': (len(course.instructor_dashboard_resources_instructor), 0)[
+            len(course.instructor_dashboard_resources_instructor) == 1 and
+            course.instructor_dashboard_resources_instructor[0].get("resource-name") == "" and
+            course.instructor_dashboard_resources_instructor[0].get("resource-url") == ""],
+        'student_handouts': course.instructor_dashboard_resources_student,
+        'student_handouts_count': (len(course.instructor_dashboard_resources_student), 0)[
+            len(course.instructor_dashboard_resources_student) == 1 and
+            course.instructor_dashboard_resources_student[0].get("resource-name") == "" and
+            course.instructor_dashboard_resources_student[0].get("resource-url") == ""],
+    }
 
     return section_data
 
