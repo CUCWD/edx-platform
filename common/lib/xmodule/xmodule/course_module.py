@@ -1011,23 +1011,21 @@ class CourseFields:  # lint-amnesty, pylint: disable=missing-class-docstring
         help=_(
             "Enter institution, this is used on qualtrics surveys throughout course."
         ),
-        scope=Scope.settings,
-        default=""
+        scope=Scope.settings, default="None"
     )
-    qualtrics_instructors = List(
+    qualtrics_instructor_info = Dict(
         display_name=_("Qualtrics: Course Instructor"),
-        help=_(
-            'Enter the details for Course Instructor to be used in qualtrics surveys.'
-            'Examples: ["John Smith", "Sally Smith"]'
-        ),
-        scope=Scope.settings,
-        default=[]
+        help=_("Enter the details for Course Instructor to be used in qualtrics surveys."),
+        default={
+            "instructors": []
+        },
+        scope=Scope.settings
     )
     qualtrics_term = String(
         display_name=_("Qualtrics: Course Term"),
         help=_("Enter the details for Course Term to be used in qualtrics surveys"),
-        scope=Scope.settings,
-        default="perpetual"
+        default=_("perpetual"),
+        scope=Scope.settings
     )
     allow_unsupported_xblocks = Boolean(
         display_name=_("Add Unsupported Problems and Tools"),
