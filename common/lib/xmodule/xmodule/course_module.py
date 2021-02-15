@@ -996,6 +996,27 @@ class CourseFields:  # lint-amnesty, pylint: disable=missing-class-docstring
         },
         scope=Scope.settings
     )
+    qualtrics_institution = String(
+        display_name=_("Qualtrics: Course Institution"),
+        help=_(
+            "Enter institution, this is used on qualtrics surveys throughout course."
+        ),
+        scope=Scope.settings, default="None"
+    )
+    qualtrics_instructor_info = Dict(
+        display_name=_("Qualtrics: Course Instructor"),
+        help=_("Enter the details for Course Instructor to be used in qualtrics surveys."),
+        default={
+            "instructors": []
+        },
+        scope=Scope.settings
+    )
+    qualtrics_term = String(
+        display_name=_("Qualtrics: Course Term"),
+        help=_("Enter the details for Course Term to be used in qualtrics surveys"),
+        default=_("perpetual"),
+        scope=Scope.settings
+    )
     allow_unsupported_xblocks = Boolean(
         display_name=_("Add Unsupported Problems and Tools"),
         help=_(
