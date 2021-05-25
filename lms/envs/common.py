@@ -2881,11 +2881,6 @@ BADGR_ISSUER_SLUG = "example-issuer"
 BADGR_TIMEOUT = 10
 BADGR_OAUTH_CLIENT_ID = 'public'
 
-#################### Qualtrics Settings #######################
-QUALTRICS_API_TOKEN = None
-QUALTRICS_API_BASE_URL = None
-QUALTRICS_API_VERSION = None
-
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
 # the ones that contain information other than grades.
