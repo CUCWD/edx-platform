@@ -1021,6 +1021,29 @@ class CourseFields(object):
         },
         scope=Scope.settings
     )
+    qualtrics_institution = String(
+        display_name=_("Qualtrics: Course Institution"),
+        help=_(
+            "Enter institution, this is used on qualtrics surveys throughout course."
+        ),
+        scope=Scope.settings,
+        default=""
+    )
+    qualtrics_instructors = List(
+        display_name=_("Qualtrics: Course Instructor"),
+        help=_(
+            'Enter the details for Course Instructor to be used in qualtrics surveys.'
+            'Examples: ["John Smith", "Sally Smith"]'
+        ),
+        scope=Scope.settings,
+        default=[]
+    )
+    qualtrics_term = String(
+        display_name=_("Qualtrics: Course Term"),
+        help=_("Enter the details for Course Term to be used in qualtrics surveys"),
+        scope=Scope.settings,
+        default="perpetual"
+    )
     allow_unsupported_xblocks = Boolean(
         display_name=_("Add Unsupported Problems and Tools"),
         help=_(
