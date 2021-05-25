@@ -1656,6 +1656,9 @@ base_vendor_js = [
     # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
 
+    # Load iFrame-Resizer
+    'common/js/vendor/iframeResizer.js',
+
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
     'edx-ui-toolkit/js/utils/string-utils.js',
@@ -2877,6 +2880,11 @@ BADGR_ISSUER_SLUG = "example-issuer"
 # Number of seconds to wait on the badging server when contacting it before giving up.
 BADGR_TIMEOUT = 10
 BADGR_OAUTH_CLIENT_ID = 'public'
+
+#################### Qualtrics Settings #######################
+QUALTRICS_API_TOKEN = None
+QUALTRICS_API_BASE_URL = None
+QUALTRICS_API_VERSION = None
 
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
