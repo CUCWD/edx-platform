@@ -236,3 +236,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = corsheaders_default_headers + (
     'use-jwt-cookie',
 )
+
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+         'LOCATION': 'qualtrics_backends_api_tokens'
+     }
