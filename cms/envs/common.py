@@ -2162,29 +2162,23 @@ BULK_EMAIL_LOG_SENT_EMAILS = False
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 #################### Qualtrics Settings #######################
-QUALTRICS_API_TOKEN = None
 QUALTRICS_API_BASE_URL = None
-QUALTRICS_OAUTH_URL = None
-QUATRICS_API_VERSION = None
-QUALTRICS_CLIENT_ID = None
-QUALTRICS_CLIENT_SECRET= None
-
 QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
-QUALTRICS_API_VERSION = "v2"
-QUALTRICS_API_TOKEN = None
+QUALTRICS_API_VERSION = "v3"
 QUALTRICS_API_TOKEN_EXPIRATION = 3599 # 1 hr
 QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
-QUALTRICS_API_REFRESH_TOKEN = None
-QUALTRICS_API_NOTIFICATIONS_ENABLED = False
 
-# Do not add the trailing slash here.  Base API URL
-QUALTRICS_BASE_URL = "http://localhost:8005"
-# for login and public access to Backpack, etc
-QUALTRICS_PUBLIC_URL = "http://localhost:8005"
-QUALTRICS_ISSUER_SLUG = "example-issuer"
-# Number of seconds to wait on the badging server when contacting it before giving up.
-QUALTRICS_TIMEOUT = 10
-QUALTRICS_OAUTH_CLIENT_ID = 'public'
+# OAuth2 Authentication (Client Credentials)
+# https://api.qualtrics.com/instructions/docs/Instructions/oauth-authentication.md
+# Client credentials grant type doesn't use `refresh` token for access.
+QUALTRICS_API_CLIENT_ID = None
+QUALTRICS_API_CLIENT_SECRET= None
+
+# API Token Authentication
+# https://api.qualtrics.com/instructions/docs/Instructions/api-key-authentication.md
+# Recommend OAuth2 Authentication to limit scope of API calls.
+# This is automatically switch over to OAuth2 after API v1.
+QUALTRICS_API_TOKEN = None
 
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
