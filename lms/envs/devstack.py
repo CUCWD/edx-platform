@@ -429,3 +429,8 @@ if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
 # Uncomment the lines below if you'd like to see SQL statements in your devstack LMS log.
 # LOGGING['handlers']['console']['level'] = 'DEBUG'
 # LOGGING['loggers']['django.db.backends'] = {'handlers': ['console'], 'level': 'DEBUG', 'propagate': False}
+
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+         'LOCATION': 'qualtrics_backends_api_tokens'
+     }
