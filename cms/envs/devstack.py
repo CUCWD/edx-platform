@@ -213,3 +213,9 @@ SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 # See if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
     from .private import *  # pylint: disable=import-error,wildcard-import
+
+
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+         'LOCATION': 'qualtrics_backends_api_tokens'
+     }
