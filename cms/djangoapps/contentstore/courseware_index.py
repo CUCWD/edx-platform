@@ -32,7 +32,19 @@ INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
 
+def textbook_key_terms(course_id):
+    """ Uses key terms API endpoint """
 
+    import requests
+
+    # url for api endpoint
+    URL = settings.KEY_TERMS_API_URL
+    URL += str(course_id)
+
+    # when request is sent to endpoint, starts process of retrieving and searching through textbooks for key terms
+    r = requests.post(URL)
+    return r
+    
 def strip_html_content_to_text(html_content):
     """ Gets only the textual part for html content - useful for building text to be searched """
     # Removing HTML-encoded non-breaking space characters
@@ -156,6 +168,8 @@ class SearchIndexerBase(metaclass=ABCMeta):
         # it is used to collect all indexes and index them using bulk API,
         # instead of per item index API call.
         items_index = []
+
+        textbook_key_terms(structure_key)
 
         def get_item_location(item):
             """

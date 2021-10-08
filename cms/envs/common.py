@@ -131,6 +131,10 @@ from openedx.core.release import doc_version
 
 # pylint: enable=useless-suppression
 
+############### Edx Key Terms API ###############
+
+KEY_TERMS_API_URL = 'http://733be8bf2c10:18500/api/v1/platform_course_reindex/?course_id='
+
 ################ Enable credit eligibility feature ####################
 ENABLE_CREDIT_ELIGIBILITY = True
 
