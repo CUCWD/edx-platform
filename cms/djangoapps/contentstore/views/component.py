@@ -277,7 +277,8 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
         'html': _("HTML"),
         'problem': _("Problem"),
         'video': _("Video"),
-        'openassessment': _("Open Response")
+        'openassessment': _("Open Response"),
+        #': _("Key Terms")
     }
 
     component_templates = []
@@ -287,7 +288,7 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
     component_types = COMPONENT_TYPES[:]
 
     # Libraries do not support discussions and openassessment
-    component_not_supported_by_library = ['discussion', 'openassessment']
+    component_not_supported_by_library = ['discussion', 'openassessment', 'keyterms']
     if library:
         component_types = [component for component in component_types
                            if component not in set(component_not_supported_by_library)]
