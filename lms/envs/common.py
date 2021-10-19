@@ -342,6 +342,9 @@ FEATURES = {
     # Enable OpenBadge support. See the BADGR_* settings later in this file.
     'ENABLE_OPENBADGES': False,
 
+    # Enable BigCommerce Integration
+    'ENABLE_BIGCOMMERCE': False,
+
     # Enable LTI Provider feature.
     'ENABLE_LTI_PROVIDER': False,
 
@@ -2899,6 +2902,16 @@ QUALTRICS_API_CLIENT_SECRET= None
 # Recommend OAuth2 Authentication to limit scope of API calls.
 # This is automatically switch over to OAuth2 after API v1.
 QUALTRICS_API_TOKEN = None
+
+
+#################### BigCommerce Settings #######################
+
+# BIGCOMMERCE_APP_ACCESS_TOKEN = None
+BIGCOMMERCE_APP_CLIENT_ID = None
+BIGCOMMERCE_APP_CLIENT_SECRET = None
+BIGCOMMERCE_APP_STORE_HASH = None
+BIGCOMMERCE_APP_STORE_URL = None
+
 
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
