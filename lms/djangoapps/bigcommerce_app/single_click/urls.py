@@ -6,7 +6,7 @@ from django.urls import re_path
 from django.conf import settings
 from django.conf.urls import include, url
 
-from bigcommerce_app.single_click import views
+from lms.djangoapps.bigcommerce_app.single_click import views
 
 app_name = 'v1'
 urlpatterns = []
