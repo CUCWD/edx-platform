@@ -1,5 +1,5 @@
 """
-API views for badges
+BigCommerce Single-Click app endpoints
 """
 
 import logging
@@ -9,8 +9,8 @@ from django.shortcuts import redirect, reverse
 # from django.urls import reverse
 
 from bigcommerce.api import BigcommerceApi
-from bigcommerce_app.utils import internal_server_error, client_id, client_secret, platform_lms_url
-from bigcommerce_app.models import Store, AdminUser, StoreAdminUser
+from lms.djangoapps.bigcommerce_app.utils import internal_server_error, client_id, client_secret, platform_lms_url
+from lms.djangoapps.bigcommerce_app.models import Store, AdminUser, StoreAdminUser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,8 +85,6 @@ class BigCommerceAppCallbacks():
             store_admin_user.is_admin = True
         store_admin_user.save()
 
-        # response = redirect(platform_lms_url() + "/bigcommerce/single-click/index/")
-        # reverse("badges_api:v1:badges-user-assertions", kwargs={'username': request.user})
         response = redirect(reverse("bigcommerce_app_single_click:index") + '?bc_storeadminuserid={id}'.format(id=store_admin_user.bc_admin_user.bc_id))
         
         # Todo: This doesn't work at the moment.
@@ -143,8 +141,6 @@ class BigCommerceAppCallbacks():
         store_admin_user, __ = StoreAdminUser.objects.get_or_create(store_id=store.id, bc_admin_user_id=admin_user.id)
         store_admin_user.save()
 
-        # response = redirect(platform_lms_url() + "/bigcommerce/single-click/index/")
-        # reverse("badges_api:v1:badges-user-assertions", kwargs={'username': request.user})
         response = redirect(reverse("bigcommerce_app_single_click:index") + '?bc_storeadminuserid={id}'.format(id=store_admin_user.bc_admin_user.bc_id))
         
         # Todo: This doesn't work at the moment.

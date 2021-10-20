@@ -2590,6 +2590,9 @@ INSTALLED_APPS = [
     # Management of per-user schedules
     'openedx.core.djangoapps.schedules',
     'rest_framework_jwt',
+
+    # BigCommerce App
+    'lms.djangoapps.bigcommerce_app',
 ]
 
 ######################### CSRF #########################################
@@ -2906,7 +2909,6 @@ QUALTRICS_API_TOKEN = None
 
 #################### BigCommerce Settings #######################
 
-# BIGCOMMERCE_APP_ACCESS_TOKEN = None
 BIGCOMMERCE_APP_CLIENT_ID = None
 BIGCOMMERCE_APP_CLIENT_SECRET = None
 BIGCOMMERCE_APP_STORE_HASH = None
