@@ -2746,6 +2746,9 @@ INSTALLED_APPS = [
     'openedx.core.djangoapps.content.learning_sequences.apps.LearningSequencesConfig',
 
     'ratelimitbackend',
+
+    # BigCommerce App
+    'lms.djangoapps.bigcommerce_app',
 ]
 
 ######################### CSRF #########################################
@@ -3047,7 +3050,6 @@ BADGR_TIMEOUT = 10
 
 #################### BigCommerce Settings #######################
 
-# BIGCOMMERCE_APP_ACCESS_TOKEN = None
 BIGCOMMERCE_APP_CLIENT_ID = None
 BIGCOMMERCE_APP_CLIENT_SECRET = None
 BIGCOMMERCE_APP_STORE_HASH = None
