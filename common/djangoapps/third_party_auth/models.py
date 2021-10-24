@@ -31,7 +31,7 @@ from openedx.core.lib.hash_utils import create_hash256
 from .lti import LTI_PARAMS_KEY, LTIAuthBackend
 from .saml import STANDARD_SAML_PROVIDER_KEY, get_saml_idp_choices, get_saml_idp_class
 
-from lms.djangoapps.bigcommerce_app.utils import client_id, client_secret, access_token, BigCommerceAPI, internal_server_error
+from lms.djangoapps.bigcommerce_app.utils import access_token, BigCommerceAPI, internal_server_error
 
 log = logging.getLogger(__name__)
 
@@ -359,8 +359,8 @@ class EmailProviderConfig(ProviderConfig):
     # auth documentation. In order to reuse a backend for a second provider, a subclass can be
     # created with seperate name.
     # example:
-    # class SecondOpenIDProvider(OpenIDAuth):
-    #   name = "second-openId-provider"
+    # class SecondEmailProvider(EmailAuth):
+    #   name = "second-email-provider"
     KEY_FIELDS = ('backend_name',)
     prefix = 'email'
     backend_name = models.CharField(
@@ -370,6 +370,17 @@ class EmailProviderConfig(ProviderConfig):
             "The list of backend choices is determined by the THIRD_PARTY_AUTH_BACKENDS setting."
             # To be precise, it's set by AUTHENTICATION_BACKENDS
             # which production.py sets from THIRD_PARTY_AUTH_BACKENDS
+        )
+    )
+    key = models.TextField(blank=True, verbose_name=u"Client ID")
+    secret = models.TextField(
+        blank=True,
+        verbose_name=u"Client Secret",
+        help_text=(
+            u'For increased security, you can avoid storing this in your database by leaving '
+            ' this field blank and setting '
+            'SOCIAL_AUTH_OAUTH_SECRETS = {"(backend name)": "secret", ...} '
+            'in your instance\'s Django settings (or lms.auth.json)'
         )
     )
     other_settings = models.TextField(blank=True, help_text=u"Optional JSON object with advanced settings, if any.")
@@ -387,11 +398,10 @@ class EmailProviderConfig(ProviderConfig):
     def get_setting(self, name):
         """ Get the value of a setting, or raise KeyError """
         if name == "KEY":
-            return client_id()
+            return self.key
         if name == "SECRET":
-            tmp_secret = client_secret()
-            if tmp_secret:
-                tmp_secret
+            if self.secret:
+                return self.secret
             # To allow instances to avoid storing secrets in the DB, the secret can also be set via Django:
             return getattr(settings, 'SOCIAL_AUTH_OAUTH_SECRETS', {}).get(self.backend_name, '')
         if name == "ACCESS_TOKEN":

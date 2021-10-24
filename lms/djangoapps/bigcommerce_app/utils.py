@@ -55,16 +55,59 @@ def internal_server_error(e):
     return HttpResponse(content, status=500)
 
 
+def _enabled_current_site_provider():
+    """
+    Helper method to return current provider for the current site.
+    """
+    from third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
+
+    email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
+    for email_backend_name in email_backend_names:
+        provider = EmailProviderConfig.current(email_backend_name)
+        if provider.enabled_for_current_site and provider.backend_name in _PSA_EMAIL_BACKENDS:
+            return provider
+
+
 def client_id():
-    return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_CLIENT_ID', "SITE_NAME", settings.BIGCOMMERCE_APP_CLIENT_ID)
+    """
+    Locate the client_id in the current enabled for site EmailProviderConfig.
+    """
+    try:
+        return _enabled_current_site_provider().key
+    except Exception as e:
+        LOGGER.error(
+            u"Could not retrieve `client_id` from current site enabled Third-party Auth Backend."
+        )
+
+    return ""
 
 
 def client_secret():
-    return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_CLIENT_SECRET', "SITE_NAME", settings.BIGCOMMERCE_APP_CLIENT_SECRET)
+    """
+    Locate the client_secret in the current enabled for site EmailProviderConfig.
+    """
+    try:
+        return _enabled_current_site_provider().secret
+    except Exception as e:
+        LOGGER.error(
+            u"Could not retrieve `client_secret` from current site enabled Third-party Auth Backend."
+        )
+
+    return ""
 
 
 def _store_hash():
-    return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_STORE_HASH', "SITE_NAME", settings.BIGCOMMERCE_APP_STORE_HASH)
+    """
+    Locate the store_hash in the current enabled for site EmailProviderConfig.
+    """
+    try:
+        return _enabled_current_site_provider().get_setting("STOREFRONT").get("HASH")
+    except Exception as e:
+        LOGGER.error(
+            u"Could not retrieve `Storefront hash_code` from current site enabled Third-party Auth Backend."
+        )
+
+    return ""
 
 def store_hash():
     return _store_hash()
