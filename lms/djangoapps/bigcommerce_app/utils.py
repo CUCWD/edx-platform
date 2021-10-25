@@ -15,6 +15,7 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from lms.djangoapps.bigcommerce_app.models import Store, Customer, StoreCustomer, StoreCustomerPlatformUser
 
 import bigcommerce.api as bigcommerce_client
+from bigcommerce.resources.products import ProductCustomFields
 
 LOGGER = logging.getLogger(__name__)
 
@@ -314,9 +315,10 @@ class BigCommerceAPI():
                     product_details = cls.api_client.Products.get(product.product_id)
                     custom_fields = product_details.custom_fields()
 
-                    for field in custom_fields:
-                        if field.name == 'Course ID':
-                            courses.append(field.text)
+                    if custom_fields:
+                        for field in custom_fields:
+                            if isinstance(field, ProductCustomFields) and field.name == 'Course ID':
+                                courses.append(field.text)
 
             return courses
 
