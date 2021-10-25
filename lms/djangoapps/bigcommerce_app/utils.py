@@ -59,14 +59,17 @@ def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
     """
+    import third_party_auth
     from third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
 
-    email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
-    for email_backend_name in email_backend_names:
-        provider = EmailProviderConfig.current(email_backend_name)
-        if provider.enabled_for_current_site and provider.backend_name in _PSA_EMAIL_BACKENDS:
-            return provider
+    if third_party_auth.is_enabled():
+        email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
+        for email_backend_name in email_backend_names:
+            provider = EmailProviderConfig.current(email_backend_name)
+            if provider.enabled_for_current_site and provider.backend_name in _PSA_EMAIL_BACKENDS:
+                return provider
 
+    return None
 
 def client_id():
     """
@@ -76,7 +79,7 @@ def client_id():
         return _enabled_current_site_provider().key
     except Exception as e:
         LOGGER.error(
-            u"Could not retrieve `client_id` from current site enabled Third-party Auth Backend."
+            u"Could not retrieve `client_id` from current site enabled Third-party Auth Backend.\n{error}".format(error=e)
         )
 
     return ""
@@ -90,7 +93,7 @@ def client_secret():
         return _enabled_current_site_provider().secret
     except Exception as e:
         LOGGER.error(
-            u"Could not retrieve `client_secret` from current site enabled Third-party Auth Backend."
+            u"Could not retrieve `client_secret` from current site enabled Third-party Auth Backend.\n{error}".format(error=e)
         )
 
     return ""
@@ -104,7 +107,7 @@ def _store_hash():
         return _enabled_current_site_provider().get_setting("STOREFRONT").get("HASH")
     except Exception as e:
         LOGGER.error(
-            u"Could not retrieve `Storefront hash_code` from current site enabled Third-party Auth Backend."
+            u"Could not retrieve `Storefront hash_code` from current site enabled Third-party Auth Backend.\n{error}".format(error=e)
         )
 
     return ""
