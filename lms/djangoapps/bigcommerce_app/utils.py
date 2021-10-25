@@ -8,10 +8,14 @@ from threading import local
 from django.conf import settings
 from django.http import HttpResponse
 
+from opaque_keys.edx.keys import CourseKey
+from student.models import CourseEnrollment
+
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from lms.djangoapps.bigcommerce_app.models import Store, Customer, StoreCustomer, StoreCustomerPlatformUser
 
 import bigcommerce.api as bigcommerce_client
+from bigcommerce.resources.products import ProductCustomFields
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +57,6 @@ def internal_server_error(e):
     content = "Internal Server Error: " + str(e) + "<br>"
     content += _error_info(e)
     return HttpResponse(content, status=500)
-
 
 def _enabled_current_site_provider():
     """
@@ -293,3 +296,44 @@ class BigCommerceAPI():
             return internal_server_error(e)
 
         return False
+
+    @classmethod
+    def get_order_items(cls, customer_id):
+
+        if cls.api_client:
+            try:
+                orders = cls.api_client.Orders.all(customer_id=customer_id)
+            except:
+                return
+
+            courses = []
+
+            for order in orders:
+                products = cls.api_client.OrderProducts.all(order.id)
+
+                for product in products:
+                    product_details = cls.api_client.Products.get(product.product_id)
+                    custom_fields = product_details.custom_fields()
+
+                    if custom_fields:
+                        for field in custom_fields:
+                            if isinstance(field, ProductCustomFields) and field.name == 'Course ID':
+                                courses.append(field.text)
+
+            return courses
+
+    @classmethod
+    def get_bc_course_enrollments(cls, user):
+
+        try:
+            bc_customer_id = StoreCustomerPlatformUser.locate_store_customer(user.id)
+        except:
+            return
+
+        if bc_customer_id:
+            enroll_courses = cls.get_order_items(bc_customer_id)
+
+            if enroll_courses:
+                for course_key in enroll_courses:
+                    course_key = CourseKey.from_string(course_key)
+                    CourseEnrollment.enroll(user, course_key)
