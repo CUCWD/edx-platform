@@ -62,9 +62,10 @@ def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
     """
-    from third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
+    from common.djangoapps.third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
 
     email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
+    # import pdb; pdb.set_trace()
     for email_backend_name in email_backend_names:
         provider = EmailProviderConfig.current(email_backend_name)
         if provider.enabled_for_current_site and provider.backend_name in _PSA_EMAIL_BACKENDS:
@@ -309,7 +310,11 @@ class BigCommerceAPI():
                 products = cls.api_client.OrderProducts.all(order.id)
 
                 for product in products:
-                    courses.append(product.sku)
+                    product_details = cls.api_client.Products.get(product.product_id)
+                    custom_field = product_details.custom_fields()
+
+                    if custom_field[0].name == 'Course ID':
+                        courses.append(custom_field[0].text)
 
             return courses
 
