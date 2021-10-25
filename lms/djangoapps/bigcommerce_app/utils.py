@@ -57,7 +57,6 @@ def internal_server_error(e):
     content += _error_info(e)
     return HttpResponse(content, status=500)
 
-
 def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
@@ -313,10 +312,11 @@ class BigCommerceAPI():
 
                 for product in products:
                     product_details = cls.api_client.Products.get(product.product_id)
-                    custom_field = product_details.custom_fields()
+                    custom_fields = product_details.custom_fields()
 
-                    if custom_field[0].name == 'Course ID':
-                        courses.append(custom_field[0].text)
+                    for field in custom_fields:
+                        if field.name == 'Course ID':
+                            courses.append(field.text)
 
             return courses
 
