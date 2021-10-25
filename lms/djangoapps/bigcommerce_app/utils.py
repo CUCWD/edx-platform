@@ -312,7 +312,11 @@ class BigCommerceAPI():
                 products = cls.api_client.OrderProducts.all(order.id)
 
                 for product in products:
-                    courses.append(product.sku)
+                    product_details = cls.api_client.Products.get(product.product_id)
+                    custom_field = product_details.custom_fields()
+
+                    if custom_field[0].name == 'Course ID':
+                        courses.append(custom_field[0].text)
 
             return courses
 
