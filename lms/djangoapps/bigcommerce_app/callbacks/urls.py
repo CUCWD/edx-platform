@@ -6,8 +6,7 @@ BigCommerce Callback URLs for Single-Click app.
 from django.conf import settings
 from django.conf.urls import include, url
 
-# from badges.apis.v1 import views
-from bigcommerce_app.callbacks import views
+from lms.djangoapps.bigcommerce_app.callbacks import views
 
 app_name = 'v1'
 urlpatterns = []

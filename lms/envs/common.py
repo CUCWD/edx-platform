@@ -2368,6 +2368,9 @@ INSTALLED_APPS = [
 
     # API Documentation
     'rest_framework_swagger',
+
+    # BigCommerce App
+    'lms.djangoapps.bigcommerce_app',
 ]
 
 ######################### CSRF #########################################
@@ -2655,7 +2658,6 @@ BADGR_OAUTH_CLIENT_ID = 'public'
 
 #################### BigCommerce Settings #######################
 
-# BIGCOMMERCE_APP_ACCESS_TOKEN = None
 BIGCOMMERCE_APP_CLIENT_ID = None
 BIGCOMMERCE_APP_CLIENT_SECRET = None
 BIGCOMMERCE_APP_STORE_HASH = None
