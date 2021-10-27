@@ -83,13 +83,16 @@ class Customer(models.Model):
         max_length=255,
         unique=False,
     )
-    bc_group_id = models.IntegerField(blank=False)
+    bc_group_id = models.IntegerField(blank=True, null=True)
+    bc_first_name = models.TextField(blank=True)
+    bc_last_name = models.TextField(blank=True)
 
     def __str__(self):
-        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}".format(
+        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}\nFull Name: {full_name}".format(
             id=self.bc_id,
             email=self.bc_email,
-            group_id=self.bc_group_id
+            group_id=self.bc_group_id,
+            full_name="{first} {last}".format(first=self.bc_first_name, last=self.bc_last_name)
         )
 
     class Meta(object):
