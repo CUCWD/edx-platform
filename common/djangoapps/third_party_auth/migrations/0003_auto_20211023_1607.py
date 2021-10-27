@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('third_party_auth', '0002_emailproviderconfig'),
+        ('third_party_auth', '0022_emailproviderconfig'),
     ]
 
     operations = [
