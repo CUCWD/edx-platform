@@ -324,7 +324,7 @@ class BigCommerceAPI():
     def get_bc_course_enrollments(cls, user):
 
         try:
-            bc_customer_id = StoreCustomerPlatformUser.locate_store_customer(user.id)
+            bc_customer_id = StoreCustomerPlatformUser.locate_store_customer(store_hash(), user.id)
         except:
             return
 
