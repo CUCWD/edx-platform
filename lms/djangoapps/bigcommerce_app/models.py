@@ -4,7 +4,6 @@ from django.db import models
 from django.contrib.auth.models import User
 
 from django.conf import settings
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 LOGGER = logging.getLogger(__name__)
 
@@ -124,14 +123,12 @@ class StoreCustomerPlatformUser(models.Model):
     platform_user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     @classmethod
-    def locate_store_customer(cls, platform_user):
+    def locate_store_customer(cls, store_hash, platform_user):
         """
         Returns a BigCommerce user for a store.
         """
 
         platform_user_store_customers = cls.objects.filter(platform_user=platform_user)
-
-        store_hash = configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_STORE_HASH', "SITE_NAME", settings.BIGCOMMERCE_APP_STORE_HASH)
 
         if store_hash:
             bc_site_store = Store.objects.get(store_hash=store_hash)
