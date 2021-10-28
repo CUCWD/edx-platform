@@ -125,23 +125,19 @@ def access_token():
 
 
 def platform_lms_url():
-    return configuration_helpers.get_value_for_org('LMS_ROOT_URL', "SITE_NAME", settings.LMS_ROOT_URL)
+    return configuration_helpers.get_value("LMS_ROOT_URL", settings.LMS_ROOT_URL)
 
 class BigCommerceAPI():
     """
     Handles talking with the BigCommerceAPI
     """
 
-    api_client = None
-
     def __init__(self):
-        self._setup_api_client()
+        self._api_client = bigcommerce_client.BigcommerceApi(client_id=client_id(), store_hash=store_hash(), access_token=access_token())
 
-    def _setup_api_client(self):
-        """
-        Setup the BigCommerce API one time.
-        """
-        self.api_client = bigcommerce_client.BigcommerceApi(client_id=client_id(), store_hash=store_hash(), access_token=access_token())
+    @property
+    def api_client(self):
+        return self._api_client
 
     @classmethod
     def bcapi_customer_metadata(cls, bc_customer_email):
@@ -151,11 +147,12 @@ class BigCommerceAPI():
         At the moment this calls V2 of the BigCommerce API which doesn't have an 'id' to make get calls against.
         https://developer.bigcommerce.com/api-reference/store-management/customers-v2/customers/getallcustomers
         """
-        cls._setup_api_client(cls)
+        # cls._setup_api_client(cls)
+        bcapi_client = cls().api_client
 
-        if cls.api_client:
+        if bcapi_client:
             try:
-                customer = cls.api_client.Customers.all(email=bc_customer_email)[0]    
+                customer = bcapi_client.Customers.all(email=bc_customer_email)[0]    
                 if customer:
 
                     LOGGER.info(
@@ -185,11 +182,10 @@ class BigCommerceAPI():
         """
         Returns decode payload from JWT token passed in from BigCommerce third-party-auth complete and saves the customer information on the platform.
         """
-        cls._setup_api_client(cls)
-
-        if cls.api_client:
+        bcapi_client = cls().api_client
+        if bcapi_client:
             try:
-                user_data = cls.api_client.oauth_verify_payload_jwt(payload, client_secret(), client_id())
+                user_data = bcapi_client.oauth_verify_payload_jwt(payload, client_secret(), client_id())
 
                 bc_customer = cls.bcapi_customer_metadata(user_data['customer']['email'])
 
@@ -300,19 +296,21 @@ class BigCommerceAPI():
     @classmethod
     def get_order_items(cls, customer_id):
 
-        if cls.api_client:
+        bcapi_client = cls().api_client
+
+        if bcapi_client:
             try:
-                orders = cls.api_client.Orders.all(customer_id=customer_id)
+                orders = bcapi_client.Orders.all(customer_id=customer_id)
             except:
                 return
 
             courses = []
 
             for order in orders:
-                products = cls.api_client.OrderProducts.all(order.id)
+                products = bcapi_client.OrderProducts.all(order.id)
 
                 for product in products:
-                    product_details = cls.api_client.Products.get(product.product_id)
+                    product_details = bcapi_client.Products.get(product.product_id)
                     custom_fields = product_details.custom_fields()
 
                     if custom_fields:

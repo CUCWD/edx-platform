@@ -41,18 +41,22 @@ class BigCommerceAppCallbacks():
         code = request.GET.get('code')
         context = request.GET.get('context')
         scope = request.GET.get('scope')
-        store_hash = context.split('/')[1]
+        store_hash = context.split('/')[1] if context else ''
 
         # Should be same as the BigCommerce Single-Click app Auth Callback URL
         auth_redirect = "{lms_root_url}{bcapp_auth_callback}".format(
             lms_root_url=platform_lms_url(),
             bcapp_auth_callback=reverse('bigcommerce_app_callbacks:auth')).rstrip("/")
 
-        # Fetch a permanent oauth token. This will throw an exception on error,
-        # which will get caught by our error handler above.
-        client = BigcommerceApi(client_id=client_id(), store_hash=store_hash)
+        LOGGER.info(
+                u"The `auth_redirect` is {redirect}".format(redirect=auth_redirect)
+            )
 
         try:
+            # Fetch a permanent oauth token. This will throw an exception on error,
+            # which will get caught by our error handler above.
+            client = BigcommerceApi(client_id=client_id(), store_hash=store_hash)
+
             token = client.oauth_fetch_token(client_secret(), code, context, scope, auth_redirect)
             bc_store_admin_user_id = token['user']['id']
             bc_store_admin_email = token['user']['email']
