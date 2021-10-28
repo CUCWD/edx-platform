@@ -28,6 +28,7 @@ from edxmako.shortcuts import render_to_response, render_to_string
 from entitlements.models import CourseEntitlement
 from lms.djangoapps.commerce.utils import EcommerceService  # pylint: disable=import-error
 from lms.djangoapps.verify_student.services import IDVerificationService
+from lms.djangoapps.bigcommerce_app.utils import BigCommerceAPI
 from openedx.core.djangoapps import monitoring_utils
 from openedx.core.djangoapps.catalog.utils import (
     get_programs,
@@ -205,6 +206,9 @@ def get_course_enrollments(user, org_whitelist, org_blacklist):
         generator[CourseEnrollment]: a sequence of enrollments to be displayed
         on the user's dashboard.
     """
+
+    BigCommerceAPI.get_bc_course_enrollments(user)
+
     for enrollment in CourseEnrollment.enrollments_for_user_with_overviews_preload(user):
 
         # If the course is missing or broken, log an error and skip it.
