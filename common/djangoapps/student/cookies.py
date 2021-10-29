@@ -205,7 +205,7 @@ def delete_logged_in_cookies(response):
         response.delete_cookie(
             cookie_name.encode('utf-8'),
             path='/',
-            domain=settings.SESSION_COOKIE_DOMAIN
+            domain=configuration_helpers.get_value('SESSION_COOKIE_DOMAIN', settings.SESSION_COOKIE_DOMAIN)
         )
 
     return response
