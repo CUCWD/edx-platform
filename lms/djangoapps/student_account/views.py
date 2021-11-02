@@ -570,6 +570,12 @@ def account_settings_context(request):
         'enable_account_deletion': configuration_helpers.get_value(
             'ENABLE_ACCOUNT_DELETION', settings.FEATURES.get('ENABLE_ACCOUNT_DELETION', False)
         ),
+        'enable_account_linked_accounts': configuration_helpers.get_value(
+            'ENABLE_ACCOUNT_LINKED_ACCOUNTS', settings.FEATURES.get('ENABLE_ACCOUNT_LINKED_ACCOUNTS', False)
+        ),
+        'enable_account_order_history': configuration_helpers.get_value(
+            'ENABLE_ACCOUNT_ORDER_HISTORY', settings.FEATURES.get('ENABLE_ACCOUNT_ORDER_HISTORY', False)
+        ),
         'extended_profile_fields': _get_extended_profile_fields(),
     }
 
