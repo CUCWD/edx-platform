@@ -9,37 +9,40 @@
         'js/student_account/views/account_section_view',
         'text!templates/student_account/account_settings.underscore'
     ], function(gettext, $, _, TabbedView, HtmlUtils, AccountSectionView, accountSettingsTemplate) {
+
+        var accountSettingsTabsConfig = [
+            {
+                name: 'aboutTabSections',
+                id: 'about-tab',
+                label: gettext('Account Information'),
+                class: 'active',
+                tabindex: 0,
+                selected: true,
+                expanded: true
+            }
+        ];
+        var accountLinkedAccounts = {
+                name: 'accountsTabSections',
+                id: 'accounts-tab',
+                label: gettext('Linked Accounts'),
+                tabindex: -1,
+                selected: false,
+                expanded: false
+            };
+        var accountOrdersTabSections = {
+            name: 'ordersTabSections',
+            id: 'orders-tab',
+            label: gettext('Order History'),
+            tabindex: -1,
+            selected: false,
+            expanded: false
+        };
+
         var AccountSettingsView = TabbedView.extend({
 
             navLink: '.account-nav-link',
             activeTab: 'aboutTabSections',
-            accountSettingsTabs: [
-                {
-                    name: 'aboutTabSections',
-                    id: 'about-tab',
-                    label: gettext('Account Information'),
-                    class: 'active',
-                    tabindex: 0,
-                    selected: true,
-                    expanded: true
-                },
-                {
-                    name: 'accountsTabSections',
-                    id: 'accounts-tab',
-                    label: gettext('Linked Accounts'),
-                    tabindex: -1,
-                    selected: false,
-                    expanded: false
-                },
-                {
-                    name: 'ordersTabSections',
-                    id: 'orders-tab',
-                    label: gettext('Order History'),
-                    tabindex: -1,
-                    selected: false,
-                    expanded: false
-                }
-            ],
+            accountSettingsTabs: accountSettingsTabsConfig,
             events: {
                 'click .account-nav-link': 'switchTab',
                 'keydown .account-nav-link': 'keydownHandler'
@@ -52,7 +55,20 @@
 
             render: function() {
                 var tabName,
-                    view = this;
+                    view = this;   
+
+                // Add in the `Linked Accounts` tab if enabled in Site Configuration
+                if (view.options.tabSections['accountsTabSections'].length > 0 ) {
+                    accountSettingsTabsConfig.push(accountLinkedAccounts);
+                    this.accountSettingsTabs = accountSettingsTabsConfig;
+                }
+
+                // Add in the `Order History` tab if enabled in Site Configuration
+                if (view.options.tabSections['ordersTabSections'].length > 0 ) {
+                    accountSettingsTabsConfig.push(accountOrdersTabSections);
+                    this.accountSettingsTabs = accountSettingsTabsConfig;
+                }
+
                 HtmlUtils.setHtml(this.$el, HtmlUtils.template(accountSettingsTemplate)({
                     accountSettingsTabs: this.accountSettingsTabs
                 }));
