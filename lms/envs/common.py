@@ -486,6 +486,12 @@ FEATURES = {
     # .. toggle_status: supported
     # .. toggle_warnings: None
     'ENABLE_ORA_USER_STATE_UPLOAD_DATA': False,
+
+    # Whether to display the account linked accounts view.
+    'ENABLE_ACCOUNT_LINKED_ACCOUNTS': True,
+
+    # Whether to display the account order history view.
+    'ENABLE_ACCOUNT_ORDER_HISTORY': True,
 }
 
 # Settings for the course reviews tool template and identification key, set either to None to disable course reviews
