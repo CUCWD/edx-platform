@@ -1,4 +1,4 @@
-"""TO-DO: Write a description of what this XBlock is."""
+"""This Xblock creates a module that makes it easy to manage what keywords are displayed to the user."""
 
 from typing import List
 import pkg_resources
@@ -8,13 +8,14 @@ from xblock.fields import String, Scope, List
 from django.conf import settings
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 import json
+import bleach
 
 class KeytermsXBlock(XBlock):
     """
-    TO-DO: document what your XBlock does.
+    This Xblock creates a module that makes it easy to manage what keywords are displayed to the user.
     """
 
-    includedKeytermsList = List(
+    includedkeyterms = List(
         default=[], scope=Scope.content,
         help="A set to hold all keyterms that are selected to be displayed.",
     )
@@ -35,6 +36,16 @@ class KeytermsXBlock(XBlock):
         scope=Scope.settings,
         default="Keyterms"
     )
+
+    # Tags to allow in HTML, attempting to prevent XSS
+    allowedtags = ['a', 'abbr', 'acronym', 'b', 'blockquote', 'code', 'em', 'i', 'li', 'ol', 'strong', 
+    'ul', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'u', 'table', 'tbody', 'td', 'tr', 'th', 'img', 'em', 'br']
+
+    root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
+    print(root_url)
+
+    root_url = "localhost"
+    course_id = ""
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
@@ -67,67 +78,47 @@ class KeytermsXBlock(XBlock):
         frag.initialize_js('KeytermsXBlock')
         return frag
 
-    # TO-DO: Event handlers
     @XBlock.json_handler
     def edit_lesson(self, data, suffix=''):
         """
-        An example handler, which increments the data.
+        This handler is used to edit the lesson summary that is displayed to the user.
         """
-        self.lessonsummary = data['lessonsummary']
+        self.lessonsummary = bleach.clean(data['lessonsummary'], tags=self.allowedtags)
         return {"lessonsummary": self.lessonsummary}
 
-    # TO-DO: change this handler to perform your own actions.  You may need more
-    # than one handler, or you may not need any handlers at all.
     @XBlock.json_handler
     def get_included_keyterms(self, data, suffix=''):
         """
-        An example handler, 
+        This handler returns all keyterms that are being listed to the user.
         """
-        return {"includedKeytermsList": self.includedKeytermsList}
+        return {"includedkeyterms": self.includedkeyterms}
 
-    # TO-DO: change this handler to perform your own actions.  You may need more
-    # than one handler, or you may not need any handlers at all.
     @XBlock.json_handler
     def add_keyterm(self, data, suffix=''):
         """
-        An example handler, 
+        This handler adds a keyterm to the list of included keyterms.
         """
-        self.includedKeytermsList.append(data['keyterm'])
-        self.updateKeytermHtml(self.includedKeytermsList, data['course_id'])
+        self.includedkeyterms.append(data['keyterm'])
+        self.course_id = data['course_id']
+        self.update_keyterm_html(self.includedkeyterms)
         return {"keytermhtml": self.keytermhtml}
 
-    # TO-DO: change this handler to perform your own actions.  You may need more
-    # than one handler, or you may not need any handlers at all.
     @XBlock.json_handler
     def remove_keyterm(self, data, suffix=''):
         """
-        An example handler, 
+        This handler removes a keyterm from the list of included keyterms.
         """
-        self.includedKeytermsList.remove(data['keyterm'])
-        self.updateKeytermHtml(self.includedKeytermsList, data['course_id'])
+        self.includedkeyterms.remove(data['keyterm'])
+        self.course_id = data['course_id']
+        self.update_keyterm_html(self.includedkeyterms)
         return {"keytermhtml": self.keytermhtml}
 
-    def updateKeytermHtml(self, list, courseid):
+    def update_keyterm_html(self, list):
+        """
+        This handler updates the html to be displayed to the user.
+        """
         self.keytermhtml = ""
         for keyterm in list:
-            listItem = '<li><a class="keytermli" id="{}" href="http://{}:2000/course/course-v1:{}/glossary">{}</a></li>\n'
-            listItem = listItem.format(keyterm, "localhost", courseid, keyterm)
-            self.keytermhtml += listItem
-
-    # TO-DO: change this to create the scenarios you'd like to see in the
-    # workbench while developing your XBlock.
-    @staticmethod
-    def workbench_scenarios():
-        """A canned scenario for display in the workbench."""
-        return [
-            ("KeytermsXBlock",
-             """<keyterms/>
-             """),
-            ("Multiple KeytermsXBlock",
-             """<vertical_demo>
-                <keyterms/>
-                <keyterms/>
-                <keyterms/>
-                </vertical_demo>
-             """),
-        ]
+            listItem = '<li><a class="keytermli" id="{keyterm}" href="http://{glossaryurl}:2000/course/course-v1:{courseid}/glossary?scrollTo={keyterm}">{keyterm}</a></li>\n'
+            listItem = listItem.format(keyterm = keyterm, glossaryurl = self.root_url, courseid=self.course_id)
+            self.keytermhtml += bleach.clean(listItem, tags=self.allowedtags)

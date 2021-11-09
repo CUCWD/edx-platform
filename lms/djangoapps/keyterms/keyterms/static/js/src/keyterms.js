@@ -1,4 +1,7 @@
 /* Javascript for KeytermsXBlock. */
+
+// https://edx.readthedocs.io/projects/edx-developer-guide/en/latest/preventing_xss/preventing_xss.html
+
 function KeytermsXBlock(runtime, element) {
     // Getting the handles for the python functions
     var addkeywordhandlerUrl = runtime.handlerUrl(element, 'add_keyterm');
@@ -6,22 +9,19 @@ function KeytermsXBlock(runtime, element) {
     var editlessonhandlerUrl = runtime.handlerUrl(element, 'edit_lesson');
     var getincludedkeytermshandlerUrl = runtime.handlerUrl(element, 'get_included_keyterms');
 
-    // Stroing all keyterms for the course.
+    // Variables needed to store the data for this page.
     var keytermsJson;
-    var allKeytermsList = new Set();
-    var includedKeytermsList = new Set();
+    var allKeytermsSet = new Set();
     var courseid;
 
     // Used to update the keyterms html
     function updateSummary(result) {
-        html = $.parseHTML(result.lessonsummary);
-        $('.lessonsummary').html(html);
+        edx.HtmlUtils.setHtml($('.lessonsummary'), edx.HtmlUtils.HTML(result.lessonsummary));
     }
 
     // Used to update the keyterms html
     function updateKeyterms(result) {
-        html = $.parseHTML(result.keytermhtml);
-        $('.allKeytermsList').html(html);
+       edx.HtmlUtils.setHtml($('.allKeytermsList'), edx.HtmlUtils.HTML(result.keytermhtml));
     }
 
     // Used for getting courseID
@@ -39,8 +39,9 @@ function KeytermsXBlock(runtime, element) {
         }
     }
 
-    // Editing lesson summary
-    $(".editLessonSummary").click(function(eventObject) {
+    // Editing lesson summary handler
+    $(".editLessonSummary").click(function(event) {
+        event.preventDefault();
         var lesson = $(".lesson-field").val();
         var data = {lessonsummary: lesson};
 
@@ -51,41 +52,167 @@ function KeytermsXBlock(runtime, element) {
             success: updateSummary
         });
     });
-     
+    
+    // Used for editing the keyterms
     function populateOptions(result) {
         var available = $('#id_keyterms_from');
         var chosen = $('#id_keyterms_to');
 
-        allKeytermsList.forEach(term => {
-            if ((result.includedKeytermsList).includes(term)){
-                $(chosen).append(`<option value="${term}" title="${term}">${term}</option>`);
+        // Adds each term to appropriate side of list
+        allKeytermsSet.forEach(term => {
+            var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+
+            if ((result.includedkeyterms).includes(term)){
+                edx.HtmlUtils.append($(chosen), html);
             } else {
-                $(available).append(`<option value="${term}" title="${term}">${term}</option>`);
+                edx.HtmlUtils.append($(available), html);
             }
         });
 
-        // Create event handlers for the options
-        $('#id_keyterms_input').change(function(){
-            var select = $('#id_keyterms_from');
-            for (var i = 0; i < select.length; i++) {
-                var txt = select.options[i].text;
-                var include = txt.toLowerCase().search($(this).val().toLowerCase());
-                select.options[i].style.display = include ? 'inline-block':'none';
-            }
+        // Handle search feature
+        $('#id_keyterms_input').keyup(function(){
+            $('#id_keyterms_from').find('option').each(function() {
+                var txt = $(this).val();
+                var regex = new RegExp($('#id_keyterms_input').val(), "i");
+                $(this).css("display", regex.test(txt) ? 'block':'none');
+            });
         });
 
-        $('#id_keyterms_add_link').click(function() {
-            var arr = $(available).map(function(){
-                return this.value;
-            }).get();
+        // Handle double clicking an element
+        $("body").on('dblclick', '#id_keyterms_from option', function(event) {
+            event.preventDefault();
+            var term = $(this).val();
+            data = {keyterm:term, course_id: courseid}
+            $.ajax({
+                type: "POST",
+                url: addkeywordhandlerUrl,
+                data: JSON.stringify(data),
+                async: false,
+                success: function(result){
+                    updateKeyterms(result)
+                }
+            });
+            $(`#id_keyterms_from option[value='${term}']`).remove();
+            var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+            edx.HtmlUtils.append($(chosen), html);
+        });
+
+        // Handle double clicking an element
+        $("body").on('dblclick','#id_keyterms_to option', function(event) {
+            event.preventDefault();
+            var term = $(this).val();
+            data = {keyterm:term, course_id: courseid}
+            $.ajax({
+                type: "POST",
+                url: removekeywordhandlerUrl,
+                data: JSON.stringify(data),
+                async: false,
+                success: function(result){
+                    updateKeyterms(result)
+                }
+            });
+            $(`#id_keyterms_to option[value='${term}']`).remove();
+            var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+            edx.HtmlUtils.append($(available), html);
+        });
+
+        // Handle selecting many elements
+        $('#id_keyterms_add_link').on('click', function(event) {
+            event.preventDefault();
+            var arr = $.map($('#id_keyterms_from option:selected'), function(option){
+                return option.value;
+            });
             arr.forEach(term => {
-                data = {keyterm:term}
+                data = {keyterm:term, course_id: courseid}
                 $.ajax({
                     type: "POST",
                     url: addkeywordhandlerUrl,
                     data: JSON.stringify(data),
-                    success: updateKeyterms
+                    async: false,
+                    success: function(result){
+                        updateKeyterms(result)
+                    }
                 });
+                $(`#id_keyterms_from option[value='${term}']`).remove();
+                var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+                edx.HtmlUtils.append($(chosen), html);
+            });
+        });
+
+        // Handle selecting many elements
+        $('#id_keyterms_remove_link').on('click', function(event) {
+            event.preventDefault();
+            var arr = $.map($('#id_keyterms_to option:selected'), function(option){
+                return option.value;
+            });
+            arr.forEach(term => {
+                data = {keyterm:term, course_id: courseid}
+                $.ajax({
+                    type: "POST",
+                    url: removekeywordhandlerUrl,
+                    data: JSON.stringify(data),
+                    async: false,
+                    success: function(result){
+                        updateKeyterms(result)
+                    }
+                });
+                $(`#id_keyterms_to option[value='${term}']`).remove();
+                var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+                edx.HtmlUtils.append($(available), html);
+            });
+        });
+
+        // Handle remove all button
+        $('#id_keyterms_remove_all_link').on('click', function(event) {
+            event.preventDefault();
+            var arr = $.map($('#id_keyterms_to option'), function(option){
+                return option.value;
+            });
+            arr.forEach(term => {
+                data = {keyterm:term, course_id: courseid}
+                $.ajax({
+                    type: "POST",
+                    url: removekeywordhandlerUrl,
+                    data: JSON.stringify(data),
+                    async: false,
+                    success: function(result){
+                        updateKeyterms(result)
+                    }
+                });
+                $(`#id_keyterms_to option[value='${term}']`).remove();
+                var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+                edx.HtmlUtils.append($(available), html);
+            });
+        });
+
+        // Handle choose all button
+        $('#id_keyterms_add_all_link').on('click', function(event) {
+            event.preventDefault();
+            var arr = $.map($('#id_keyterms_from option'), function(option){
+                return option.value;
+            });
+            arr.forEach(term => {
+                data = {keyterm:term, course_id: courseid}
+                $.ajax({
+                    type: "POST",
+                    url: addkeywordhandlerUrl,
+                    data: JSON.stringify(data),
+                    async: false,
+                    success: function(result){
+                        updateKeyterms(result)
+                    }
+                });
+                $(`#id_keyterms_from option[value='${term}']`).remove();
+
+                var html = edx.HtmlUtils.joinHtml(edx.HtmlUtils.HTML('<option value="'), gettext(term), edx.HtmlUtils.HTML('" title="'), 
+            gettext(term), edx.HtmlUtils.HTML('">'), gettext(term), edx.HtmlUtils.HTML('</option>'));
+                edx.HtmlUtils.append($(chosen), html);
             });
         });
     }
@@ -100,9 +227,9 @@ function KeytermsXBlock(runtime, element) {
         resturl = 'http://localhost:18500/api/v1/course_terms/?course_id=course-v1:'+ encodeURIComponent(courseid);
         $.getJSON(resturl,
         function(data, err) {
-            keytermsJson = data;
             // Store list of all keyterms
-            keytermsJson.forEach( keyterm => allKeytermsList.add(keyterm["key_name"]));
+            keytermsJson = data;
+            keytermsJson.forEach( keyterm => allKeytermsSet.add(keyterm["key_name"]));
         }).then(data=>
             { 
                 // Showing information about definition on hover
@@ -128,11 +255,13 @@ function KeytermsXBlock(runtime, element) {
 
                     // Lessons
                     formattedContent += `<div class="outline-box"><h1>Lesson Pages</h1>`
-                    /*
+                    
                     keyterminfo["lessons"].forEach(lesson => {
-                        formattedContent += `<p>${lesson[""]}</p>`
+                        formattedContent += `<a href='${lesson["lesson_link"]}' class="btn">`
+                        formattedContent += `Module ${lesson["lesson_number"]}`
+                        formattedContent += `</a>`
                     })
-                    */
+                    
                     formattedContent += `</div>`;
 
                     // Resources

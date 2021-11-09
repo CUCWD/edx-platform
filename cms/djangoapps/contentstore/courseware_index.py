@@ -44,7 +44,7 @@ def textbook_key_terms(course_id):
     # when request is sent to endpoint, starts process of retrieving and searching through textbooks for key terms
     r = requests.post(URL)
     return r
-    
+
 def strip_html_content_to_text(html_content):
     """ Gets only the textual part for html content - useful for building text to be searched """
     # Removing HTML-encoded non-breaking space characters
@@ -145,6 +145,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
         Returns:
         Number of items that have been added to the index
         """
+        
         error_list = []
         searcher = SearchEngine.get_search_engine(cls.INDEX_NAME)
         if not searcher:
@@ -285,6 +286,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
             raise SearchIndexingError('Error(s) present during indexing', error_list)
 
         return indexed_count["count"]
+        
 
     @classmethod
     def _do_reindex(cls, modulestore, structure_key):

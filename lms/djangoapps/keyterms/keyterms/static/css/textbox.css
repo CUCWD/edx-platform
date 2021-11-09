@@ -3,7 +3,8 @@
     /* Both elements need the same text and space styling so they are directly on top of each other */
     padding: 10px;
     border: 0;
-    width: calc(100% - 32px);
+    border-radius: 10px;
+    width: 80%;
     height: 150px;
   }
   #editing, #highlighting, #highlighting * {
@@ -187,3 +188,7 @@
   }
   
   /* End of prism.js syntax highlighting*/
+
+  .editLessonSummary {
+    display: block;
+  }

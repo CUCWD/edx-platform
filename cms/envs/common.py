@@ -133,7 +133,7 @@ from openedx.core.release import doc_version
 
 ############### Edx Key Terms API ###############
 
-KEY_TERMS_API_URL = 'http://733be8bf2c10:18500/api/v1/platform_course_reindex/?course_id='
+KEY_TERMS_API_URL = 'http://8a6ba90b2c11:18500/api/v1/platform_course_reindex/?course_id='
 
 ################ Enable credit eligibility feature ####################
 ENABLE_CREDIT_ELIGIBILITY = True
