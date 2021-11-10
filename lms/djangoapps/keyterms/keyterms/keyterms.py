@@ -42,7 +42,6 @@ class KeytermsXBlock(XBlock):
     'ul', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'u', 'table', 'tbody', 'td', 'tr', 'th', 'img', 'em', 'br']
 
     root_url = configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
-    print(root_url)
 
     root_url = "localhost"
     course_id = ""

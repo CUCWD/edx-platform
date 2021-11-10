@@ -222,9 +222,11 @@ function KeytermsXBlock(runtime, element) {
         // Getting courseid
         const url = window.location.href;
         courseid = getStringBetween(url, 'block\-v1:', 'type').slice(0,-1);
-
+        
         // Getting all the keyterms
-        resturl = 'http://localhost:18500/api/v1/course_terms/?course_id=course-v1:'+ encodeURIComponent(courseid);
+        courseid.replace(" ", "+");
+        resturl = 'http://localhost:18500/api/v1/course_terms/?course_id=course-v1:'+ courseid;
+
         $.getJSON(resturl,
         function(data, err) {
             // Store list of all keyterms
