@@ -6,7 +6,7 @@
     left: 0;
     z-index: 99999;
     display: block;
-    min-width: 300px;
+    min-width: 400px;
     max-width: 30%;
     font-style: normal;
     font-weight: 400;
@@ -170,4 +170,7 @@
   .popover-body {
     padding: 0.5rem 0.75rem;
     color: #212529;
+    max-height: 450px;
+    overflow-y: auto;
+    white-space:pre-wrap;
   }

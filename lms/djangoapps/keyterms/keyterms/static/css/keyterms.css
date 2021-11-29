@@ -245,3 +245,55 @@ h2 {
         position: static;
     }
 }
+
+/* Defaults for lesson summary */
+.lessonsummary li {
+    display: list-item !important;
+}
+
+.lessonsummary ul {
+    display: block !important;
+    list-style-type: disc !important;
+    margin-top: 1em !important;
+    margin-bottom: 1em !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 40px !important;
+}
+
+.lessonsummary table {
+    display: table !important;
+    border-collapse: separate !important;
+    border-spacing: 2px !important;
+    border-color: gray !important;
+}
+
+.lessonsummary tbody {
+    display: table-row-group !important;
+    vertical-align: middle !important;
+    border-color: inherit !important;
+}
+
+.lessonsummary td {
+    display: table-cell !important;
+    vertical-align: inherit !important;
+}
+
+.lessonsummary tr {
+    display: table-row !important;
+    vertical-align: inherit !important;
+    border-color: inherit !important;
+}
+
+.lessonsummary th {
+    display: table-cell !important;
+    vertical-align: inherit !important;
+    font-weight: bold !important;
+    text-align: center !important;
+}
+
+.lessonsummary thead {
+    display: table-header-group !important;
+    vertical-align: middle !important;
+    border-color: inherit !important;
+}

@@ -90,6 +90,7 @@ class KeytermsXBlock(XBlock):
         """
         This handler returns all keyterms that are being listed to the user.
         """
+        self.course_id = data['course_id']
         return {"includedkeyterms": self.includedkeyterms}
 
     @XBlock.json_handler
@@ -98,7 +99,6 @@ class KeytermsXBlock(XBlock):
         This handler adds a keyterm to the list of included keyterms.
         """
         self.includedkeyterms.append(data['keyterm'])
-        self.course_id = data['course_id']
         self.update_keyterm_html(self.includedkeyterms)
         return {"keytermhtml": self.keytermhtml}
 
@@ -108,7 +108,6 @@ class KeytermsXBlock(XBlock):
         This handler removes a keyterm from the list of included keyterms.
         """
         self.includedkeyterms.remove(data['keyterm'])
-        self.course_id = data['course_id']
         self.update_keyterm_html(self.includedkeyterms)
         return {"keytermhtml": self.keytermhtml}
 

@@ -83,7 +83,7 @@ function KeytermsXBlock(runtime, element) {
         $("body").on('dblclick', '#id_keyterms_from option', function(event) {
             event.preventDefault();
             var term = $(this).val();
-            data = {keyterm:term, course_id: courseid}
+            data = {keyterm:term}
             $.ajax({
                 type: "POST",
                 url: addkeywordhandlerUrl,
@@ -103,7 +103,7 @@ function KeytermsXBlock(runtime, element) {
         $("body").on('dblclick','#id_keyterms_to option', function(event) {
             event.preventDefault();
             var term = $(this).val();
-            data = {keyterm:term, course_id: courseid}
+            data = {keyterm:term}
             $.ajax({
                 type: "POST",
                 url: removekeywordhandlerUrl,
@@ -126,7 +126,7 @@ function KeytermsXBlock(runtime, element) {
                 return option.value;
             });
             arr.forEach(term => {
-                data = {keyterm:term, course_id: courseid}
+                data = {keyterm:term}
                 $.ajax({
                     type: "POST",
                     url: addkeywordhandlerUrl,
@@ -150,7 +150,7 @@ function KeytermsXBlock(runtime, element) {
                 return option.value;
             });
             arr.forEach(term => {
-                data = {keyterm:term, course_id: courseid}
+                data = {keyterm:term}
                 $.ajax({
                     type: "POST",
                     url: removekeywordhandlerUrl,
@@ -174,7 +174,7 @@ function KeytermsXBlock(runtime, element) {
                 return option.value;
             });
             arr.forEach(term => {
-                data = {keyterm:term, course_id: courseid}
+                data = {keyterm:term}
                 $.ajax({
                     type: "POST",
                     url: removekeywordhandlerUrl,
@@ -198,7 +198,7 @@ function KeytermsXBlock(runtime, element) {
                 return option.value;
             });
             arr.forEach(term => {
-                data = {keyterm:term, course_id: courseid}
+                data = {keyterm:term}
                 $.ajax({
                     type: "POST",
                     url: addkeywordhandlerUrl,
@@ -218,11 +218,14 @@ function KeytermsXBlock(runtime, element) {
     }
 
     // initializing the data
-    $(document).ready(function(){
-        // Getting courseid
+    $(function() { 
+    // Getting courseid
         const url = window.location.href;
         courseid = getStringBetween(url, 'block\-v1:', 'type').slice(0,-1);
         
+        // Setting glossary url
+        $("#glossarymsg").html(`Click on or hover the term to reveal the definitions on the <a href="http://localhost:2000/course/course-v1:${courseid}/glossary">Glossary</a> page.`)
+
         // Getting all the keyterms
         courseid.replace(" ", "+");
         resturl = 'http://localhost:18500/api/v1/course_terms/?course_id=course-v1:'+ courseid;
@@ -259,8 +262,9 @@ function KeytermsXBlock(runtime, element) {
                     formattedContent += `<div class="outline-box"><h1>Lesson Pages</h1>`
                     
                     keyterminfo["lessons"].forEach(lesson => {
-                        formattedContent += `<a href='${lesson["lesson_link"]}' class="btn">`
-                        formattedContent += `Module ${lesson["lesson_number"]}`
+                        formattedContent += `<a href='http://localhost:2000/course/course-v1:${courseid}/${lesson["lesson_link"]}' class="btn">`
+                        formattedContent += `Lesson ${lesson["lesson_number"]}: ${lesson["lesson_name"]}`
+                        formattedContent += `<br>Module: ${lesson["module_name"]}`
                         formattedContent += `</a>`
                     })
                     
@@ -311,4 +315,5 @@ function KeytermsXBlock(runtime, element) {
         )
     });
 }
+
 
