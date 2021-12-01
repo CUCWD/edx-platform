@@ -71,6 +71,10 @@ from util.milestones_helpers import is_entrance_exams_enabled
 from util.model_utils import emit_field_changed_events, get_changed_fields_dict
 from util.query import use_read_replica_if_available
 
+from organizations import models as org_models
+from organizations.models import Organization, UserOrganizationMapping
+import util.organizations_helpers as org_helpers
+
 log = logging.getLogger(__name__)
 AUDIT_LOG = logging.getLogger("audit")
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore  # pylint: disable=invalid-name
@@ -1528,6 +1532,24 @@ class CourseEnrollment(models.Model):
         enrollment = cls.get_or_create_enrollment(user, course_key)
         enrollment.update_enrollment(is_active=True, mode=mode)
         enrollment.send_signal(EnrollStatusChange.enroll)
+
+        organization_data = org_helpers.get_course_organizations(text_type(course_key))[0]
+        organization = Organization.objects.get(id=organization_data.get('id'))
+        
+        try:
+            user_org = org_models.UserOrganizationMapping.objects.filter(user=user, organization=organization).first()
+            if not (user_org):
+                org_models.UserOrganizationMapping.objects.create(user=user, organization=organization, is_active=True, is_amc_admin=False)
+            else:
+                # Enable `is_active` for the user_org record if it already exists in the database.
+                user_org.is_active = True
+                user_org.save()
+
+        except Exception:
+            log.error(u"Could not create UserOrganizationMapping for org %s, user %s",
+                organization.name,
+                user.username
+            )
 
         return enrollment
 
