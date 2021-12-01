@@ -341,7 +341,7 @@ class BigCommerceAPI():
         if bc_customer_id:
             enroll_courses = cls.get_order_items(bc_customer_id)
 
-            if enroll_courses:
+            if len(enroll_courses):
                 for course_key in enroll_courses:
                     course_key = CourseKey.from_string(course_key)
                     CourseEnrollment.enroll(user, course_key)

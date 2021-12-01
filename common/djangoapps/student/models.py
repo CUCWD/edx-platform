@@ -1533,23 +1533,25 @@ class CourseEnrollment(models.Model):
         enrollment.update_enrollment(is_active=True, mode=mode)
         enrollment.send_signal(EnrollStatusChange.enroll)
 
-        organization_data = org_helpers.get_course_organizations(text_type(course_key))[0]
-        organization = Organization.objects.get(id=organization_data.get('id'))
-        
-        try:
-            user_org = org_models.UserOrganizationMapping.objects.filter(user=user, organization=organization).first()
-            if not (user_org):
-                org_models.UserOrganizationMapping.objects.create(user=user, organization=organization, is_active=True, is_amc_admin=False)
-            else:
-                # Enable `is_active` for the user_org record if it already exists in the database.
-                user_org.is_active = True
-                user_org.save()
+        # Mapping a user to an organization for Figures analytics.
+        organization_data = org_helpers.get_course_organizations(text_type(course_key))
+        if len(organization_data):
+            organization = Organization.objects.get(id=organization_data[0].get('id'))
+            
+            try:
+                user_org = org_models.UserOrganizationMapping.objects.filter(user=user, organization=organization).first()
+                if not (user_org):
+                    org_models.UserOrganizationMapping.objects.create(user=user, organization=organization, is_active=True, is_amc_admin=False)
+                else:
+                    # Enable `is_active` for the user_org record if it already exists in the database.
+                    user_org.is_active = True
+                    user_org.save()
 
-        except Exception:
-            log.error(u"Could not create UserOrganizationMapping for org %s, user %s",
-                organization.name,
-                user.username
-            )
+            except Exception:
+                log.error(u"Could not create UserOrganizationMapping for org %s, user %s",
+                    organization.name,
+                    user.username
+                )
 
         return enrollment
 
