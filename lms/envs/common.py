@@ -1753,6 +1753,7 @@ LANGUAGES = [
     ('en', 'English'),
     ('rtl', 'Right-to-Left Test Language'),
     ('eo', 'Dummy Language (Esperanto)'),  # Dummy languaged used for testing
+    #('fake2', 'Fake translations'),        # Another dummy language for testing (not pushed to prod)
 
     ('am', 'አማርኛ'),  # Amharic
     ('ar', 'العربية'),  # Arabic
@@ -2225,6 +2226,9 @@ base_vendor_js = [
     'edx-ui-toolkit/js/utils/string-utils.js',
     'edx-ui-toolkit/js/utils/html-utils.js',
 
+    # Load Bootstrap and supporting libraries
+    'js/vendor/bootstrap.bundle.js',
+    
     # Finally load RequireJS and dependent vendor libraries
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',

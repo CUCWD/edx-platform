@@ -32,6 +32,38 @@ INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
 
+def keyterms_reindex(course_id):
+    """ Uses key terms API endpoint """
+    import requests
+    import json
+    from xmodule.modulestore.django import modulestore
+    from lms.lib.utils import get_parent_unit
+    from opaque_keys.edx.keys import UsageKey
+    # url for api endpoint
+    URL = settings.KEY_TERMS_API_URL + str(course_id)
+
+    # when request is sent to endpoint, starts process of retrieving and searching through textbooks for key terms
+    requests.post(URL)
+
+    # retrieve lesson data to be updated
+    response = requests.get(URL)
+
+    # holds our updated lesson links
+    updatedlesson = {}
+
+    # go through all lessons and update lesson link to find vertical xblock
+    for lesson in response.json():
+        if "vertical+block" not in lesson['lesson_link']: 
+            usage_key = UsageKey.from_string(lesson['lesson_link'])
+            item = modulestore().get_item(usage_key)
+            newlink = str(get_parent_unit(item).location)
+            print(item)
+            updatedlesson[lesson['lesson_link']] = newlink
+        else:
+            updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
+
+    # send updated data
+    return requests.post(URL, json = json.dumps(updatedlesson))
 
 def strip_html_content_to_text(html_content):
     """ Gets only the textual part for html content - useful for building text to be searched """
@@ -133,6 +165,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
         Returns:
         Number of items that have been added to the index
         """
+        
         error_list = []
         searcher = SearchEngine.get_search_engine(cls.INDEX_NAME)
         if not searcher:
@@ -156,6 +189,8 @@ class SearchIndexerBase(metaclass=ABCMeta):
         # it is used to collect all indexes and index them using bulk API,
         # instead of per item index API call.
         items_index = []
+
+        keyterms_reindex(structure_key)
 
         def get_item_location(item):
             """
@@ -271,6 +306,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
             raise SearchIndexingError('Error(s) present during indexing', error_list)
 
         return indexed_count["count"]
+        
 
     @classmethod
     def _do_reindex(cls, modulestore, structure_key):

@@ -8,6 +8,7 @@ from django.urls import re_path
 
 from lms.djangoapps.course_home_api.course_metadata.views import CourseHomeMetadataView
 from lms.djangoapps.course_home_api.dates.views import DatesTabView
+from lms.djangoapps.course_home_api.glossary.views import GlossaryTabView
 from lms.djangoapps.course_home_api.outline.views import (
     OutlineTabView, dismiss_welcome_message, save_course_goal, unsubscribe_from_course_goal_by_token,
 )
@@ -34,6 +35,15 @@ urlpatterns += [
         fr'dates/{settings.COURSE_KEY_PATTERN}',
         DatesTabView.as_view(),
         name='dates-tab'
+    ),
+]
+
+# Glossary Tab URLs
+urlpatterns += [
+    re_path(
+        fr'glossary/{settings.COURSE_KEY_PATTERN}',
+        GlossaryTabView.as_view(),
+        name='glossary-tab'
     ),
 ]
 
