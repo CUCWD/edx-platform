@@ -406,6 +406,7 @@ class CourseTabList(List):
             discussion_tab,
             CourseTab.load('wiki'),
             CourseTab.load('progress'),
+            CourseTab.load('glossary'),
         ])
         # While you should be able to do `tab.priority`, a lot of tests mock tabs to be a dict
         # which causes them to throw an error on this line

@@ -79,6 +79,26 @@ class CourseInfoTab(CourseTab):
     def is_enabled(cls, course, user=None):
         return True
 
+class GlossaryTab(EnrolledTab):
+    """
+    A tab representing the glossary for a course.
+    """
+    type = "glossary"
+    title = gettext_noop('Glossary')
+    priority = 10
+    view_name = "glossary"
+    is_movable = True
+    is_dynamic = True
+ 
+    def __init__(self, tab_dict):
+        def link_func(course, reverse_func):
+            if course_home_legacy_is_active(course.id):
+                return reverse_func(self.view_name, args=[str(course.id)])
+            else:
+                return get_learning_mfe_home_url(course_key=course.id, view_name=self.view_name)
+ 
+        tab_dict['link_func'] = link_func
+        super().__init__(tab_dict)
 
 class SyllabusTab(EnrolledTab):
     """
