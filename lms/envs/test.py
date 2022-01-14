@@ -182,6 +182,7 @@ CONTENTSTORE = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'edxapp',
         'ATOMIC_REQUESTS': True,
     },
     'student_module_history': {
@@ -603,3 +604,23 @@ CORS_ORIGIN_WHITELIST = ['https://sandbox.edx.org']
 #################### OpenBadges Settings #######################
 
 BADGR_API_TOKEN_CACHE = 'default'
+
+#################### BigCommerce Settings #######################
+
+FEATURES.update({
+
+    # Enable BigCommerce feature.
+    'ENABLE_BIGCOMMERCE': True,
+
+})
+
+if FEATURES.get('ENABLE_BIGCOMMERCE'):
+    # BIGCOMMERCE_APP_ACCESS_TOKEN="rg2zptq3s9x1nzh8sttgy8zcjgd9gyu"
+    BIGCOMMERCE_APP_CLIENT_ID="6ms4rvrkhnv5m3h1o582mtqb7wzixyr"
+    BIGCOMMERCE_APP_CLIENT_SECRET="385d434a82fe40cd838ad5891bdbc1548209547112f1e81c4b16bc2842d1a329"
+    BIGCOMMERCE_APP_STORE_HASH="1nol3cto8"
+    BIGCOMMERCE_APP_STORE_URL="https://educateworkforce-development.mybigcommerce.com"
+
+    INSTALLED_APPS.append('bigcommerce')
+    INSTALLED_APPS.append('bigcommerce_app')
+

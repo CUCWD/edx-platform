@@ -231,6 +231,18 @@ if settings.FEATURES.get('ENABLE_OPENBADGES'):
         ),
     ]
 
+if settings.FEATURES.get('ENABLE_BIGCOMMERCE'):
+    urlpatterns += [
+        # Callback Endpoints
+        url(r'^bigcommerce/callbacks/', 
+            include(('bigcommerce_app.callbacks.urls', 'bigcommerce_app'), namespace='bigcommerce_app_callbacks')),
+    ]
+    urlpatterns += [
+        # Single-Click App Endpoints
+        url(r'^bigcommerce/single-click/', 
+            include(('bigcommerce_app.single_click.urls', 'bigcommerce_app'), namespace='bigcommerce_app_single_click')),
+    ]
+
 urlpatterns += [
     path('openassessment/fileupload/', include('openassessment.fileupload.urls')),
 ]

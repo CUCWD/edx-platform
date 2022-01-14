@@ -700,6 +700,9 @@ FEATURES = {
     # .. toggle_tickets: https://openedx.atlassian.net/browse/SOL-1325
     'ENABLE_OPENBADGES': False,
 
+    # Enable BigCommerce Integration
+    'ENABLE_BIGCOMMERCE': False,
+
     # .. toggle_name: FEATURES['ENABLE_LTI_PROVIDER']
     # .. toggle_implementation: DjangoSetting
     # .. toggle_default: False
@@ -3579,6 +3582,14 @@ BADGR_TIMEOUT = 10
 # .. toggle_creation_date: 2021-07-29
 # .. toggle_warnings: Review FEATURES['ENABLE_OPENBADGES'] for further context.
 BADGR_ENABLE_NOTIFICATIONS = False
+
+#################### BigCommerce Settings #######################
+
+# BIGCOMMERCE_APP_ACCESS_TOKEN = None
+BIGCOMMERCE_APP_CLIENT_ID = None
+BIGCOMMERCE_APP_CLIENT_SECRET = None
+BIGCOMMERCE_APP_STORE_HASH = None
+BIGCOMMERCE_APP_STORE_URL = None
 
 #################### Qualtrics Settings #######################
 QUALTRICS_API_BASE_URL = None
