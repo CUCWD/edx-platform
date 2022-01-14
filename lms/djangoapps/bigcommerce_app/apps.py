@@ -12,7 +12,7 @@ class BigCommerceAppConfig(AppConfig):
     """
     Application Configuration for BigCommerce.
     """
-    name = u'bigcommerce_app'
+    name = u'lms.djangoapps.bigcommerce_app'
 
     def ready(self):
         """

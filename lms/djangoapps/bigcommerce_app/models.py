@@ -1,7 +1,6 @@
 import logging
 
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.auth.models import User
 
 from django.conf import settings
@@ -10,7 +9,6 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 LOGGER = logging.getLogger(__name__)
 
 
-@python_2_unicode_compatible
 class Store(models.Model):
     """
     Specifies a BigCommerce store.
@@ -30,7 +28,7 @@ class Store(models.Model):
         app_label = "bigcommerce_app"
 
     
-@python_2_unicode_compatible
+
 class AdminUser(models.Model):
     """
     Specifies a BigCommerce store user.
@@ -52,7 +50,7 @@ class AdminUser(models.Model):
         app_label = "bigcommerce_app"
 
 
-@python_2_unicode_compatible
+
 class StoreAdminUser(models.Model):
     """
     Specifies a BigCommerce store mapping with the BigCommerce admin user account.
@@ -72,7 +70,7 @@ class StoreAdminUser(models.Model):
         app_label = "bigcommerce_app"
         
 
-@python_2_unicode_compatible
+
 class Customer(models.Model):
     """
     Specifies a BigCommerce store user.
@@ -83,20 +81,23 @@ class Customer(models.Model):
         max_length=255,
         unique=False,
     )
-    bc_group_id = models.IntegerField(blank=False)
+    bc_group_id = models.IntegerField(blank=True, null=True)
+    bc_first_name = models.TextField(blank=True)
+    bc_last_name = models.TextField(blank=True)
 
     def __str__(self):
-        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}".format(
+        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}\nFull Name: {full_name}".format(
             id=self.bc_id,
             email=self.bc_email,
-            group_id=self.bc_group_id
+            group_id=self.bc_group_id,
+            full_name="{first} {last}".format(first=self.bc_first_name, last=self.bc_last_name)
         )
 
     class Meta(object):
         app_label = "bigcommerce_app"
 
 
-@python_2_unicode_compatible
+
 class StoreCustomer(models.Model):
     """
     Specifies a BigCommerce store mapping with the BigCommerce customer account.
@@ -114,7 +115,7 @@ class StoreCustomer(models.Model):
         app_label = "bigcommerce_app"
 
 
-@python_2_unicode_compatible
+
 class StoreCustomerPlatformUser(models.Model):
     """
     Specifies a BigCommerce store customer mapping with the platform user account.

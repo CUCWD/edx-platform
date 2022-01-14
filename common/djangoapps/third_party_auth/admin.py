@@ -12,8 +12,10 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from .models import (
+    _PSA_EMAIL_BACKENDS,
     _PSA_OAUTH2_BACKENDS,
     _PSA_SAML_BACKENDS,
+    EmailProviderConfig,
     LTIProviderConfig,
     OAuth2ProviderConfig,
     SAMLConfiguration,
@@ -21,6 +23,24 @@ from .models import (
     SAMLProviderData
 )
 from .tasks import fetch_saml_metadata
+
+
+class EmailProviderConfigForm(forms.ModelForm):
+    """ Django Admin form class for EmailProviderConfig """
+    backend_name = forms.ChoiceField(choices=((name, name) for name in _PSA_EMAIL_BACKENDS))
+
+class EmailProviderConfigAdmin(KeyedConfigurationModelAdmin):
+    """ Django Admin class for EmailProviderConfig """
+    form = EmailProviderConfigForm
+
+    def get_list_display(self, request):
+        """ Don't show every single field in the admin change list """
+        return (
+            'name', 'enabled', 'slug', 'site', 'backend_name', 'secondary', 'skip_registration_form',
+            'skip_email_verification', 'change_date', 'changed_by', 'edit_link',
+        )
+
+admin.site.register(EmailProviderConfig, EmailProviderConfigAdmin)
 
 
 class OAuth2ProviderConfigForm(forms.ModelForm):

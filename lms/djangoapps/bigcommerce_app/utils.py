@@ -2,10 +2,18 @@
 Utility functions used by the bigcommerce_app.
 """
 
+import logging
+from threading import local
+
 from django.conf import settings
 from django.http import HttpResponse
 
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+from lms.djangoapps.bigcommerce_app.models import Store, Customer, StoreCustomer, StoreCustomerPlatformUser
+
+import bigcommerce.api as bigcommerce_client
+
+LOGGER = logging.getLogger(__name__)
 
 def requires_bigcommerce_enabled(function):
     """
@@ -55,5 +63,187 @@ def client_secret():
     return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_CLIENT_SECRET', "SITE_NAME", settings.BIGCOMMERCE_APP_CLIENT_SECRET)
 
 
+def _store_hash():
+    return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_STORE_HASH', "SITE_NAME", settings.BIGCOMMERCE_APP_STORE_HASH)
+
+def store_hash():
+    return _store_hash()
+
+
+def access_token():
+    store_hash = _store_hash()
+    return Store.objects.filter(store_hash=store_hash).first().access_token
+
+
 def platform_lms_url():
     return configuration_helpers.get_value_for_org('LMS_ROOT_URL', "SITE_NAME", settings.LMS_ROOT_URL)
+
+class BigCommerceAPI():
+    """
+    Handles talking with the BigCommerceAPI
+    """
+
+    api_client = None
+
+    def __init__(self):
+        self._setup_api_client()
+
+    def _setup_api_client(self):
+        """
+        Setup the BigCommerce API one time.
+        """
+        self.api_client = bigcommerce_client.BigcommerceApi(client_id=client_id(), store_hash=store_hash(), access_token=access_token())
+
+    @classmethod
+    def bcapi_customer_metadata(cls, bc_customer_email):
+        """
+        Returns Customer information from BigCommerce for current platform user. This is needed for third-party auth to load full name registration form field.
+
+        At the moment this calls V2 of the BigCommerce API which doesn't have an 'id' to make get calls against.
+        https://developer.bigcommerce.com/api-reference/store-management/customers-v2/customers/getallcustomers
+        """
+        cls._setup_api_client(cls)
+
+        if cls.api_client:
+            try:
+                customer = cls.api_client.Customers.all(email=bc_customer_email)[0]    
+                if customer:
+
+                    LOGGER.info(
+                        u"Successfully located BigCommerce {store} Store Customer {customer} meta data".format(
+                            store=store_hash(),
+                            customer=bc_customer_email
+                        )
+                    )           
+                    
+                    return customer
+            except Exception as e:
+                LOGGER.error(
+                    u"Could not get access token from BigCommerce in `auth_callback`"
+                )
+                return internal_server_error(e)
+
+        LOGGER.error(
+            u"Could not locate BigCommerce {store} Store Customer {customer} meta data".format(
+                store=store_hash(),
+                customer=bc_customer_email
+            )
+        )
+        return {}
+
+    @classmethod
+    def bigcommerce_customer_save(cls, payload):
+        """
+        Returns decode payload from JWT token passed in from BigCommerce third-party-auth complete and saves the customer information on the platform.
+        """
+        cls._setup_api_client(cls)
+
+        if cls.api_client:
+            try:
+                user_data = cls.api_client.oauth_verify_payload_jwt(payload, client_secret(), client_id())
+
+                bc_customer = cls.bcapi_customer_metadata(user_data['customer']['email'])
+
+                # Save the BigCommerce Customer for the platform
+                try:
+                    new_customer, __ = Customer.objects.get_or_create(bc_id=bc_customer.id, bc_email=bc_customer.email)
+                    new_customer.bc_group_id = bc_customer.customer_group_id
+                    new_customer.bc_first_name = bc_customer.first_name
+                    new_customer.bc_last_name = bc_customer.last_name
+                    new_customer.save()
+                except Exception as e:
+                    LOGGER.error(
+                        u"Could save BigCommerce Customer {customer}".format(
+                            customer=bc_customer.email
+                        )
+                    )
+                    return {}
+
+                # Save the BigCommerce StoreCustomer fro the platform
+                store = Store.objects.filter(store_hash=store_hash()).first()
+                if store:
+                    try:
+                        new_store_customer, __ = StoreCustomer.objects.get_or_create(
+                            store=store,
+                            bc_customer=new_customer
+                        )
+                        new_store_customer.save()
+                    except Exception as e:
+                        LOGGER.error(
+                            u"Could save BigCommerce StoreCustomer {store_hash} – {customer}".format(
+                                store_hash=store_hash(),
+                                customer=bc_customer.email
+                            )
+                        )
+                        return {}
+                else:
+                    LOGGER.error(
+                        u"Could not create StoreCustomer for {store} – {customer}.".format(
+                            store=store_hash(),
+                            customer=new_customer.email
+                        )
+                    )
+
+                return {
+                    'store_hash': store_hash(),
+                    'id': new_customer.bc_id,
+                    'email': new_customer.bc_email,
+                    'group_id': new_customer.bc_group_id,
+                    'first_name': new_customer.bc_first_name,
+                    'last_name': new_customer.bc_last_name
+                }
+
+            except Exception as e:
+                LOGGER.error(
+                    u"Could not decode JWT payload from BigCommerce Customer."
+                )
+                return internal_server_error(e)
+
+        return {}
+
+    @classmethod
+    def bigcommerce_store_customer_platform_user_save(cls, payload):
+        """
+        Returns true whether or not the StoreCustomerPlatformUser was saved successfully.
+        """
+        try:
+            platform_user = payload.get('platform_user')
+
+            store = Store.objects.filter(store_hash=store_hash()).first()
+            if store:
+                try:
+                    bc_store_customer = StoreCustomer.objects.filter(
+                        store=store,
+                        bc_customer__bc_id=payload.get('bc_uid')
+                    ).first()
+
+                    bc_store_customer_platform_user, bc_store_customer_platform_user_created = StoreCustomerPlatformUser.objects.get_or_create(
+                        bc_store_customer=bc_store_customer,
+                        platform_user=platform_user
+                    )
+                    bc_store_customer_platform_user.save()
+
+                    if bc_store_customer_platform_user_created:
+                        return True
+
+                except Exception as e:
+                    LOGGER.error(
+                        u"Could save StoreCustomerPlatformUser: BigCommerce {bc_customer} – Platform {platform_user}".format(
+                            bc_customer=payload.get('bc_uid'),
+                            platform_user=platform_user.id
+                        )
+                    )
+            else:
+                LOGGER.error(
+                    u"Could not locate {store} to make StoreCustomerPlatformUser mapping.".format(
+                        store=store_hash()
+                    )
+                )
+
+        except Exception as e:
+            LOGGER.error(
+                u"Could not find BigCommerce StoreCustomer."
+            )
+            return internal_server_error(e)
+
+        return False
