@@ -7,6 +7,26 @@ from django.http import HttpResponse
 
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
+def requires_bigcommerce_enabled(function):
+    """
+    Decorator that bails a function out early if bigcommerce isn't enabled.
+    """
+    def wrapped(*args, **kwargs):
+        """
+        Wrapped function which bails out early if bagdes aren't enabled.
+        """
+        if not bigcommerce_enabled():
+            return
+        return function(*args, **kwargs)
+    return wrapped
+
+
+def bigcommerce_enabled():
+    """
+    returns a boolean indicating whether or not BigCommerce app is enabled.
+    """
+    return configuration_helpers.get_value_for_org('ENABLE_BIGCOMMERCE', "SITE_NAME", settings.ENABLE_BIGCOMMERCE)
+
 #
 # Error handling and helpers
 #
@@ -28,12 +48,12 @@ def internal_server_error(e):
 
 
 def client_id():
-    return configuration_helpers.get_value('BIGCOMMERCE_APP_CLIENT_ID', settings.BIGCOMMERCE_APP_CLIENT_ID)
+    return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_CLIENT_ID', "SITE_NAME", settings.BIGCOMMERCE_APP_CLIENT_ID)
 
 
 def client_secret():
-    return configuration_helpers.get_value('BIGCOMMERCE_APP_CLIENT_SECRET', settings.BIGCOMMERCE_APP_CLIENT_SECRET)
+    return configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_CLIENT_SECRET', "SITE_NAME", settings.BIGCOMMERCE_APP_CLIENT_SECRET)
 
 
 def platform_lms_url():
-    return configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL)
+    return configuration_helpers.get_value_for_org('LMS_ROOT_URL', "SITE_NAME", settings.LMS_ROOT_URL)

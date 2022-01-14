@@ -130,7 +130,8 @@ class StoreCustomerPlatformUser(models.Model):
 
         platform_user_store_customers = cls.objects.filter(platform_user=platform_user)
 
-        store_hash = configuration_helpers.get_value('BIGCOMMERCE_APP_STORE_HASH', settings.BIGCOMMERCE_APP_STORE_HASH)
+        store_hash = configuration_helpers.get_value_for_org('BIGCOMMERCE_APP_STORE_HASH', "SITE_NAME", settings.BIGCOMMERCE_APP_STORE_HASH)
+
         if store_hash:
             bc_site_store = Store.objects.get(store_hash=store_hash)
             
