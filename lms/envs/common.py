@@ -3194,6 +3194,9 @@ INSTALLED_APPS = [
 
     # Content Library LTI 1.3 Support.
     'pylti1p3.contrib.django.lti1p3_tool_config',
+
+    # BigCommerce App
+    'lms.djangoapps.bigcommerce_app',
 ]
 
 ######################### CSRF #########################################
@@ -3554,7 +3557,6 @@ BADGR_ENABLE_NOTIFICATIONS = False
 
 #################### BigCommerce Settings #######################
 
-# BIGCOMMERCE_APP_ACCESS_TOKEN = None
 BIGCOMMERCE_APP_CLIENT_ID = None
 BIGCOMMERCE_APP_CLIENT_SECRET = None
 BIGCOMMERCE_APP_STORE_HASH = None

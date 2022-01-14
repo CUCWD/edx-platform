@@ -7,8 +7,8 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from edxmako.shortcuts import render_to_response
 
 from bigcommerce.api import BigcommerceApi
-from bigcommerce_app.models import Store, AdminUser, StoreAdminUser
-from bigcommerce_app.utils import client_id
+from lms.djangoapps.bigcommerce_app.models import StoreAdminUser
+from lms.djangoapps.bigcommerce_app.utils import client_id
 
 LOGGER = logging.getLogger(__name__)
 _ = translation.ugettext

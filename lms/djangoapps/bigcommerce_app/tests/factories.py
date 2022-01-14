@@ -6,7 +6,7 @@ import json
 import factory
 from factory import DjangoModelFactory
 
-from bigcommerce_app.models import (
+from lms.djangoapps.bigcommerce_app.models import (
     Store, 
     AdminUser, 
     StoreAdminUser, 

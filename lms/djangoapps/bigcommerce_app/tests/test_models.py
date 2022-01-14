@@ -4,7 +4,7 @@ from django.test.utils import override_settings
 
 from mock import Mock
 
-from bigcommerce_app.models import (
+from lms.djangoapps.bigcommerce_app.models import (
     Store, 
     AdminUser, 
     StoreAdminUser, 
@@ -13,7 +13,7 @@ from bigcommerce_app.models import (
     StoreCustomerPlatformUser
 )
 
-from bigcommerce_app.tests.factories import (
+from lms.djangoapps.bigcommerce_app.tests.factories import (
     StoreFactory,
     RandomStoreFactory,
     CustomerFactory,
