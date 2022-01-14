@@ -9,8 +9,10 @@ from openedx.core.djangoapps.theming.helpers import get_current_request
 
 from common.djangoapps.third_party_auth.models import (
     _LTI_BACKENDS,
+    _PSA_EMAIL_BACKENDS,
     _PSA_OAUTH2_BACKENDS,
     _PSA_SAML_BACKENDS,
+    EmailProviderConfig,
     LTIProviderConfig,
     OAuth2ProviderConfig,
     SAMLConfiguration,
@@ -30,6 +32,11 @@ class Registry:
         Helper method that returns a generator used to iterate over all providers
         of the current site.
         """
+        email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
+        for email_backend_name in email_backend_names:
+            provider = EmailProviderConfig.current(email_backend_name)
+            if provider.enabled_for_current_site and provider.backend_name in _PSA_EMAIL_BACKENDS:
+                yield provider
         oauth2_backend_names = OAuth2ProviderConfig.key_values('backend_name', flat=True)
         for oauth2_backend_name in oauth2_backend_names:
             provider = OAuth2ProviderConfig.current(oauth2_backend_name)
@@ -113,6 +120,12 @@ class Registry:
         Yields:
             Instances of ProviderConfig.
         """
+        if backend_name in _PSA_EMAIL_BACKENDS:
+            email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
+            for email_backend_name in email_backend_names:
+                provider = EmailProviderConfig.current(email_backend_name)
+                if provider.backend_name == backend_name and provider.enabled_for_current_site:
+                    yield provider
         if backend_name in _PSA_OAUTH2_BACKENDS:
             oauth2_backend_names = OAuth2ProviderConfig.key_values('backend_name', flat=True)
             for oauth2_backend_name in oauth2_backend_names:

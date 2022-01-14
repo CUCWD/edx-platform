@@ -2,7 +2,7 @@
 Events related to how BigCommerce Customers interface with the platform.
 """
 
-from lms.djangoapps.bigcommerce_app import requires_bigcommerce_enabled
+from lms.djangoapps.bigcommerce_app.utils import requires_bigcommerce_enabled
 
 
 @requires_bigcommerce_enabled
