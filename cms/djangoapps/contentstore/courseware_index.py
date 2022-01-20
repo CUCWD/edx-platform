@@ -47,7 +47,8 @@ def keyterms_reindex(course_id):
 
     # retrieve lesson data to be updated
     response = requests.get(URL)
-
+    print(response)
+    
     # holds our updated lesson links
     updatedlesson = {}
 

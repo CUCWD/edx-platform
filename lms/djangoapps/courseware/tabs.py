@@ -79,16 +79,16 @@ class CourseInfoTab(CourseTab):
     def is_enabled(cls, course, user=None):
         return True
 
+
 class GlossaryTab(EnrolledTab):
     """
     A tab representing the glossary for a course.
     """
     type = "glossary"
     title = gettext_noop('Glossary')
-    priority = 10
+    priority = 30
     view_name = "glossary"
-    is_movable = True
-    is_dynamic = True
+    is_default = False
  
     def __init__(self, tab_dict):
         def link_func(course, reverse_func):
@@ -99,6 +99,7 @@ class GlossaryTab(EnrolledTab):
  
         tab_dict['link_func'] = link_func
         super().__init__(tab_dict)
+
 
 class SyllabusTab(EnrolledTab):
     """

@@ -1897,7 +1897,8 @@ def textbooks_api_handler(request, course_key_string, textbook_id):
     '''
     from django.http.response import HttpResponse
     from xmodule.contentstore.content import StaticContent
-
+    from xmodule.contentstore.django import contentstore
+    
     course_key = CourseKey.from_string(course_key_string)
     content = contentstore()
 
