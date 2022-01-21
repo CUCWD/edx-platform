@@ -539,6 +539,15 @@ urlpatterns += [
         name=COURSE_DATES_NAME,
     ),
 
+    # glossary page
+    re_path(
+        r'^courses/{}/glossary'.format(
+            settings.COURSE_ID_PATTERN,
+        ),
+        courseware_views.glossary,
+        name='glossary',
+    ),
+
     # Takes optional student_id for instructor use--shows profile as that student sees it.
     re_path(
         r'^courses/{}/progress/(?P<student_id>[^/]*)/$'.format(

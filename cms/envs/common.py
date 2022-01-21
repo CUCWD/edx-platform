@@ -1255,7 +1255,7 @@ base_vendor_js = [
 
     # Load Bootstrap and supporting libraries
     'common/js/vendor/popper.js',
-    'common/js/vendor/bootstrap.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Finally load RequireJS
     'common/js/vendor/require.js'
