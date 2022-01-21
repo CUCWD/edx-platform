@@ -13,9 +13,9 @@ from rest_framework.test import APITestCase
 from common.djangoapps.student.tests.factories import GlobalStaffFactory
 from common.djangoapps.student.tests.factories import InstructorFactory
 from common.djangoapps.student.tests.factories import UserFactory
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.factories import CourseFactory  # lint-amnesty, pylint: disable=wrong-import-order
 
 
 class ProctoringExamSettingsTestMixin():
@@ -87,7 +87,7 @@ class ProctoringExamSettingsTestMixin():
 class ProctoringExamSettingsGetTests(ProctoringExamSettingsTestMixin, ModuleStoreTestCase, APITestCase):
     """ Tests for proctored exam settings GETs """
     @classmethod
-    def get_expected_response_data(cls, course, user):
+    def get_expected_response_data(cls, course, user):  # pylint: disable=unused-argument
         return {
             'proctored_exam_settings': {
                 'enable_proctored_exams': course.enable_proctored_exams,

@@ -817,7 +817,7 @@ FEATURES = {
     # .. toggle_tickets: https://openedx.atlassian.net/browse/OSPR-1880
     'ENABLE_HTML_XBLOCK_STUDENT_VIEW_DATA': False,
 
-    # .. toggle_name: FEATURES['ENABLE_CHANGE_USER_PASSWORD_ADMIN']
+    # .. toggle_name: FEATURES['ENABLE_PASSWORD_RESET_FAILURE_EMAIL']
     # .. toggle_implementation: DjangoSetting
     # .. toggle_default: False
     # .. toggle_description: Whether to send an email for failed password reset attempts or not. This happens when a
@@ -991,8 +991,18 @@ COURSE_MESSAGE_ALERT_DURATION_IN_DAYS = 14
 
 MARKETING_EMAILS_OPT_IN = False
 
-# VAN-754 - Year of birth field put behind a flag to make it available for OpenedX.
-COLLECT_YEAR_OF_BIRTH = True
+# .. toggle_name: ENABLE_COPPA_COMPLIANCE
+# .. toggle_implementation: DjangoSetting
+# .. toggle_default: False
+# .. toggle_description: When True, inforces COPPA compliance and removes YOB field from registration form and accounnt
+# .. settings page. Also hide YOB banner from profile page.
+# .. toggle_use_cases: open_edx
+# .. toggle_creation_date: 2021-10-27
+# .. toggle_tickets: 'https://openedx.atlassian.net/browse/VAN-622'
+ENABLE_COPPA_COMPLIANCE = False
+
+# VAN-741 - save for later api put behind a flag to make it only available for edX
+ENABLE_SAVE_FOR_LATER = False
 
 ############################# SET PATH INFORMATION #############################
 PROJECT_ROOT = path(__file__).abspath().dirname().dirname()  # /edx-platform/lms
@@ -1743,6 +1753,7 @@ LANGUAGES = [
     ('en', 'English'),
     ('rtl', 'Right-to-Left Test Language'),
     ('eo', 'Dummy Language (Esperanto)'),  # Dummy languaged used for testing
+    #('fake2', 'Fake translations'),        # Another dummy language for testing (not pushed to prod)
 
     ('am', 'አማርኛ'),  # Amharic
     ('ar', 'العربية'),  # Arabic
@@ -2036,10 +2047,6 @@ CREDIT_NOTIFICATION_CACHE_TIMEOUT = 5 * 60 * 60
 MIDDLEWARE = [
     'openedx.core.lib.x_forwarded_for.middleware.XForwardedForMiddleware',
 
-    # Avoid issue with https://blog.heroku.com/chrome-changes-samesite-cookie
-    # Override was found here https://github.com/django/django/pull/11894
-    'django_cookies_samesite.middleware.CookiesSameSite',
-
     'crum.CurrentRequestUserMiddleware',
 
     'edx_django_utils.monitoring.DeploymentMonitoringMiddleware',
@@ -2153,13 +2160,6 @@ MIDDLEWARE = [
     'openedx.core.djangoapps.site_configuration.middleware.SessionCookieDomainOverrideMiddleware',
 ]
 
-if django.VERSION >= (3, 1):
-    # Avoid issue with https://blog.heroku.com/chrome-changes-samesite-cookie
-    # Override was found here https://github.com/django/django/pull/11894
-    MIDDLEWARE.remove(
-        'django_cookies_samesite.middleware.CookiesSameSite'
-    )
-
 # Clickjacking protection can be disbaled by setting this to 'ALLOW'
 X_FRAME_OPTIONS = 'DENY'
 
@@ -2219,12 +2219,16 @@ base_vendor_js = [
     'common/js/vendor/underscore.js',
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
     'edx-ui-toolkit/js/utils/string-utils.js',
     'edx-ui-toolkit/js/utils/html-utils.js',
 
+    # Load Bootstrap and supporting libraries
+    'js/vendor/bootstrap.bundle.js',
+    
     # Finally load RequireJS and dependent vendor libraries
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',
@@ -2938,6 +2942,7 @@ INSTALLED_APPS = [
     'lms.djangoapps.courseware',
     'lms.djangoapps.coursewarehistoryextended',
     'common.djangoapps.student.apps.StudentConfig',
+    'common.djangoapps.split_modulestore_django.apps.SplitModulestoreDjangoBackendAppConfig',
 
     'lms.djangoapps.static_template_view',
     'lms.djangoapps.staticbook',
@@ -2952,6 +2957,9 @@ INSTALLED_APPS = [
 
     # Course home api
     'lms.djangoapps.course_home_api',
+
+    # User tours
+    'lms.djangoapps.user_tours',
 
     # New (Blockstore-based) XBlock runtime
     'openedx.core.djangoapps.xblock.apps.LmsXBlockAppConfig',
@@ -3191,6 +3199,12 @@ INSTALLED_APPS = [
 
     # Content Library LTI 1.3 Support.
     'pylti1p3.contrib.django.lti1p3_tool_config',
+
+    # For edx ace template tags
+    'edx_ace',
+
+    # For save for later
+    'lms.djangoapps.save_for_later'
 ]
 
 ######################### CSRF #########################################
@@ -3884,6 +3898,7 @@ OPTIONAL_APPS = [
     ('consent', None),
     ('integrated_channels.integrated_channel', None),
     ('integrated_channels.degreed', None),
+    ('integrated_channels.degreed2', None),
     ('integrated_channels.sap_success_factors', None),
     ('integrated_channels.cornerstone', None),
     ('integrated_channels.xapi', None),
@@ -4040,7 +4055,6 @@ ACCOUNT_VISIBILITY_CONFIGURATION["admin_fields"] = (
         "phone_number",
         "activation_key",
         "pending_name_change",
-        "is_verified_name_enabled",
     ]
 )
 
@@ -4531,9 +4545,6 @@ CONTENT_TYPE_GATE_GROUP_IDS = {
 
 COURSES_API_CACHE_TIMEOUT = 3600  # Value is in seconds
 
-############## Settings for CourseGraph ############################
-COURSEGRAPH_JOB_QUEUE = DEFAULT_PRIORITY_QUEUE
-
 
 # Initialize to 'unknown', but read from JSON in production.py
 EDX_PLATFORM_REVISION = 'release'
@@ -4560,6 +4571,10 @@ RESET_PASSWORD_API_RATELIMIT = '30/7d'
 ##### PASSWORD RESET RATE LIMIT SETTINGS #####
 PASSWORD_RESET_IP_RATE = '1/m'
 PASSWORD_RESET_EMAIL_RATE = '2/h'
+
+#### SAVE FOR LATER EMAIL RATE LIMIT SETTINGS ####
+SAVE_FOR_LATER_IP_RATE_LIMIT = '100/d'
+SAVE_FOR_LATER_EMAIL_RATE_LIMIT = '5/m'
 
 ############### Settings for Retirement #####################
 # .. setting_name: RETIRED_USERNAME_PREFIX
@@ -4686,6 +4701,20 @@ PROGRAM_CONSOLE_MICROFRONTEND_URL = None
 # .. setting_description: Base URL of the micro-frontend-based courseware page.
 # .. setting_warning: Also set site's courseware.courseware_mfe waffle flag.
 LEARNING_MICROFRONTEND_URL = None
+# .. setting_name: DISCUSSIONS_MICROFRONTEND_URL
+# .. setting_default: None
+# .. setting_description: Base URL of the micro-frontend-based discussions page.
+# .. setting_warning: Also set site's courseware.discussions_mfe waffle flag.
+DISCUSSIONS_MICROFRONTEND_URL = None
+# .. toggle_name: ENABLE_AUTHN_RESET_PASSWORD_HIBP_POLICY
+# .. toggle_implementation: DjangoSetting
+# .. toggle_default: False
+# .. toggle_description: When enabled, this toggle activates the use of the password validation
+#   HIBP Policy.
+# .. toggle_use_cases: open_edx
+# .. toggle_creation_date: 2021-12-03
+# .. toggle_tickets: https://openedx.atlassian.net/browse/VAN-666
+ENABLE_AUTHN_RESET_PASSWORD_HIBP_POLICY = False
 
 ############### Settings for the ace_common plugin #################
 ACE_ENABLED_CHANNELS = ['django_email']
@@ -4848,3 +4877,9 @@ TEAMS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-runn
 TEXTBOOKS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/textbooks.html"
 WIKI_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/course_wiki.html"
 CUSTOM_PAGES_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/pages.html#adding-custom-pages"
+
+################# Bulk Course Email Settings #################
+# If set, recipients of bulk course email messages will be filtered based on the last_login date of their User account.
+# The expected value is an Integer representing the cutoff point (in months) for inclusion to the message. Example:
+# a value of `3` would include learners who have logged in within the past 3 months.
+BULK_COURSE_EMAIL_LAST_LOGIN_ELIGIBILITY_PERIOD = None

@@ -18,6 +18,7 @@ from crum import set_current_request
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.http import Http404, HttpResponseBadRequest
+from django.http.request import QueryDict
 from django.test import RequestFactory, TestCase
 from django.test.client import Client
 from django.test.utils import override_settings
@@ -32,7 +33,7 @@ from xblock.core import XBlock
 from xblock.fields import Scope, String
 
 import lms.djangoapps.courseware.views.views as views
-from capa.tests.response_xml_factory import MultipleChoiceResponseXMLFactory
+from capa.tests.response_xml_factory import MultipleChoiceResponseXMLFactory  # lint-amnesty, pylint: disable=wrong-import-order
 from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.course_modes.tests.factories import CourseModeFactory
 from freezegun import freeze_time  # lint-amnesty, pylint: disable=wrong-import-order
@@ -102,18 +103,18 @@ from common.djangoapps.student.tests.factories import TEST_PASSWORD, AdminFactor
 from common.djangoapps.util.tests.test_date_utils import fake_pgettext, fake_ugettext
 from common.djangoapps.util.url import reload_django_url_config
 from common.djangoapps.util.views import ensure_valid_course_key
-from xmodule.course_module import COURSE_VISIBILITY_PRIVATE, COURSE_VISIBILITY_PUBLIC, COURSE_VISIBILITY_PUBLIC_OUTLINE
-from xmodule.data import CertificatesDisplayBehaviors
-from xmodule.graders import ShowCorrectness
-from xmodule.modulestore import ModuleStoreEnum
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import (
+from xmodule.course_module import COURSE_VISIBILITY_PRIVATE, COURSE_VISIBILITY_PUBLIC, COURSE_VISIBILITY_PUBLIC_OUTLINE  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.data import CertificatesDisplayBehaviors  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.graders import ShowCorrectness  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore import ModuleStoreEnum  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.django_utils import (  # lint-amnesty, pylint: disable=wrong-import-order
     TEST_DATA_SPLIT_MODULESTORE,
     CourseUserType,
     ModuleStoreTestCase,
     SharedModuleStoreTestCase
 )
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls
+from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory, check_mongo_calls  # lint-amnesty, pylint: disable=wrong-import-order
 
 QUERY_COUNT_TABLE_BLACKLIST = WAFFLE_TABLES
 
@@ -388,8 +389,8 @@ class IndexQueryTestCase(ModuleStoreTestCase):
     NUM_PROBLEMS = 20
 
     @ddt.data(
-        (ModuleStoreEnum.Type.mongo, 10, 227),
-        (ModuleStoreEnum.Type.split, 4, 210),
+        (ModuleStoreEnum.Type.mongo, 10, 220),
+        (ModuleStoreEnum.Type.split, 4, 205),
     )
     @ddt.unpack
     def test_index_query_counts(self, store_type, expected_mongo_query_count, expected_mysql_query_count):
@@ -498,9 +499,9 @@ class BaseViewsTestCase(ModuleStoreTestCase):  # lint-amnesty, pylint: disable=m
                 'course_id': str(self.course_key),
                 'chapter': str(self.chapter.location.block_id),
                 'section': str(self.section2.location.block_id),
-            }
-        )
-        mfe_url = '{}/course/{}/{}'.format(
+            },
+        ) + '?foo=b$r'
+        mfe_url = '{}/course/{}/{}?foo=b%24r'.format(
             settings.LEARNING_MICROFRONTEND_URL,
             self.course_key,
             self.section2.location
@@ -1583,8 +1584,8 @@ class ProgressPageTests(ProgressPageBaseTests):
             self.assertContains(resp, "Download Your Certificate")
 
     @ddt.data(
-        (True, 55),
-        (False, 55),
+        (True, 52),
+        (False, 52),
     )
     @ddt.unpack
     def test_progress_queries_paced_courses(self, self_paced, query_count):
@@ -1597,8 +1598,8 @@ class ProgressPageTests(ProgressPageBaseTests):
 
     @patch.dict(settings.FEATURES, {'ASSUME_ZERO_GRADE_IF_ABSENT_FOR_ALL_TESTS': False})
     @ddt.data(
-        (False, 63, 45),
-        (True, 55, 39)
+        (False, 60, 42),
+        (True, 52, 36)
     )
     @ddt.unpack
     def test_progress_queries(self, enable_waffle, initial, subsequent):
@@ -3213,6 +3214,46 @@ class TestRenderXBlock(RenderXBlockTestMixin, ModuleStoreTestCase, CompletionWaf
             response = self.get_response(usage_key=block.location)
             assert response.status_code == 200
 
+    def test_render_xblock_with_course_duration_limits(self):
+        """
+        Verify that expired banner message appears on xblock page, if learner is enrolled
+        in audit mode.
+        """
+        self.setup_course(ModuleStoreEnum.Type.split)
+        self.setup_user(admin=False, login=True)
+
+        CourseDurationLimitConfig.objects.create(enabled=True, enabled_as_of=datetime(2018, 1, 1))
+        add_course_mode(self.course, mode_slug=CourseMode.AUDIT)
+        add_course_mode(self.course)
+        CourseEnrollmentFactory(user=self.user, course_id=self.course.id, mode=CourseMode.AUDIT)
+
+        response = self.get_response(usage_key=self.vertical_block.location)
+        assert response.status_code == 200
+
+        banner_text = get_expiration_banner_text(self.user, self.course)
+        self.assertContains(response, banner_text, html=True)
+
+    @patch('lms.djangoapps.courseware.views.views.is_request_from_mobile_app')
+    def test_render_xblock_with_course_duration_limits_in_mobile_browser(self, mock_is_request_from_mobile_app):
+        """
+        Verify that expired banner message doesn't appear on xblock page in a mobile browser, if learner is enrolled
+        in audit mode.
+        """
+        mock_is_request_from_mobile_app.return_value = True
+        self.setup_course(ModuleStoreEnum.Type.split)
+        self.setup_user(admin=False, login=True)
+
+        CourseDurationLimitConfig.objects.create(enabled=True, enabled_as_of=datetime(2018, 1, 1))
+        add_course_mode(self.course, mode_slug=CourseMode.AUDIT)
+        add_course_mode(self.course)
+        CourseEnrollmentFactory(user=self.user, course_id=self.course.id, mode=CourseMode.AUDIT)
+
+        response = self.get_response(usage_key=self.vertical_block.location)
+        assert response.status_code == 200
+
+        banner_text = get_expiration_banner_text(self.user, self.course)
+        self.assertNotContains(response, banner_text, html=True)
+
 
 class TestRenderXBlockSelfPaced(TestRenderXBlock):  # lint-amnesty, pylint: disable=test-inherits-tests
     """
@@ -3355,10 +3396,12 @@ class AccessUtilsTestCase(ModuleStoreTestCase):
 
 
 @ddt.ddt
+@override_waffle_flag(COURSE_HOME_USE_LEGACY_FRONTEND, active=True)
 class DatesTabTestCase(ModuleStoreTestCase):
     """
     Ensure that the dates page renders with the correct data for both a verified and audit learner
     """
+    MODULESTORE = TEST_DATA_SPLIT_MODULESTORE
 
     def setUp(self):
         super().setUp()
@@ -3493,6 +3536,15 @@ class DatesTabTestCase(ModuleStoreTestCase):
         response = self._get_response(self.course)
         self.assertContains(response, 'div class="banner-cta-text"')
 
+    @override_waffle_flag(COURSE_HOME_USE_LEGACY_FRONTEND, active=False)
+    def test_legacy_redirect(self):
+        """
+        Verify that the legacy dates page redirects to the MFE correctly.
+        """
+        response = self.client.get(reverse('dates', args=[str(self.course.id)]) + '?foo=b$r')
+        assert response.status_code == 302
+        assert response.get('Location') == f'http://learning-mfe/course/{self.course.id}/dates?foo=b%24r'
+
 
 class TestShowCoursewareMFE(TestCase):
     """
@@ -3587,6 +3639,11 @@ class TestShowCoursewareMFE(TestCase):
         assert make_learning_mfe_courseware_url(course_key) == (
             'https://learningmfe.openedx.org'
             '/course/course-v1:OpenEdX+MFE+2020'
+        )
+        assert make_learning_mfe_courseware_url(course_key, params=QueryDict('foo=b$r')) == (
+            'https://learningmfe.openedx.org'
+            '/course/course-v1:OpenEdX+MFE+2020'
+            '?foo=b%24r'
         )
         assert make_learning_mfe_courseware_url(course_key, section_key, '') == (
             'https://learningmfe.openedx.org'

@@ -8,16 +8,17 @@ from unittest import mock
 
 import ddt
 from django.test.client import Client, RequestFactory
+from web_fragments.fragment import Fragment
 from xblock.core import XBlock, XBlockAside
 
 from cms.djangoapps.contentstore.utils import reverse_usage_url
 from cms.djangoapps.xblock_config.models import StudioConfig
 from common.djangoapps.student.tests.factories import UserFactory
-from xmodule.modulestore import ModuleStoreEnum
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
-from xmodule.modulestore.tests.test_asides import AsideTestType
+from xmodule.modulestore import ModuleStoreEnum  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.test_asides import AsideTestType  # lint-amnesty, pylint: disable=wrong-import-order
 
 from ..preview import _preview_module_system, get_preview_fragment
 
@@ -168,13 +169,20 @@ class GetPreviewHtmlTestCase(ModuleStoreTestCase):
 
 @XBlock.needs("field-data")
 @XBlock.needs("i18n")
+@XBlock.needs("mako")
 @XBlock.needs("user")
 @XBlock.needs("teams_configuration")
 class PureXBlock(XBlock):
     """
     Pure XBlock to use in tests.
     """
-    pass  # lint-amnesty, pylint: disable=unnecessary-pass
+    def student_view(self, context):
+        """
+        Renders the output that a student will see.
+        """
+        fragment = Fragment()
+        fragment.add_content(self.runtime.service(self, 'mako').render_template('edxmako.html', context))
+        return fragment
 
 
 @ddt.ddt
@@ -206,3 +214,25 @@ class StudioXBlockServiceBindingTest(ModuleStoreTestCase):
         )
         service = runtime.service(descriptor, expected_service)
         self.assertIsNotNone(service)
+
+
+class CmsModuleSystemShimTest(ModuleStoreTestCase):
+    """
+    Tests that the deprecated attributes in the Module System (XBlock Runtime) return the expected values.
+    """
+    def setUp(self):
+        """
+        Set up the user and other fields that will be used to instantiate the runtime.
+        """
+        super().setUp()
+        self.course = CourseFactory.create()
+        self.user = UserFactory()
+        self.request = RequestFactory().get('/dummy-url')
+        self.request.user = self.user
+        self.request.session = {}
+
+    @XBlock.register_temp_plugin(PureXBlock, identifier='pure')
+    def test_render_template(self):
+        descriptor = ItemFactory(category="pure", parent=self.course)
+        html = get_preview_fragment(self.request, descriptor, {'element_id': 142}).content
+        assert '<div id="142" ns="main">Testing the MakoService</div>' in html

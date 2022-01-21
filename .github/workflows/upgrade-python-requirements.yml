@@ -2,15 +2,13 @@ name: Upgrade Requirements
 
 on:
   schedule:
-    # will start the job at 2 every tuesday (UTC)
-    - cron: "0 2 * * 2"
+     - cron: "0 2 * * 2"
   workflow_dispatch:
-    inputs:
-      branch:
-        description: "Target branch to create requirements PR against"
-        required: true
-        default: 'master'
-
+     inputs:
+       branch:
+         description: 'Target branch to create requirements PR against'
+         required: true
+         default: 'master'
 jobs:
   upgrade_requirements:
     runs-on: ubuntu-20.04
@@ -57,15 +55,3 @@ jobs:
           --pr-body="Python requirements update.Please review the [changelogs](https://openedx.atlassian.net/wiki/spaces/TE/pages/1001521320/Python+Package+Changelogs) for the upgraded packages." \
           --user-reviewers="" --team-reviewers="arbi-bom" --delete-old-pull-requests
 
-      - name: Send failure notification
-        if: ${{ failure() }}
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: email-smtp.us-east-1.amazonaws.com
-          server_port: 465
-          username: ${{secrets.EDX_SMTP_USERNAME}}
-          password: ${{secrets.EDX_SMTP_PASSWORD}}
-          subject: Upgrade python requirements workflow failed in ${{github.repository}}
-          to: arbi-bom@edx.org
-          from: github-actions <github-actions@edx.org>
-          body: Upgrade python requirements workflow in ${{github.repository}} failed! For details see "github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

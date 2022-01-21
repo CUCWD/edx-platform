@@ -131,6 +131,10 @@ from openedx.core.release import doc_version
 
 # pylint: enable=useless-suppression
 
+############### Edx Key Terms API ###############
+
+KEY_TERMS_API_URL = 'http://a6d1eb6425cc:18500/api/v1/platform_course_reindex/?course_id='
+
 ################ Enable credit eligibility feature ####################
 ENABLE_CREDIT_ELIGIBILITY = True
 
@@ -474,7 +478,19 @@ FEATURES = {
     'ENABLE_V2_CERT_DISPLAY_SETTINGS': False,
 }
 
+# .. toggle_name: ENABLE_COPPA_COMPLIANCE
+# .. toggle_implementation: DjangoSetting
+# .. toggle_default: False
+# .. toggle_description: When True, inforces COPPA compliance and removes YOB field from registration form and accounnt
+# .. settings page. Also hide YOB banner from profile page.
+# .. toggle_use_cases: open_edx
+# .. toggle_creation_date: 2021-10-27
+# .. toggle_tickets: 'https://openedx.atlassian.net/browse/VAN-622'
+ENABLE_COPPA_COMPLIANCE = False
+
 ENABLE_JASMINE = False
+
+MARKETING_EMAILS_OPT_IN = False
 
 # List of logout URIs for each IDA that the learner should be logged out of when they logout of the LMS. Only applies to
 # IDA for which the social auth flow uses DOT (Django OAuth Toolkit).
@@ -482,7 +498,17 @@ IDA_LOGOUT_URI_LIST = []
 
 ############################# MICROFRONTENDS ###################################
 COURSE_AUTHORING_MICROFRONTEND_URL = None
+DISCUSSIONS_MICROFRONTEND_URL = None
 LIBRARY_AUTHORING_MICROFRONTEND_URL = None
+# .. toggle_name: ENABLE_AUTHN_RESET_PASSWORD_HIBP_POLICY
+# .. toggle_implementation: DjangoSetting
+# .. toggle_default: False
+# .. toggle_description: When enabled, this toggle activates the use of the password validation
+#   HIBP Policy.
+# .. toggle_use_cases: open_edx
+# .. toggle_creation_date: 2021-12-03
+# .. toggle_tickets: https://openedx.atlassian.net/browse/VAN-666
+ENABLE_AUTHN_RESET_PASSWORD_HIBP_POLICY = False
 
 ############################# SOCIAL MEDIA SHARING #############################
 SOCIAL_SHARING_SETTINGS = {
@@ -829,6 +855,7 @@ XBLOCK_MIXINS = (
     EditInfoMixin,
     AuthoringMixin,
 )
+XBLOCK_EXTRA_MIXINS = ()
 
 XBLOCK_SELECT_FUNCTION = prefer_xmodules
 
@@ -1245,7 +1272,7 @@ base_vendor_js = [
 
     # Load Bootstrap and supporting libraries
     'common/js/vendor/popper.js',
-    'common/js/vendor/bootstrap.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Finally load RequireJS
     'common/js/vendor/require.js'
@@ -1370,13 +1397,15 @@ CELERY_DEFAULT_EXCHANGE = f'edx.{QUEUE_VARIANT}core'
 
 HIGH_PRIORITY_QUEUE = f'edx.{QUEUE_VARIANT}core.high'
 DEFAULT_PRIORITY_QUEUE = f'edx.{QUEUE_VARIANT}core.default'
+LOW_PRIORITY_QUEUE = f'edx.{QUEUE_VARIANT}core.low'
 
 CELERY_DEFAULT_QUEUE = DEFAULT_PRIORITY_QUEUE
 CELERY_DEFAULT_ROUTING_KEY = DEFAULT_PRIORITY_QUEUE
 
 CELERY_QUEUES = {
     HIGH_PRIORITY_QUEUE: {},
-    DEFAULT_PRIORITY_QUEUE: {}
+    DEFAULT_PRIORITY_QUEUE: {},
+    LOW_PRIORITY_QUEUE: {},
 }
 
 # Queues configuration
@@ -1478,6 +1507,7 @@ INSTALLED_APPS = [
 
     # For CMS
     'cms.djangoapps.contentstore.apps.ContentstoreConfig',
+    'common.djangoapps.split_modulestore_django.apps.SplitModulestoreDjangoBackendAppConfig',
 
     'openedx.core.djangoapps.contentserver',
     'cms.djangoapps.course_creators',
@@ -1512,7 +1542,6 @@ INSTALLED_APPS = [
 
     # Discussion
     'openedx.core.djangoapps.django_comment_common',
-    'openedx.core.djangoapps.discussions',
 
     # for course creator table
     'django.contrib.admin',
@@ -1664,6 +1693,9 @@ INSTALLED_APPS = [
 
     # Content Library LTI 1.3 Support.
     'pylti1p3.contrib.django.lti1p3_tool_config',
+
+    # For edx ace template tags
+    'edx_ace',
 ]
 
 
@@ -1798,6 +1830,7 @@ OPTIONAL_APPS = (
     ('consent', None),
     ('integrated_channels.integrated_channel', None),
     ('integrated_channels.degreed', None),
+    ('integrated_channels.degreed2', None),
     ('integrated_channels.sap_success_factors', None),
     ('integrated_channels.xapi', None),
     ('integrated_channels.cornerstone', None),
@@ -2164,7 +2197,7 @@ SOFTWARE_SECURE_VERIFICATION_ROUTING_KEY = 'edx.lms.core.default'
 POLICY_CHANGE_TASK_RATE_LIMIT = '300/h'
 
 ############## Settings for CourseGraph ############################
-COURSEGRAPH_JOB_QUEUE = DEFAULT_PRIORITY_QUEUE
+COURSEGRAPH_JOB_QUEUE = LOW_PRIORITY_QUEUE
 
 ########## Settings for video transcript migration tasks ############
 VIDEO_TRANSCRIPT_MIGRATIONS_JOB_QUEUE = DEFAULT_PRIORITY_QUEUE
@@ -2414,6 +2447,7 @@ REGISTRATION_EXTRA_FIELDS = {
     'terms_of_service': 'hidden',
     'city': 'hidden',
     'country': 'hidden',
+    'marketing_emails_opt_in': 'hidden',
 }
 EDXAPP_PARSE_KEYS = {}
 
@@ -2513,3 +2547,22 @@ TEAMS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-runn
 TEXTBOOKS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/textbooks.html"
 WIKI_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/course_wiki.html"
 CUSTOM_PAGES_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/pages.html#adding-custom-pages"
+
+#################### Qualtrics Settings #######################
+QUALTRICS_API_BASE_URL = None
+QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
+QUALTRICS_API_VERSION = "v3"
+QUALTRICS_API_TOKEN_EXPIRATION = 3599 # 1 hr
+QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
+
+# OAuth2 Authentication (Client Credentials)
+# https://api.qualtrics.com/instructions/docs/Instructions/oauth-authentication.md
+# Client credentials grant type doesn't use `refresh` token for access.
+QUALTRICS_API_CLIENT_ID = None
+QUALTRICS_API_CLIENT_SECRET= None
+
+# API Token Authentication
+# https://api.qualtrics.com/instructions/docs/Instructions/api-key-authentication.md
+# Recommend OAuth2 Authentication to limit scope of API calls.
+# This is automatically switch over to OAuth2 after API v1.
+QUALTRICS_API_TOKEN = None

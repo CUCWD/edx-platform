@@ -13,6 +13,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test.client import RequestFactory
 
+from edx_django_utils.cache import TieredCache
 from edx_toggles.toggles.testutils import override_waffle_flag
 from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.course_modes.tests.factories import CourseModeFactory
@@ -21,6 +22,7 @@ from lms.djangoapps.certificates.tests.factories import (
     GeneratedCertificateFactory, LinkedInAddToProfileConfigurationFactory
 )
 from lms.djangoapps.courseware.access_utils import ACCESS_DENIED, ACCESS_GRANTED
+from lms.djangoapps.courseware.models import LastSeenCoursewareTimezone
 from lms.djangoapps.courseware.tabs import ExternalLinkCourseTab
 from lms.djangoapps.courseware.tests.helpers import MasqueradeMixin
 from lms.djangoapps.courseware.toggles import (
@@ -36,10 +38,12 @@ from common.djangoapps.student.roles import CourseInstructorRole
 from common.djangoapps.student.tests.factories import CourseEnrollmentCelebrationFactory, UserFactory
 from openedx.core.djangoapps.agreements.api import create_integrity_signature
 from openedx.core.djangoapps.agreements.toggles import ENABLE_INTEGRITY_SIGNATURE
-from xmodule.data import CertificatesDisplayBehaviors
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import TEST_DATA_SPLIT_MODULESTORE, SharedModuleStoreTestCase
-from xmodule.modulestore.tests.factories import ItemFactory, ToyCourseFactory
+
+from xmodule.data import CertificatesDisplayBehaviors  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.django_utils import TEST_DATA_SPLIT_MODULESTORE, SharedModuleStoreTestCase  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.factories import ItemFactory, ToyCourseFactory  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.partitions.partitions import ENROLLMENT_TRACK_PARTITION_ID
 
 
 User = get_user_model()
@@ -303,6 +307,7 @@ class CourseApiTestViews(BaseCoursewareTests, MasqueradeMixin):
             response = self.client.get(self.url)
 
         assert response.status_code == 200
+        assert response.data['username'] == masquerade_role or username
         if expect_course_access:
             assert response.data['course_access']['has_access']
         else:
@@ -313,24 +318,20 @@ class CourseApiTestViews(BaseCoursewareTests, MasqueradeMixin):
         CourseEnrollment.enroll(self.user, self.course.id, 'audit')
         with override_waffle_flag(COURSEWARE_MFE_MILESTONES_STREAK_DISCOUNT, active=True):
             with mock.patch('common.djangoapps.student.models.UserCelebration.perform_streak_updates', return_value=3):
-                with mock.patch('common.djangoapps.track.segment.track') as mock_segment_track:
-                    response = self.client.get(self.url, content_type='application/json')
-                    celebrations = response.json()['celebrations']
-                    assert celebrations['streak_length_to_celebrate'] == 3
-                    assert celebrations['streak_discount_enabled'] is True
-                    mock_segment_track.assert_called_once()
+                response = self.client.get(self.url, content_type='application/json')
+                celebrations = response.json()['celebrations']
+                assert celebrations['streak_length_to_celebrate'] == 3
+                assert celebrations['streak_discount_enabled'] is True
 
     def test_streak_segment_suppressed_for_unverified(self):
         """ Test that metadata endpoint does not return a discount and signal is not sent if flag is not set """
         CourseEnrollment.enroll(self.user, self.course.id, 'audit')
         with override_waffle_flag(COURSEWARE_MFE_MILESTONES_STREAK_DISCOUNT, active=False):
             with mock.patch('common.djangoapps.student.models.UserCelebration.perform_streak_updates', return_value=3):
-                with mock.patch('common.djangoapps.track.segment.track') as mock_segment_track:
-                    response = self.client.get(self.url, content_type='application/json')
-                    celebrations = response.json()['celebrations']
-                    assert celebrations['streak_length_to_celebrate'] == 3
-                    assert celebrations['streak_discount_enabled'] is False
-                    mock_segment_track.assert_not_called()
+                response = self.client.get(self.url, content_type='application/json')
+                celebrations = response.json()['celebrations']
+                assert celebrations['streak_length_to_celebrate'] == 3
+                assert celebrations['streak_discount_enabled'] is False
 
     @ddt.data(
         (None, False, False, False),
@@ -339,7 +340,8 @@ class CourseApiTestViews(BaseCoursewareTests, MasqueradeMixin):
         ('audit', False, False, False),
         ('verified', False, True, False),
         ('masters', False, True, False),
-        ('verified', True, False, False),
+        ('verified', True, False, True),
+        ('audit', True, False, False),
     )
     @ddt.unpack
     @override_waffle_flag(ENABLE_INTEGRITY_SIGNATURE, True)
@@ -359,8 +361,43 @@ class CourseApiTestViews(BaseCoursewareTests, MasqueradeMixin):
         response = self.client.get(self.url)
         assert response.status_code == 200
         courseware_data = response.json()
+        assert 'is_integrity_signature_enabled' in courseware_data
+        assert courseware_data['is_integrity_signature_enabled'] is True
         assert 'user_needs_integrity_signature' in courseware_data
         assert courseware_data['user_needs_integrity_signature'] == needs_integrity_signature
+
+    def test_set_last_seen_courseware_timezone_no_integrity_error(self):
+        # Previously this function was trying to create duplicate records
+        # that would bump into a uniqueness constraint causing an integrity error
+        self.client.get(self.url, {'browser_timezone': 'America/New_York'})
+        TieredCache.dangerous_clear_all_tiers()
+        self.client.get(self.url, {'browser_timezone': 'Asia/Tokyo'})
+        assert len(LastSeenCoursewareTimezone.objects.filter()) == 1
+
+    @ddt.data(
+        (1, False),
+        (2, True),
+        (3, True),
+    )
+    @ddt.unpack
+    @override_waffle_flag(ENABLE_INTEGRITY_SIGNATURE, True)
+    def test_course_staff_masquerade(self, masquerade_group_id, needs_signature):
+        self.user.is_staff = True
+        self.user.save()
+        CourseEnrollment.enroll(self.user, self.course.id, 'audit')
+        masquerade_config = {
+            'role': 'student',
+            'user_partition_id': ENROLLMENT_TRACK_PARTITION_ID,
+            'group_id': masquerade_group_id
+        }
+        self.update_masquerade(**masquerade_config)
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+        courseware_data = response.json()
+        assert 'is_integrity_signature_enabled' in courseware_data
+        assert courseware_data['is_integrity_signature_enabled'] is True
+        assert 'user_needs_integrity_signature' in courseware_data
+        assert courseware_data['user_needs_integrity_signature'] == needs_signature
 
 
 @ddt.ddt
@@ -396,7 +433,15 @@ class SequenceApiTestViews(MasqueradeMixin, BaseCoursewareTests):
     def test_hidden_after_due(self, is_past_due, masquerade_config, expected_hidden, expected_banner):
         """Validate the metadata when hide-after-due is set for a sequence"""
         due = datetime.now() + timedelta(days=-1 if is_past_due else 1)
-        sequence = ItemFactory(parent=self.chapter, category='sequential', hide_after_due=True, due=due)
+        sequence = ItemFactory(
+            parent_location=self.chapter.location,
+            # ^ It is very important that we use parent_location=self.chapter.location (and not parent=self.chapter), as
+            # chapter is a class attribute and passing it by value will update its .children=[] which will then leak
+            # into other tests and cause errors if the children no longer exist.
+            category='sequential',
+            hide_after_due=True,
+            due=due,
+        )
 
         CourseEnrollment.enroll(self.user, self.course.id)
 

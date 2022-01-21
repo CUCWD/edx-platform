@@ -169,10 +169,10 @@ class OutlineTabView(RetrieveAPIView):
 
     serializer_class = OutlineTabSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):  # pylint: disable=too-many-statements
         course_key_string = kwargs.get('course_key_string')
         course_key = CourseKey.from_string(course_key_string)
-        course_usage_key = modulestore().make_course_usage_key(course_key)
+        course_usage_key = modulestore().make_course_usage_key(course_key)  # pylint: disable=unused-variable
 
         if course_home_legacy_is_active(course_key):
             raise Http404
@@ -238,6 +238,7 @@ class OutlineTabView(RetrieveAPIView):
         is_enrolled = enrollment and enrollment.is_active
         is_staff = bool(has_access(request.user, 'staff', course_key))
         show_enrolled = is_enrolled or is_staff
+        enable_proctored_exams = False
         if show_enrolled:
             course_blocks = get_course_outline_block_tree(request, course_key_string, request.user)
             date_blocks = get_course_date_blocks(course, request.user, request, num_assignments=1)
@@ -250,13 +251,15 @@ class OutlineTabView(RetrieveAPIView):
             access_expiration = get_access_expiration_data(request.user, course_overview)
             cert_data = get_cert_data(request.user, course, enrollment.mode) if is_enrolled else None
 
+            enable_proctored_exams = course_overview.enable_proctored_exams
+
             if COURSE_GOALS_NUMBER_OF_DAYS_GOALS.is_enabled():
                 if (is_enrolled and ENABLE_COURSE_GOALS.is_enabled(course_key)):
 
                     course_goals = {
-                        'selected_goal': None
+                        'selected_goal': None,
+                        'weekly_learning_goal_enabled': True,
                     }
-
                     selected_goal = get_course_goal(request.user, course_key)
                     if selected_goal:
                         course_goals['selected_goal'] = {
@@ -350,6 +353,7 @@ class OutlineTabView(RetrieveAPIView):
             'course_goals': course_goals,
             'course_tools': course_tools,
             'dates_widget': dates_widget,
+            'enable_proctored_exams': enable_proctored_exams,
             'enroll_alert': enroll_alert,
             'enrollment_mode': enrollment_mode,
             'handouts_html': handouts_html,
@@ -385,7 +389,7 @@ class OutlineTabView(RetrieveAPIView):
 @api_view(['POST'])
 @authentication_classes((JwtAuthentication,))
 @permission_classes((IsAuthenticated,))
-def dismiss_welcome_message(request):
+def dismiss_welcome_message(request):  # pylint: disable=missing-function-docstring
     course_id = request.data.get('course_id', None)
 
     # If body doesn't contain 'course_id', return 400 to client.
@@ -402,14 +406,14 @@ def dismiss_welcome_message(request):
         dismiss_current_update_for_user(request, course)
         return Response({'message': _('Welcome message successfully dismissed.')})
     except Exception:
-        raise UnableToDismissWelcomeMessage
+        raise UnableToDismissWelcomeMessage  # pylint: disable=raise-missing-from
 
 
 # Another version of this endpoint exists in ../course_goals/views.py
 @api_view(['POST'])
 @authentication_classes((JwtAuthentication, SessionAuthenticationAllowInactiveUser,))
 @permission_classes((IsAuthenticated,))
-def save_course_goal(request):
+def save_course_goal(request):  # pylint: disable=missing-function-docstring
     course_id = request.data.get('course_id')
     goal_key = request.data.get('goal_key')
     days_per_week = request.data.get('days_per_week')
@@ -431,7 +435,7 @@ def save_course_goal(request):
                 'message': _('Course goal updated successfully.'),
             })
         except Exception:
-            raise UnableToSaveCourseGoal
+            raise UnableToSaveCourseGoal  # pylint: disable=raise-missing-from
 
     else:
         # If body doesn't contain 'goal', return 400 to client.
@@ -445,7 +449,7 @@ def save_course_goal(request):
                 'message': _('Course goal updated successfully.'),
             })
         except Exception:
-            raise UnableToSaveCourseGoal
+            raise UnableToSaveCourseGoal  # pylint: disable=raise-missing-from
 
 
 @api_view(['POST'])

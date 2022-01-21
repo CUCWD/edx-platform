@@ -139,6 +139,7 @@ def _set_course_discussion_blackout(course, user_id):
 
 
 @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
+@ddt.ddt
 class GetCourseTest(ForumsEnableMixin, UrlResetMixin, SharedModuleStoreTestCase):
     """Test for get_course"""
 
@@ -176,8 +177,26 @@ class GetCourseTest(ForumsEnableMixin, UrlResetMixin, SharedModuleStoreTestCase)
             'thread_list_url': 'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz',
             'following_thread_list_url':
                 'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&following=True',
-            'topics_url': 'http://testserver/api/discussion/v1/course_topics/x/y/z'
+            'topics_url': 'http://testserver/api/discussion/v1/course_topics/x/y/z',
+            'allow_anonymous': True,
+            'allow_anonymous_to_peers': False,
+            'user_is_privileged': False,
+            'user_roles': {'Student'},
         }
+
+    @ddt.data(
+        FORUM_ROLE_ADMINISTRATOR,
+        FORUM_ROLE_MODERATOR,
+        FORUM_ROLE_COMMUNITY_TA,
+    )
+    def test_privileged_roles(self, role):
+        """
+        Test that the api returns the correct roles and privileges.
+        """
+        _assign_role_to_user(user=self.user, course_id=self.course.id, role=role)
+        course_meta = get_course(self.request, self.course.id)
+        assert course_meta["user_is_privileged"]
+        assert course_meta["user_roles"] == {FORUM_ROLE_STUDENT} | {role}
 
 
 @ddt.ddt
@@ -222,10 +241,14 @@ class GetCourseTestBlackouts(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCa
 
 @mock.patch.dict("django.conf.settings.FEATURES", {"DISABLE_START_DATES": False})
 @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
-class GetCourseTopicsTest(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase):
+class GetCourseTopicsTest(CommentsServiceMockMixin, ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase):
     """Test for get_course_topics"""
     @mock.patch.dict("django.conf.settings.FEATURES", {"ENABLE_DISCUSSION_SERVICE": True})
     def setUp(self):
+        httpretty.reset()
+        httpretty.enable()
+        self.addCleanup(httpretty.reset)
+        self.addCleanup(httpretty.disable)
         super().setUp()
         self.maxDiff = None  # pylint: disable=invalid-name
         self.partition = UserPartition(
@@ -249,6 +272,12 @@ class GetCourseTopicsTest(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase)
         self.request = RequestFactory().get("/dummy")
         self.request.user = self.user
         CourseEnrollmentFactory.create(user=self.user, course_id=self.course.id)
+        self.thread_counts_map = {
+            "courseware-1": {"discussion": 2, "question": 3},
+            "courseware-2": {"discussion": 4, "question": 5},
+            "courseware-3": {"discussion": 7, "question": 2},
+        }
+        self.register_get_course_commentable_counts_response(self.course.id, self.thread_counts_map)
 
     def make_discussion_xblock(self, topic_id, category, subcategory, **kwargs):
         """
@@ -286,11 +315,13 @@ class GetCourseTopicsTest(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase)
         """
         topic_id_list = [topic_id] if topic_id else [child["id"] for child in children]
         children = children or []
+        thread_counts = self.thread_counts_map.get(topic_id, {"discussion": 0, "question": 0})
         node = {
             "id": topic_id,
             "name": name,
             "children": children,
-            "thread_list_url": self.get_thread_list_url(topic_id_list)
+            "thread_list_url": self.get_thread_list_url(topic_id_list),
+            "thread_counts": thread_counts if not children else None
         }
 
         return node
@@ -560,29 +591,39 @@ class GetCourseTopicsTest(ForumsEnableMixin, UrlResetMixin, ModuleStoreTestCase)
         assert actual == {
             'non_courseware_topics': [],
             'courseware_topics': [
-                {'children': [
-                    {'children': [],
-                     'id': 'topic_id_1',
-                     'thread_list_url':
-                         'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=topic_id_1',
-                     'name': 'test_target_1'}
-                ],
+                {
+                    'children': [
+                        {
+                            'children': [],
+                            'id': 'topic_id_1',
+                            'thread_list_url':
+                                'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=topic_id_1',
+                            'name': 'test_target_1',
+                            'thread_counts': {'discussion': 0, 'question': 0},
+                        },
+                    ],
                     'id': None,
                     'thread_list_url':
                         'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=topic_id_1',
-                    'name': 'test_category_1'
+                    'name': 'test_category_1',
+                    'thread_counts': None,
                 },
-                {'children': [
-                    {'children': [],
-                     'id': 'topic_id_2',
-                     'thread_list_url':
-                         'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=topic_id_2',
-                     'name': 'test_target_2'}
-                ],
+                {
+                    'children': [
+                        {
+                            'children': [],
+                            'id': 'topic_id_2',
+                            'thread_list_url':
+                                'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=topic_id_2',
+                            'name': 'test_target_2',
+                            'thread_counts': {'discussion': 0, 'question': 0},
+                        }
+                    ],
                     'id': None,
                     'thread_list_url':
                         'http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=topic_id_2',
-                    'name': 'test_category_2'
+                    'name': 'test_category_2',
+                    'thread_counts': None,
                 }
             ]
         }
@@ -1357,6 +1398,8 @@ class GetCommentListTest(ForumsEnableMixin, CommentsServiceMockMixin, SharedModu
                 "child_count": 0,
                 "children": [],
                 "can_delete": False,
+                "anonymous": False,
+                "anonymous_to_peers": False,
             },
             {
                 "id": "test_comment_2",
@@ -1380,6 +1423,8 @@ class GetCommentListTest(ForumsEnableMixin, CommentsServiceMockMixin, SharedModu
                 "child_count": 0,
                 "children": [],
                 "can_delete": False,
+                "anonymous": True,
+                "anonymous_to_peers": False,
             },
         ]
         actual_comments = self.get_comment_list(
@@ -1637,7 +1682,9 @@ class CreateThreadTest(
             'thread_type': ['discussion'],
             'title': ['Test Title'],
             'body': ['Test body'],
-            'user_id': [str(self.user.id)]
+            'user_id': [str(self.user.id)],
+            'anonymous': ['False'],
+            'anonymous_to_peers': ['False'],
         }
         event_name, event_data = mock_emit.call_args[0]
         assert event_name == 'edx.forum.thread.created'
@@ -1694,8 +1741,8 @@ class CreateThreadTest(
             "comment_list_url": "http://testserver/api/discussion/v1/comments/?thread_id=test_id",
             "read": True,
             "editable_fields": [
-                "abuse_flagged", "closed", "following", "pinned", "raw_body", "read", "title", "topic_id", "type",
-                "voted"
+                "abuse_flagged", "anonymous", "closed", "following", "pinned",
+                "raw_body", "read", "title", "topic_id", "type", "voted"
             ],
         })
         assert actual == expected
@@ -1708,6 +1755,8 @@ class CreateThreadTest(
                 "title": ["Test Title"],
                 "body": ["Test body"],
                 "user_id": [str(self.user.id)],
+                "anonymous": ["False"],
+                "anonymous_to_peers": ["False"],
             }
         )
         event_name, event_data = mock_emit.call_args[0]
@@ -1977,9 +2026,11 @@ class CreateCommentTest(
             "voted": False,
             "vote_count": 0,
             "children": [],
-            "editable_fields": ["abuse_flagged", "raw_body", "voted"],
+            "editable_fields": ["abuse_flagged", "anonymous", "raw_body", "voted"],
             "child_count": 0,
             "can_delete": True,
+            "anonymous": False,
+            "anonymous_to_peers": False,
         }
         assert actual == expected
         expected_url = (
@@ -1990,7 +2041,9 @@ class CreateCommentTest(
         assert httpretty.last_request().parsed_body == {   # lint-amnesty, pylint: disable=no-member
             'course_id': [str(self.course.id)],
             'body': ['Test body'],
-            'user_id': [str(self.user.id)]
+            'user_id': [str(self.user.id)],
+            'anonymous': ['False'],
+            'anonymous_to_peers': ['False'],
         }
         expected_event_name = (
             "edx.forum.comment.created" if parent_id else
@@ -2059,9 +2112,11 @@ class CreateCommentTest(
             "voted": False,
             "vote_count": 0,
             "children": [],
-            "editable_fields": ["abuse_flagged", "endorsed", "raw_body", "voted"],
+            "editable_fields": ["abuse_flagged", "anonymous", "endorsed", "raw_body", "voted"],
             "child_count": 0,
             "can_delete": True,
+            "anonymous": False,
+            "anonymous_to_peers": False,
         }
         assert actual == expected
         expected_url = (
@@ -2072,7 +2127,9 @@ class CreateCommentTest(
         assert httpretty.last_request().parsed_body == {  # pylint: disable=no-member
             "course_id": [str(self.course.id)],
             "body": ["Test body"],
-            "user_id": [str(self.user.id)]
+            "user_id": [str(self.user.id)],
+            "anonymous": ['False'],
+            "anonymous_to_peers": ['False'],
         }
 
         expected_event_name = (
@@ -2676,6 +2733,8 @@ class UpdateCommentTest(
         with self.assert_signal_sent(api, 'comment_edited', sender=None, user=self.user, exclude_args=('post',)):
             actual = update_comment(self.request, "test_comment", {"raw_body": "Edited body"})
         expected = {
+            "anonymous": False,
+            "anonymous_to_peers": False,
             "id": "test_comment",
             "thread_id": "test_thread",
             "parent_id": parent_id,
@@ -2694,7 +2753,7 @@ class UpdateCommentTest(
             "voted": False,
             "vote_count": 0,
             "children": [],
-            "editable_fields": ["abuse_flagged", "raw_body", "voted"],
+            "editable_fields": ["abuse_flagged", "anonymous", "raw_body", "voted"],
             "child_count": 0,
             "can_delete": True,
         }

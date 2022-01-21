@@ -639,7 +639,7 @@ class TestInstructorAPIBulkAccountCreationAndEnrollment(SharedModuleStoreTestCas
         """
         csv_content = b"test_student@example.com,test_student_1,tester1,USA"
         uploaded_file = SimpleUploadedFile("temp.csv", csv_content)
-        response = self.client.post(self.url, {'students_list': uploaded_file})
+        response = self.client.post(self.url, {'students_list': uploaded_file, 'email-students': True})
         assert response.status_code == 200
         data = json.loads(response.content.decode('utf-8'))
         assert len(data['row_errors']) == 0
@@ -660,7 +660,7 @@ class TestInstructorAPIBulkAccountCreationAndEnrollment(SharedModuleStoreTestCas
         """
         csv_content = b"\ntest_student@example.com,test_student_1,tester1,USA\n\n"
         uploaded_file = SimpleUploadedFile("temp.csv", csv_content)
-        response = self.client.post(self.url, {'students_list': uploaded_file})
+        response = self.client.post(self.url, {'students_list': uploaded_file, 'email-students': True})
         assert response.status_code == 200
         data = json.loads(response.content.decode('utf-8'))
         assert len(data['row_errors']) == 0
@@ -742,10 +742,10 @@ class TestInstructorAPIBulkAccountCreationAndEnrollment(SharedModuleStoreTestCas
         assert len(data['row_errors']) == 0
         assert len(data['warnings']) == 0
         assert len(data['general_errors']) == 1
-        assert data['general_errors'][0]['response'] ==\
-               'Data in row #1 must have exactly four columns: email, username, full name, and country'
-        # lint-amnesty, pylint: disable=line-too-long
-
+        assert data['general_errors'][0]['response'] == (
+            'Data in row #1 must have exactly four columns: email, username, '
+            'full name, and country.'
+        )
         manual_enrollments = ManualEnrollmentAudit.objects.all()
         assert manual_enrollments.count() == 0
 
@@ -2805,6 +2805,33 @@ class TestInstructorAPILevelsDataDump(SharedModuleStoreTestCase, LoginEnrollment
                 CourseFinanceAdminRole(self.course.id).add_users(self.instructor)
                 response = self.client.post(url, {})
                 self.assertContains(response, success_status)
+
+    @ddt.data(
+        True,
+        False
+    )
+    @patch('lms.djangoapps.instructor.views.api.is_integrity_signature_enabled')
+    @valid_problem_location
+    def test_idv_retirement_student_features_report(self, toggle_value, mock_toggle):
+        mock_toggle.return_value = toggle_value
+        kwargs = {'course_id': str(self.course.id)}
+        kwargs.update({'csv': '/csv'})
+        url = reverse('get_students_features', kwargs=kwargs)
+        success_status = 'The enrolled learner profile report is being created.'
+        with patch('lms.djangoapps.instructor_task.api.submit_calculate_students_features_csv') as mock_task_endpoint:
+            CourseFinanceAdminRole(self.course.id).add_users(self.instructor)
+            response = self.client.post(url, {})
+            self.assertContains(response, success_status)
+
+            # assert that if the integrity signature is enabled, the verification
+            # status is not included as a query feature
+            args = mock_task_endpoint.call_args.args
+            self.assertEqual(len(args), 3)
+            query_features = args[2]
+            if not toggle_value:
+                self.assertIn('verification_status', query_features)
+            else:
+                self.assertNotIn('verification_status', query_features)
 
     def test_get_ora2_responses_success(self):
         url = reverse('export_ora2_data', kwargs={'course_id': str(self.course.id)})

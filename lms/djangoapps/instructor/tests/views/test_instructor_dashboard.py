@@ -23,6 +23,7 @@ from common.djangoapps.student.tests.factories import AdminFactory, CourseAccess
 from common.djangoapps.student.tests.factories import StaffFactory
 from common.djangoapps.student.tests.factories import UserFactory
 from common.test.utils import XssTestMixin
+from lms.djangoapps.courseware.courses import get_studio_url
 from lms.djangoapps.courseware.tabs import get_course_tab_list
 from lms.djangoapps.courseware.tests.factories import StudentModuleFactory
 from lms.djangoapps.courseware.tests.helpers import LoginEnrollmentTestCase
@@ -582,6 +583,21 @@ class TestInstructorDashboard(ModuleStoreTestCase, LoginEnrollmentTestCase, XssT
         # assert we don't get a 500 error
         assert 200 == response.status_code
 
+    @patch("lms.djangoapps.instructor.views.instructor_dashboard.get_plugins_view_context")
+    def test_external_plugin_integration(self, mock_get_plugins_view_context):
+        """
+        Tests that whether context from plugins is being reflected/added in instructor dashboard.
+        """
+        test_studio_url = get_studio_url(self.course, 'course')
+
+        context = {
+            'studio_url': test_studio_url
+        }
+        mock_get_plugins_view_context.return_value = context
+
+        response = self.client.get(self.url)
+        self.assertContains(response, test_studio_url)
+
 
 @ddt.ddt
 class TestInstructorDashboardPerformance(ModuleStoreTestCase, LoginEnrollmentTestCase, XssTestMixin):
@@ -673,6 +689,6 @@ class TestInstructorDashboardPerformance(ModuleStoreTestCase, LoginEnrollmentTes
 
         # check MongoDB calls count
         url = reverse('spoc_gradebook', kwargs={'course_id': self.course.id})
-        with check_mongo_calls(9):
+        with check_mongo_calls(7):
             response = self.client.get(url)
             assert response.status_code == 200

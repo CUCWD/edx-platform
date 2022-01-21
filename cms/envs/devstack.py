@@ -162,6 +162,9 @@ LIBRARY_AUTHORING_MICROFRONTEND_URL = 'http://localhost:3001'
 ################### FRONTEND APPLICATION COURSE AUTHORING ###################
 COURSE_AUTHORING_MICROFRONTEND_URL = 'http://localhost:2001'
 
+################### FRONTEND APPLICATION DISCUSSIONS ###################
+DISCUSSIONS_MICROFRONTEND_URL = 'http://localhost:2002'
+
 ################################# DJANGO-REQUIRE ###############################
 
 # Whether to run django-require in debug mode.
@@ -234,6 +237,11 @@ SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
     from .private import *  # pylint: disable=import-error,wildcard-import
 
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+         'LOCATION': 'qualtrics_backends_api_tokens'
+     }
+     
 ############# CORS headers for cross-domain requests #################
 FEATURES['ENABLE_CORS_HEADERS'] = True
 CORS_ALLOW_CREDENTIALS = True

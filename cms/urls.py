@@ -184,6 +184,8 @@ urlpatterns = oauth2_urlpatterns + [
     url(r'^api/val/v0/', include('edxval.urls')),
     url(r'^api/tasks/v0/', include('user_tasks.urls')),
     url(r'^accessibility$', contentstore_views.accessibility, name='accessibility'),
+    url(r'^textbooks_api/{}$'.format(settings.COURSE_KEY_PATTERN), contentstore_views.textbooks_list_api_handler, name='textbooks_list_api_handler'),
+    url(r'^textbooks_api/{}/(?P<textbook_id>.+)$'.format(settings.COURSE_KEY_PATTERN), contentstore_views.textbooks_api_handler, name='textbooks_api_handler'),
 ]
 
 if not settings.DISABLE_DEPRECATED_SIGNIN_URL:

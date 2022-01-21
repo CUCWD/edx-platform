@@ -25,8 +25,9 @@ from common.djangoapps.student.auth import has_course_author_access
 from common.djangoapps.xblock_django.api import authorable_xblocks, disabled_xblocks
 from common.djangoapps.xblock_django.models import XBlockStudioConfigurationFlag
 from openedx.core.lib.xblock_utils import get_aside_from_xblock, is_xblock_aside
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.exceptions import ItemNotFoundError
+from openedx.core.djangoapps.discussions.models import DiscussionsConfiguration
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.exceptions import ItemNotFoundError  # lint-amnesty, pylint: disable=wrong-import-order
 
 from ..utils import get_lms_link_for_item, get_sibling_urls, reverse_course_url
 from .helpers import get_parent_xblock, is_unit, xblock_type_display_name
@@ -277,7 +278,8 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
         'html': _("HTML"),
         'problem': _("Problem"),
         'video': _("Video"),
-        'openassessment': _("Open Response")
+        'openassessment': _("Open Response"),
+        #': _("Key Terms")
     }
 
     component_templates = []
@@ -287,12 +289,15 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
     component_types = COMPONENT_TYPES[:]
 
     # Libraries do not support discussions and openassessment
-    component_not_supported_by_library = ['discussion', 'openassessment']
+    component_not_supported_by_library = ['discussion', 'openassessment', 'keyterms']
     if library:
         component_types = [component for component in component_types
                            if component not in set(component_not_supported_by_library)]
 
     component_types = _filter_disabled_blocks(component_types)
+
+    # Filter out discussion component from component_types if non-legacy discussion provider is configured for course
+    component_types = _filter_discussion_for_non_legacy_provider(component_types, courselike.location.course_key)
 
     # Content Libraries currently don't allow opting in to unsupported xblocks/problem types.
     allow_unsupported = getattr(courselike, "allow_unsupported_xblocks", False)
@@ -405,7 +410,7 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
     # Set component types according to course policy file
     if isinstance(course_advanced_keys, list):
         for category in course_advanced_keys:
-            if category in advanced_component_types.keys() and category not in categories:
+            if category in advanced_component_types.keys() and category not in categories:  # pylint: disable=consider-iterating-dictionary
                 # boilerplates not supported for advanced components
                 try:
                     component_display_name = xblock_type_display_name(category, default_display_name=category)
@@ -436,6 +441,20 @@ def get_component_templates(courselike, library=False):  # lint-amnesty, pylint:
         component_templates.insert(0, advanced_component_templates)
 
     return component_templates
+
+
+def _filter_discussion_for_non_legacy_provider(all_components, course_key):
+    """
+    Filter out Discussion component if non-legacy discussion provider is configured for course key
+    """
+    discussion_provider = DiscussionsConfiguration.get(context_key=course_key).provider_type
+
+    if discussion_provider != 'legacy':
+        filtered_components = [component for component in all_components if component != 'discussion']
+    else:
+        filtered_components = all_components
+
+    return filtered_components
 
 
 def _filter_disabled_blocks(all_blocks):

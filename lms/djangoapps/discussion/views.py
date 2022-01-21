@@ -4,7 +4,6 @@ Views handling read (GET) requests for the Discussion tab and inline discussions
 
 
 import logging
-from functools import wraps
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -20,6 +19,7 @@ from django.views.decorators.cache import cache_control
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_http_methods
 from edx_django_utils.monitoring import function_trace
+from functools import wraps
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import status
 from web_fragments.fragment import Fragment
@@ -37,21 +37,28 @@ from lms.djangoapps.discussion.django_comment_client.constants import TYPE_ENTRY
 from lms.djangoapps.discussion.django_comment_client.permissions import has_permission
 from lms.djangoapps.discussion.django_comment_client.utils import (
     add_courseware_context,
-    available_division_schemes,
     course_discussion_division_enabled,
     extract,
     get_group_id_for_comments_service,
     get_group_id_for_user,
-    get_group_names_by_id,
     is_commentable_divided,
     strip_none,
 )
 from lms.djangoapps.discussion.exceptions import TeamDiscussionHiddenFromUserException
+from lms.djangoapps.discussion.toggles import ENABLE_DISCUSSIONS_MFE
 from lms.djangoapps.experiments.utils import get_experiment_user_metadata_context
 from lms.djangoapps.teams import api as team_api
+from openedx.core.djangoapps.discussions.url_helpers import get_discussions_mfe_url
+from openedx.core.djangoapps.discussions.utils import (
+    available_division_schemes,
+    get_discussion_categories_ids,
+    get_divided_discussions,
+    get_group_names_by_id,
+)
 from openedx.core.djangoapps.django_comment_common.models import CourseDiscussionSettings
 from openedx.core.djangoapps.django_comment_common.utils import ThreadContext
 from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
+from openedx.core.djangolib.markup import HTML
 from openedx.features.course_duration_limits.access import generate_course_expired_fragment
 from xmodule.modulestore.django import modulestore
 
@@ -162,7 +169,7 @@ def get_threads(request, course, user_info, discussion_id=None, per_page=THREADS
     # If not provided with a discussion id, filter threads by commentable ids
     # which are accessible to the current user.
     if discussion_id is None:
-        discussion_category_ids = set(utils.get_discussion_categories_ids(course, request.user))
+        discussion_category_ids = set(get_discussion_categories_ids(course, request.user))
         threads = [
             thread for thread in threads
             if thread.get('commentable_id') in discussion_category_ids
@@ -713,8 +720,25 @@ class DiscussionBoardFragmentView(EdxFragmentView):
         Returns:
             Fragment: The fragment representing the discussion board
         """
+        course_key = CourseKey.from_string(course_id)
+        mfe_url = get_discussions_mfe_url(course_key)
+        if ENABLE_DISCUSSIONS_MFE.is_enabled(course_key) and mfe_url:
+            fragment = Fragment(
+                HTML(
+                    "<iframe id='discussions-mfe-tab-embed' src='{src}'></iframe>"
+                ).format(src=mfe_url)
+            )
+            fragment.add_css(
+                """
+                #discussions-mfe-tab-embed {
+                    width: 100%;
+                    min-height: 800px;
+                    border: none;
+                }
+                """
+            )
+            return fragment
         try:
-            course_key = CourseKey.from_string(course_id)
             base_context = _create_base_discussion_view_context(request, course_key)
             # Note:
             #   After the thread is rendered in this fragment, an AJAX
@@ -954,25 +978,6 @@ def course_discussions_settings_handler(request, course_key_string):
         'division_scheme': discussion_settings.division_scheme,
         'available_division_schemes': available_division_schemes(course_key)
     })
-
-
-def get_divided_discussions(course, discussion_settings):
-    """
-    Returns the course-wide and inline divided discussion ids separately.
-    """
-    divided_course_wide_discussions = []
-    divided_inline_discussions = []
-
-    course_wide_discussions = [topic['id'] for __, topic in course.discussion_topics.items()]
-    all_discussions = utils.get_discussion_categories_ids(course, None, include_all=True)
-
-    for divided_discussion_id in discussion_settings.divided_discussions:
-        if divided_discussion_id in course_wide_discussions:
-            divided_course_wide_discussions.append(divided_discussion_id)
-        elif divided_discussion_id in all_discussions:
-            divided_inline_discussions.append(divided_discussion_id)
-
-    return divided_course_wide_discussions, divided_inline_discussions
 
 
 def _check_team_discussion_access(request, course, discussion_id):

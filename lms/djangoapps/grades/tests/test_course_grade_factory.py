@@ -95,7 +95,7 @@ class TestCourseGradeFactory(GradeTestBase):
                 self.sequence2.display_name
             ]
 
-        with self.assertNumQueries(5), mock_get_score(1, 2):
+        with self.assertNumQueries(4), mock_get_score(1, 2):
             _assert_read(expected_pass=False, expected_percent=0)  # start off with grade of 0
 
         num_queries = 43
@@ -279,7 +279,7 @@ class TestGradeIteration(SharedModuleStoreTestCase):
         iterator, but it shouldn't error.
         """
         grade_results = list(CourseGradeFactory().iter([], self.course))
-        assert grade_results == []
+        assert not grade_results
 
     def test_all_empty_grades(self):
         """

@@ -177,7 +177,10 @@ FEATURES['CERTIFICATES_HTML_VIEW'] = True
 
 
 ########################## Course Discovery #######################
-LANGUAGE_MAP = {'terms': {lang: display for lang, display in ALL_LANGUAGES}, 'name': 'Language'}  # lint-amnesty, pylint: disable=unnecessary-comprehension
+LANGUAGE_MAP = {
+    'terms': dict(ALL_LANGUAGES),
+    'name': 'Language',
+}
 COURSE_DISCOVERY_MEANINGS = {
     'org': {
         'name': 'Organization',
@@ -335,6 +338,9 @@ ACCOUNT_MICROFRONTEND_URL = 'http://localhost:1997'
 AUTHN_MICROFRONTEND_URL = 'http://localhost:1999'
 AUTHN_MICROFRONTEND_DOMAIN = 'localhost:1999'
 
+################### FRONTEND APPLICATION DISCUSSIONS ###################
+DISCUSSIONS_MICROFRONTEND_URL = 'http://localhost:2002'
+
 ############## Docker based devstack settings #######################
 
 FEATURES.update({
@@ -401,11 +407,6 @@ if FEATURES.get('ENABLE_ENTERPRISE_INTEGRATION'):
 DCS_SESSION_COOKIE_SAMESITE = 'Lax'
 DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
-#####################################################################
-# See if the developer has any local overrides.
-if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
-    from .private import *  # pylint: disable=import-error,wildcard-import
-
 ########################## THEMING  #######################
 # If you want to enable theming in devstack, uncomment this section and add any relevant
 # theme directories to COMPREHENSIVE_THEME_DIRS
@@ -439,3 +440,9 @@ PROCTORING_USER_OBFUSCATION_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 
 #################### Webpack Configuration Settings ##############################
 WEBPACK_LOADER['DEFAULT']['TIMEOUT'] = 5
+
+################# New settings must go ABOVE this line #################
+########################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import

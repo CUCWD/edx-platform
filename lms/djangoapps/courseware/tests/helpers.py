@@ -7,6 +7,7 @@ import ast
 import json
 from collections import OrderedDict
 from datetime import timedelta
+from unittest.mock import Mock
 
 from django.contrib import messages
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
@@ -27,10 +28,10 @@ from openedx.core.lib.url_utils import quote_slashes
 from common.djangoapps.student.models import CourseEnrollment, Registration
 from common.djangoapps.student.tests.factories import CourseEnrollmentFactory, UserFactory
 from common.djangoapps.util.date_utils import strftime_localized_html
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.tests.django_utils import TEST_DATA_MONGO_MODULESTORE, ModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
-from xmodule.tests import get_test_descriptor_system, get_test_system
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.django_utils import TEST_DATA_MONGO_MODULESTORE, ModuleStoreTestCase  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.tests import get_test_descriptor_system, get_test_system  # lint-amnesty, pylint: disable=wrong-import-order
 
 
 class BaseTestXmodule(ModuleStoreTestCase):
@@ -63,11 +64,11 @@ class BaseTestXmodule(ModuleStoreTestCase):
     METADATA = {}
     MODEL_DATA = {'data': '<some_module></some_module>'}
 
-    def new_module_runtime(self):
+    def new_module_runtime(self, render_template=None):
         """
         Generate a new ModuleSystem that is minimally set up for testing
         """
-        return get_test_system(course_id=self.course.id)
+        return get_test_system(course_id=self.course.id, render_template=render_template)
 
     def new_descriptor_runtime(self):
         runtime = get_test_descriptor_system()
@@ -143,12 +144,14 @@ class BaseTestXmodule(ModuleStoreTestCase):
 
 class XModuleRenderingTestBase(BaseTestXmodule):  # lint-amnesty, pylint: disable=missing-class-docstring
 
-    def new_module_runtime(self):
+    def new_module_runtime(self, render_template=None):
         """
         Create a runtime that actually does html rendering
         """
-        runtime = super().new_module_runtime()
-        runtime.render_template = render_to_string
+        if not render_template:
+            render_template = render_to_string
+        runtime = super().new_module_runtime(render_template=render_template)
+        runtime.modulestore = Mock()
         return runtime
 
 

@@ -3,12 +3,10 @@ Command to trigger sending reminder emails for learners to achieve their Course 
 """
 from datetime import date, datetime, timedelta
 import logging
-import six
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.management.base import BaseCommand
-from django.urls import reverse
 from edx_ace import ace
 from edx_ace.message import Message
 from edx_ace.recipient import Recipient
@@ -26,7 +24,7 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from openedx.core.djangoapps.user_api.preferences.api import get_user_preference
 from openedx.core.lib.celery.task_utils import emulate_http_request
 from openedx.features.course_duration_limits.access import get_user_course_expiration_date
-from openedx.features.course_experience import course_home_url_name
+from openedx.features.course_experience.url_helpers import get_learning_mfe_home_url
 
 log = logging.getLogger(__name__)
 
@@ -52,31 +50,45 @@ def send_ace_message(goal):
     site = Site.objects.get_current()
     message_context = get_base_template_context(site)
 
-    course_home_url = reverse(course_home_url_name(course.id), args=[str(course.id)])
-    course_home_absolute_url_parts = ("https", site.name, course_home_url, '', '', '')
-    course_home_absolute_url = six.moves.urllib.parse.urlunparse(course_home_absolute_url_parts)
+    course_home_url = get_learning_mfe_home_url(course_key=goal.course_key, view_name='home')
 
-    goals_unsubscribe_url = reverse(
-        'course-home:unsubscribe-from-course-goal',
-        kwargs={'token': goal.unsubscribe_token}
-    )
+    goals_unsubscribe_url = f'{settings.LEARNING_MICROFRONTEND_URL}/goal-unsubscribe/{goal.unsubscribe_token}'
+
+    language = get_user_preference(user, LANGUAGE_KEY)
+
+    # Code to allow displaying different banner images for different languages
+    # However, we'll likely want to develop a better way to do this within edx-ace
+    image_url = settings.STATIC_URL
+    if image_url:
+        # If the image url is a relative url prepend the LMS ROOT
+        if 'http' not in image_url:
+            image_url = settings.LMS_ROOT_URL + settings.STATIC_URL
+        image_url += 'images/'
+
+        if language and language in ['es', 'es-419']:
+            image_url += 'spanish-'
 
     message_context.update({
         'email': user.email,
         'platform_name': configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
         'course_name': course_name,
         'days_per_week': goal.days_per_week,
-        'course_url': course_home_absolute_url,
+        'course_url': course_home_url,
         'goals_unsubscribe_url': goals_unsubscribe_url,
+        'image_url': image_url,
         'unsubscribe_url': None,  # We don't want to include the default unsubscribe link
+        'omit_unsubscribe_link': True,
+        'courses_url': getattr(settings, 'ACE_EMAIL_COURSES_URL', None),
+        'programs_url': getattr(settings, 'ACE_EMAIL_PROGRAMS_URL', None),
     })
 
     msg = Message(
         name="goalreminder",
         app_label="course_goals",
         recipient=Recipient(user.id, user.email),
-        language=get_user_preference(user, LANGUAGE_KEY),
-        context=message_context
+        language=language,
+        context=message_context,
+        options={'transactional': True},
     )
 
     with emulate_http_request(site, user):
@@ -122,8 +134,9 @@ class Command(BaseCommand):
 
         count = 0
         course_goals = course_goals.exclude(course_key__in=courses_to_exclude).select_related('user').order_by('user')
-        with emulate_http_request(site=Site.objects.get_current()):  # emulate a request for waffle's benefit
-            for goal in course_goals:
+        for goal in course_goals:
+            # emulate a request for waffle's benefit
+            with emulate_http_request(site=Site.objects.get_current(), user=goal.user):
                 if self.handle_goal(goal, today, sunday_date, monday_date):
                     count += 1
 

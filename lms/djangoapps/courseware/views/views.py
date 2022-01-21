@@ -22,7 +22,7 @@ from django.shortcuts import redirect
 from django.template.context_processors import csrf
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus  # lint-amnesty, pylint: disable=wrong-import-order
 from django.utils.text import slugify
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
@@ -129,11 +129,11 @@ from common.djangoapps.util.course import course_location_from_key
 from common.djangoapps.util.db import outer_atomic
 from common.djangoapps.util.milestones_helpers import get_prerequisite_courses_display
 from common.djangoapps.util.views import ensure_valid_course_key, ensure_valid_usage_key
-from xmodule.course_module import COURSE_VISIBILITY_PUBLIC, COURSE_VISIBILITY_PUBLIC_OUTLINE
-from xmodule.modulestore.django import modulestore
-from xmodule.modulestore.exceptions import ItemNotFoundError, NoPathToItem
-from xmodule.tabs import CourseTabList
-from xmodule.x_module import STUDENT_VIEW
+from xmodule.course_module import COURSE_VISIBILITY_PUBLIC, COURSE_VISIBILITY_PUBLIC_OUTLINE  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.exceptions import ItemNotFoundError, NoPathToItem  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.tabs import CourseTabList  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.x_module import STUDENT_VIEW  # lint-amnesty, pylint: disable=wrong-import-order
 
 from ..context_processor import user_timezone_locale_prefs
 from ..entrance_exams import user_can_skip_entrance_exam
@@ -1060,8 +1060,9 @@ def dates(request, course_id):
 
     course_key = CourseKey.from_string(course_id)
     if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
-        microfrontend_url = get_learning_mfe_home_url(course_key=course_key, view_name=COURSE_DATES_NAME)
-        raise Redirect(microfrontend_url)
+        raise Redirect(get_learning_mfe_home_url(
+            course_key=course_key, view_name=COURSE_DATES_NAME, params=request.GET,
+        ))
 
     # Enable NR tracing for this view based on course
     monitoring_utils.set_custom_attribute('course_id', str(course_key))
@@ -1124,6 +1125,75 @@ def dates(request, course_id):
 
     return render_to_response('courseware/dates.html', context)
 
+@login_required
+@ensure_csrf_cookie
+@ensure_valid_course_key
+def glossary(request, course_id):
+    """
+    Display the course's glossary.html, or 404 if there is no such course.
+    Assumes the course_id is in a valid format.
+    """
+    from lms.urls import COURSE_DATES_NAME, RESET_COURSE_DEADLINES_NAME
+
+    course_key = CourseKey.from_string(course_id)
+    if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
+        raise Redirect(get_learning_mfe_home_url(
+            course_key=course_key, view_name=COURSE_DATES_NAME, params=request.GET,
+        ))
+ 
+    # Enable NR tracing for this view based on course
+    monitoring_utils.set_custom_attribute('course_id', str(course_key))
+    monitoring_utils.set_custom_attribute('user_id', request.user.id)
+    monitoring_utils.set_custom_attribute('is_staff', request.user.is_staff)
+ 
+    course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=False)
+ 
+    masquerade = None
+    can_masquerade = request.user.has_perm(MASQUERADE_AS_STUDENT, course)
+    if can_masquerade:
+        masquerade, masquerade_user = setup_masquerade(
+            request,
+            course.id,
+            can_masquerade,
+            reset_masquerade_data=True,
+        )
+        request.user = masquerade_user
+ 
+    user_is_enrolled = CourseEnrollment.is_enrolled(request.user, course_key)
+    user_is_staff = bool(has_access(request.user, 'staff', course_key))
+ 
+    # Render the full content to enrolled users, as well as to course and global staff.
+    # Unenrolled users who are not course or global staff are redirected to the Outline Tab.
+    if not user_is_enrolled and not user_is_staff:
+        raise CourseAccessRedirect(reverse('openedx.course_experience.course_home', args=[course_id]))
+ 
+    learner_is_full_access = not ContentTypeGatingConfig.enabled_for_enrollment(request.user, course_key)
+
+    # User locale settings
+    user_timezone_locale = user_timezone_locale_prefs(request)
+    user_timezone = user_timezone_locale['user_timezone']
+    user_language = user_timezone_locale['user_language']
+
+    context = {
+        'course': course,
+        'verified_upgrade_link': verified_upgrade_deadline_link(request.user, course=course),
+        'learner_is_full_access': learner_is_full_access,
+        'user_timezone': user_timezone,
+        'user_language': user_language,
+        'supports_preview_menu': True,
+        'can_masquerade': can_masquerade,
+        'masquerade': masquerade,
+        'on_dates_tab': True,
+        'content_type_gating_enabled': ContentTypeGatingConfig.enabled_for_enrollment(
+            user=request.user,
+            course_key=course_key,
+        ),
+        'reset_deadlines_url': reverse(RESET_COURSE_DEADLINES_NAME),
+        'has_ended': course.has_ended(),
+    }
+ 
+    return render_to_response('courseware/glossary.html', context)
+
 
 @transaction.non_atomic_requests
 @login_required
@@ -1137,8 +1207,9 @@ def progress(request, course_id, student_id=None):
     course_key = CourseKey.from_string(course_id)
 
     if course_home_mfe_progress_tab_is_active(course_key) and not request.user.is_staff:
-        microfrontend_url = get_learning_mfe_home_url(course_key=course_key, view_name=COURSE_PROGRESS_NAME)
-        raise Redirect(microfrontend_url)
+        raise Redirect(get_learning_mfe_home_url(
+            course_key=course_key, view_name=COURSE_PROGRESS_NAME, params=request.GET,
+        ))
 
     with modulestore().bulk_operations(course_key):
         return _progress(request, course_key, student_id)
@@ -1758,6 +1829,8 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
         # If other use cases appear, consider removing the is_learning_mfe check or switching this
         # to be its own query parameter that can toggle the behavior.
         student_view_context['hide_access_error_blocks'] = is_learning_mfe and recheck_access
+        is_mobile_app = is_request_from_mobile_app(request)
+        student_view_context['is_mobile_app'] = is_mobile_app
 
         enable_completion_on_view_service = False
         completion_service = block.runtime.service(block, 'completion')
@@ -1807,7 +1880,7 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
             'on_courseware_page': True,
             'verified_upgrade_link': verified_upgrade_deadline_link(request.user, course=course),
             'is_learning_mfe': is_learning_mfe,
-            'is_mobile_app': is_request_from_mobile_app(request),
+            'is_mobile_app': is_mobile_app,
             'reset_deadlines_url': reverse(RESET_COURSE_DEADLINES_NAME),
             'render_course_wide_assets': True,
 

@@ -103,7 +103,7 @@ edx_xml_parser = etree.XMLParser(dtd_validation=False, load_dtd=False,
 _cached_toc = {}
 
 
-class Textbook:  # lint-amnesty, pylint: disable=missing-class-docstring,eq-without-hash
+class Textbook:  # lint-amnesty, pylint: disable=missing-class-docstring
     def __init__(self, title, book_url):
         self.title = title
         self.book_url = book_url
@@ -146,7 +146,7 @@ class Textbook:  # lint-amnesty, pylint: disable=missing-class-docstring,eq-with
                 # expire every 10 minutes
                 if age.seconds < 600:
                     return table_of_contents
-        except Exception as err:  # lint-amnesty, pylint: disable=broad-except
+        except Exception as err:  # lint-amnesty, pylint: disable=broad-except, unused-variable
             pass
 
         # Get the table of contents from S3
@@ -405,6 +405,16 @@ class CourseFields:  # lint-amnesty, pylint: disable=missing-class-docstring
             "Enter true or false. If true, discussion categories and subcategories are sorted alphabetically. "
             "If false, they are sorted chronologically by creation date and time."
         )
+    )
+    discussions_settings = Dict(
+        display_name=_("Discussions Plugin Settings"),
+        scope=Scope.settings,
+        help=_("Settings for discussions plugins."),
+        default={
+            "enable_in_context": True,
+            "enable_graded_units": False,
+            "unit_level_visibility": False,
+        }
     )
     announcement = Date(
         display_name=_("Course Announcement Date"),
@@ -980,6 +990,29 @@ class CourseFields:  # lint-amnesty, pylint: disable=missing-class-docstring
             "instructors": []
         },
         scope=Scope.settings
+    )
+    qualtrics_institution = String(
+    display_name=_("Qualtrics: Course Institution"),
+    help=_(
+        "Enter institution, this is used on qualtrics surveys throughout course."
+    ),
+    scope=Scope.settings,
+    default=""
+    )
+    qualtrics_instructors = List(
+        display_name=_("Qualtrics: Course Instructor"),
+        help=_(
+            'Enter the details for Course Instructor to be used in qualtrics surveys.'
+            'Examples: ["John Smith", "Sally Smith"]'
+        ),
+        scope=Scope.settings,
+        default=[]
+    )
+    qualtrics_term = String(
+        display_name=_("Qualtrics: Course Term"),
+        help=_("Enter the details for Course Term to be used in qualtrics surveys"),
+        scope=Scope.settings,
+        default="perpetual"
     )
     allow_unsupported_xblocks = Boolean(
         display_name=_("Add Unsupported Problems and Tools"),
