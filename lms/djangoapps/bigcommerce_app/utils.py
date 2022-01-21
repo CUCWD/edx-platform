@@ -33,7 +33,7 @@ def bigcommerce_enabled():
     """
     returns a boolean indicating whether or not BigCommerce app is enabled.
     """
-    return configuration_helpers.get_value_for_org('ENABLE_BIGCOMMERCE', "SITE_NAME", settings.ENABLE_BIGCOMMERCE)
+    return configuration_helpers.get_value_for_org('ENABLE_BIGCOMMERCE', "SITE_NAME", settings.FEATURES.get('ENABLE_BIGCOMMERCE', False))
 
 #
 # Error handling and helpers
