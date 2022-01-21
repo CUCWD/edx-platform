@@ -299,24 +299,33 @@ class BigCommerceAPI():
         bcapi_client = cls().api_client
 
         if bcapi_client:
-            try:
-                orders = bcapi_client.Orders.all(customer_id=customer_id)
-            except:
-                return
-
             courses = []
 
-            for order in orders:
-                products = bcapi_client.OrderProducts.all(order.id)
+            try:
+                orders = bcapi_client.Orders.all(customer_id=customer_id)
+            except Exception as e:
+                LOGGER.error(
+                    u"Could not find BigCommerce Orders for {customer_id}".format(customer_id=customer_id)
+                )
+                return courses
 
-                for product in products:
-                    product_details = bcapi_client.Products.get(product.product_id)
-                    custom_fields = product_details.custom_fields()
+            try:
+                for order in orders:
+                    products = bcapi_client.OrderProducts.all(order.id)
 
-                    if custom_fields:
-                        for field in custom_fields:
-                            if isinstance(field, ProductCustomFields) and field.name == 'Course ID':
-                                courses.append(field.text)
+                    for product in products:
+                        product_details = bcapi_client.Products.get(product.product_id)
+                        custom_fields = product_details.custom_fields()
+
+                        if custom_fields:
+                            for field in custom_fields:
+                                if isinstance(field, ProductCustomFields) and field.name == 'Course ID':
+                                    courses.append(field.text)
+            except AttributeError as e:
+                LOGGER.error(
+                    u"Could not find BigCommerce orders for the customer."
+                )
+                return courses
 
             return courses
 
