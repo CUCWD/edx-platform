@@ -138,6 +138,8 @@ from openedx.core.release import doc_version
 ################ Enable credit eligibility feature ####################
 ENABLE_CREDIT_ELIGIBILITY = True
 
+KEY_TERMS_API_URL = 'http://a6d1eb6425cc:18500/api/v1/platform_course_reindex/?course_id='
+
 ################################ Block Structures ###################################
 BLOCK_STRUCTURES_SETTINGS = dict(
     # Delay, in seconds, after a new edit of a course is published
