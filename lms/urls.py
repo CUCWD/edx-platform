@@ -234,12 +234,12 @@ if settings.FEATURES.get('ENABLE_OPENBADGES'):
 if settings.FEATURES.get('ENABLE_BIGCOMMERCE'):
     urlpatterns += [
         # Callback Endpoints
-        url(r'^bigcommerce/callbacks/', 
+        re_path(r'^bigcommerce/callbacks/', 
             include(('lms.djangoapps.bigcommerce_app.callbacks.urls', 'lms.djangoapps.bigcommerce_app'), namespace='bigcommerce_app_callbacks')),
     ]
     urlpatterns += [
         # Single-Click App Endpoints
-        url(r'^bigcommerce/single-click/', 
+        re_path(r'^bigcommerce/single-click/', 
             include(('lms.djangoapps.bigcommerce_app.single_click.urls', 'lms.djangoapps.bigcommerce_app'), namespace='bigcommerce_app_single_click')),
     ]
 

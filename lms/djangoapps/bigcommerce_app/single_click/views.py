@@ -3,15 +3,16 @@ import time
 
 from django.http import HttpResponse
 from django.utils import translation
+from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
-from edxmako.shortcuts import render_to_response
+from common.djangoapps.edxmako.shortcuts import render_to_response
 
 from bigcommerce.api import BigcommerceApi
 from lms.djangoapps.bigcommerce_app.models import StoreAdminUser
 from lms.djangoapps.bigcommerce_app.utils import client_id
 
 LOGGER = logging.getLogger(__name__)
-_ = translation.ugettext
+# _ = translation.ugettext
 
 
 @xframe_options_exempt
