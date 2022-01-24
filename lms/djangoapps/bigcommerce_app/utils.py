@@ -62,8 +62,8 @@ def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
     """
-    import third_party_auth
-    from third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
+    import common.djangoapps.third_party_auth as third_party_auth
+    from common.djangoapps.third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
 
     if third_party_auth.is_enabled():
         email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
