@@ -16,6 +16,7 @@
 
 -r base.txt               # Core edx-platform production dependencies
 -r coverage.txt           # Utilities for calculating test coverage
+-r private.txt            # Include our EducateWorkforce specific packages
 
 beautifulsoup4            # Library for extracting data from HTML and XML files
 bok-choy                  # Framework for browser automation tests, based on selenium
