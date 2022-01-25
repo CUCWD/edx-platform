@@ -4,7 +4,6 @@ import string
 
 import json
 import factory
-from factory import DjangoModelFactory
 
 from lms.djangoapps.bigcommerce_app.models import (
     Store, 
@@ -14,10 +13,10 @@ from lms.djangoapps.bigcommerce_app.models import (
     StoreCustomer, 
     StoreCustomerPlatformUser
 )
-from student.tests.factories import UserFactory
+from common.djangoapps.student.tests.factories import UserFactory
 
 
-class StoreFactory(DjangoModelFactory):
+class StoreFactory(factory.django.DjangoModelFactory):
     """
     Factory for Store
     """
@@ -38,7 +37,7 @@ class RandomStoreFactory(StoreFactory):
     access_token = factory.lazy_attribute(lambda _: ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(31)))
 
 
-class AdminUserFactory(DjangoModelFactory):
+class AdminUserFactory(factory.django.DjangoModelFactory):
     """
     Factory for AdminUser
     """
@@ -50,7 +49,7 @@ class AdminUserFactory(DjangoModelFactory):
     bc_email = factory.Sequence(u'admin-user-bigcommerce-{0}@gmail.com'.format)
 
 
-class StoreAdminUserFactory(DjangoModelFactory):
+class StoreAdminUserFactory(factory.django.DjangoModelFactory):
     """
     Factory for StoreAdminUser
     """
@@ -63,7 +62,7 @@ class StoreAdminUserFactory(DjangoModelFactory):
     is_admin = False
 
 
-class CustomerFactory(DjangoModelFactory):
+class CustomerFactory(factory.django.DjangoModelFactory):
     """
     Factory for Customer
     """
@@ -76,7 +75,7 @@ class CustomerFactory(DjangoModelFactory):
     bc_group_id = factory.lazy_attribute(lambda _: randrange(0, 10000))
 
 
-class StoreCustomerFactory(DjangoModelFactory):
+class StoreCustomerFactory(factory.django.DjangoModelFactory):
     """
     Factory for StoreCustomer
     """
@@ -88,7 +87,7 @@ class StoreCustomerFactory(DjangoModelFactory):
     bc_customer = factory.SubFactory(CustomerFactory)
     
 
-class StoreCustomerPlatformUserFactory(DjangoModelFactory):
+class StoreCustomerPlatformUserFactory(factory.django.DjangoModelFactory):
     """
     Factory for StoreCustomerPlatformUser
     """
