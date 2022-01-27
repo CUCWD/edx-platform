@@ -1162,16 +1162,16 @@ def glossary(request, course_id):
     course_key = CourseKey.from_string(course_id)
     if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
         raise Redirect(get_learning_mfe_home_url(
-            course_key=course_key, view_name=COURSE_DATES_NAME, params=request.GET,
+            course_key=course_key, view_name=COURSE_DATES_NAME
         ))
- 
+
     # Enable NR tracing for this view based on course
     monitoring_utils.set_custom_attribute('course_id', str(course_key))
     monitoring_utils.set_custom_attribute('user_id', request.user.id)
     monitoring_utils.set_custom_attribute('is_staff', request.user.is_staff)
- 
+
     course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=False)
- 
+
     masquerade = None
     can_masquerade = request.user.has_perm(MASQUERADE_AS_STUDENT, course)
     if can_masquerade:
@@ -1182,15 +1182,15 @@ def glossary(request, course_id):
             reset_masquerade_data=True,
         )
         request.user = masquerade_user
- 
+
     user_is_enrolled = CourseEnrollment.is_enrolled(request.user, course_key)
     user_is_staff = bool(has_access(request.user, 'staff', course_key))
- 
+
     # Render the full content to enrolled users, as well as to course and global staff.
     # Unenrolled users who are not course or global staff are redirected to the Outline Tab.
     if not user_is_enrolled and not user_is_staff:
         raise CourseAccessRedirect(reverse('openedx.course_experience.course_home', args=[course_id]))
- 
+
     learner_is_full_access = not ContentTypeGatingConfig.enabled_for_enrollment(request.user, course_key)
 
     # User locale settings
@@ -1215,10 +1215,10 @@ def glossary(request, course_id):
         'reset_deadlines_url': reverse(RESET_COURSE_DEADLINES_NAME),
         'has_ended': course.has_ended(),
     }
- 
+
     return render_to_response('courseware/glossary.html', context)
 
-    
+
 @transaction.non_atomic_requests
 @login_required
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)

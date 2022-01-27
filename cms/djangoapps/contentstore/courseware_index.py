@@ -47,14 +47,13 @@ def keyterms_reindex(course_id):
 
     # retrieve lesson data to be updated
     response = requests.get(URL)
-    print(response)
-    
+
     # holds our updated lesson links
     updatedlesson = {}
 
     # go through all lessons and update lesson link to find vertical xblock
     for lesson in response.json():
-        if "vertical+block" not in lesson['lesson_link']: 
+        if "vertical+block" not in lesson['lesson_link']:
             usage_key = UsageKey.from_string(lesson['lesson_link'])
             item = modulestore().get_item(usage_key)
             newlink = str(get_parent_unit(item).location)
@@ -189,7 +188,7 @@ class SearchIndexerBase(metaclass=ABCMeta):
         # it is used to collect all indexes and index them using bulk API,
         # instead of per item index API call.
         items_index = []
-        
+
         keyterms_reindex(structure_key)
 
         def get_item_location(item):

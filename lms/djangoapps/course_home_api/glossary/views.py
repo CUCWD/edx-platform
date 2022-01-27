@@ -12,7 +12,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from common.djangoapps.student.models import CourseEnrollment
-from lms.djangoapps.course_goals.models import UserActivity
 from lms.djangoapps.course_home_api.glossary.serializers import GlossaryTabSerializer
 from lms.djangoapps.course_home_api.toggles import course_home_legacy_is_active
 from lms.djangoapps.courseware.access import has_access
@@ -25,6 +24,7 @@ from openedx.features.content_type_gating.models import ContentTypeGatingConfig
 
 
 class GlossaryTabView(RetrieveAPIView):
+    """Tab View for the Glossary Feature."""
     authentication_classes = (
         JwtAuthentication,
         BearerAuthenticationAllowInactiveUser,
