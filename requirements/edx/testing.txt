@@ -1437,3 +1437,9 @@ zipp==3.6.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
+# EducateWorkforce specific packages. This was manually added because `make upgrade` was causing a lot of packages to update. This limits the Python package changes for the release.
+-e git+https://github.com/CUCWD/bigcommerce-api-python.git@bigcommerce-0.22.2-maple.1#egg=bigcommerce==0.22.2
+    # via -r ./requirements/edx/private.in
+-e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.1#egg=social-auth-backend-bigcommerce==0.1.0-maple.1
+    # via -r ./requirements/edx/private.in
