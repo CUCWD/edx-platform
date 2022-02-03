@@ -5,11 +5,11 @@ from django.test.utils import override_settings
 from mock import Mock
 
 from lms.djangoapps.bigcommerce_app.models import (
-    Store, 
-    AdminUser, 
-    StoreAdminUser, 
-    Customer, 
-    StoreCustomer, 
+    Store,
+    AdminUser,
+    StoreAdminUser,
+    Customer,
+    StoreCustomer,
     StoreCustomerPlatformUser
 )
 
@@ -34,7 +34,7 @@ class StoreCustomerPlatformUserTest(TestCase):
 
         # Create BigCommerce store
         self.store = StoreFactory.create(
-            store_hash='1nol3cto8', 
+            store_hash='1nol3cto8',
             access_token='lwqngxmw4d6yfv8un97ubujr8hc1hg1'
         )
 
@@ -69,11 +69,11 @@ class StoreCustomerPlatformUserTest(TestCase):
         """
 
         bc_store_customer_id = StoreCustomerPlatformUser.locate_store_customer(
-            store_hash=self.store.store_hash, 
+            store_hash=self.store.store_hash,
             platform_user=self.platform_user
         )
         self.assertEqual(bc_store_customer_id, self.customer.bc_id)
-       
+
     def test_locate_store_customer_not_exists(self):
         """
         Verify that we cannot get a BigCommerce Store Customer from an existing platform User.
@@ -94,7 +94,7 @@ class StoreCustomerPlatformUserTest(TestCase):
 
         # Create a separate BigCommerce store
         new_store = StoreFactory.create(
-            store_hash='3r4l2hj8jc', 
+            store_hash='3r4l2hj8jc',
             access_token='38b2kcz5salxe7pgw9zlyaj9b571yky'
         )
 
@@ -115,18 +115,17 @@ class StoreCustomerPlatformUserTest(TestCase):
 
         # Check new store for this customer
         bc_newstore_customer_id = StoreCustomerPlatformUser.locate_store_customer(
-            store_hash='3r4l2hj8jc', 
+            store_hash='3r4l2hj8jc',
             platform_user=self.platform_user
         )
         self.assertEqual(bc_newstore_customer_id, new_customer_same_email.bc_id)
 
         # Check setup store for this customer
         bc_setupstore_customer_id = StoreCustomerPlatformUser.locate_store_customer(
-            store_hash=self.store.store_hash, 
+            store_hash=self.store.store_hash,
             platform_user=self.platform_user
         )
         self.assertNotEqual(bc_setupstore_customer_id, new_customer_same_email.bc_id)
-
 
     @override_settings(BIGCOMMERCE_APP_STORE_HASH='3r4l2hj8jc')
     def test_locate_customer_multiple_stores_not_exists(self):
@@ -136,7 +135,7 @@ class StoreCustomerPlatformUserTest(TestCase):
 
         # Create a separate BigCommerce store
         new_store = StoreFactory.create(
-            store_hash='3r4l2hj8jc', 
+            store_hash='3r4l2hj8jc',
             access_token='38b2kcz5salxe7pgw9zlyaj9b571yky'
         )
 
@@ -152,7 +151,7 @@ class StoreCustomerPlatformUserTest(TestCase):
         # Don't setup a mapping for this platform user to BigCommerce storefront customer.
 
         bc_store_customer_id = StoreCustomerPlatformUser.locate_store_customer(
-            store_hash='3r4l2hj8jc', 
+            store_hash='3r4l2hj8jc',
             platform_user=self.platform_user
         )
         self.assertEqual(bc_store_customer_id, None)

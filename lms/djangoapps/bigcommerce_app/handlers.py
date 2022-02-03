@@ -20,11 +20,10 @@ def enroll_courses_on_login(sender, event=None, user=None, **kwargs):  # pylint:
 
 
 @receiver(user_logged_in)
-def store_customer_information(sender, event=None, user=None, **kwargs): # pylint: disable=unused-argument
+def store_customer_information(sender, event=None, user=None, **kwargs):  # pylint: disable=unused-argument
     """
     Save the current logged in user for API calls to BigCommerce.
 
     Note: Couldn't find a way to find Django logged in user easily.
     """
     pass
-    

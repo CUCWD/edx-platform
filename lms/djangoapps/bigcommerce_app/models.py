@@ -26,7 +26,6 @@ class Store(models.Model):
     class Meta(object):
         app_label = "bigcommerce_app"
 
-    
 
 class AdminUser(models.Model):
     """
@@ -49,7 +48,6 @@ class AdminUser(models.Model):
         app_label = "bigcommerce_app"
 
 
-
 class StoreAdminUser(models.Model):
     """
     Specifies a BigCommerce store mapping with the BigCommerce admin user account.
@@ -67,7 +65,6 @@ class StoreAdminUser(models.Model):
 
     class Meta(object):
         app_label = "bigcommerce_app"
-        
 
 
 class Customer(models.Model):
@@ -96,7 +93,6 @@ class Customer(models.Model):
         app_label = "bigcommerce_app"
 
 
-
 class StoreCustomer(models.Model):
     """
     Specifies a BigCommerce store mapping with the BigCommerce customer account.
@@ -112,7 +108,6 @@ class StoreCustomer(models.Model):
 
     class Meta(object):
         app_label = "bigcommerce_app"
-
 
 
 class StoreCustomerPlatformUser(models.Model):
@@ -132,7 +127,7 @@ class StoreCustomerPlatformUser(models.Model):
 
         if store_hash:
             bc_site_store = Store.objects.get(store_hash=store_hash)
-            
+
             if bc_site_store:
                 for platform_store_customer in platform_user_store_customers:
                     if platform_store_customer.bc_store_customer.store.store_hash == bc_site_store.store_hash:
@@ -150,7 +145,6 @@ class StoreCustomerPlatformUser(models.Model):
         )
 
         return None
-
 
     class Meta(object):
         app_label = "bigcommerce_app"

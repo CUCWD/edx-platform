@@ -6,11 +6,11 @@ import json
 import factory
 
 from lms.djangoapps.bigcommerce_app.models import (
-    Store, 
-    AdminUser, 
-    StoreAdminUser, 
-    Customer, 
-    StoreCustomer, 
+    Store,
+    AdminUser,
+    StoreAdminUser,
+    Customer,
+    StoreCustomer,
     StoreCustomerPlatformUser
 )
 from common.djangoapps.student.tests.factories import UserFactory
@@ -20,7 +20,7 @@ class StoreFactory(factory.django.DjangoModelFactory):
     """
     Factory for Store
     """
-    
+
     class Meta(object):
         model = Store
 
@@ -85,7 +85,7 @@ class StoreCustomerFactory(factory.django.DjangoModelFactory):
 
     store = factory.SubFactory(RandomStoreFactory)
     bc_customer = factory.SubFactory(CustomerFactory)
-    
+
 
 class StoreCustomerPlatformUserFactory(factory.django.DjangoModelFactory):
     """
