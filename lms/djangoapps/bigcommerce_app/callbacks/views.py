@@ -30,7 +30,6 @@ class BigCommerceAppCallbacks():
     def auth(cls, request):
         """
         The GET request to your app’s auth callback URL contains a temporary code that can be exchanged for a permanent access_token. It also includes a unique value that identifies the store installing or updating your app, as well as authorized scopes.
-        
 
         https://developer.bigcommerce.com/api-docs/apps/guide/auth#receiving-the-get-request
         """
@@ -49,8 +48,8 @@ class BigCommerceAppCallbacks():
             bcapp_auth_callback=reverse('bigcommerce_app_callbacks:auth')).rstrip("/")
 
         LOGGER.info(
-                u"The `auth_redirect` is {redirect}".format(redirect=auth_redirect)
-            )
+            u"The `auth_redirect` is {redirect}".format(redirect=auth_redirect)
+        )
 
         try:
             # Fetch a permanent oauth token. This will throw an exception on error,
@@ -77,7 +76,7 @@ class BigCommerceAppCallbacks():
             old_store_admin_user = StoreAdminUser.objects.filter(store__id=store.id, is_admin=True).first()
             if old_store_admin_user:
                 old_store_admin_user.is_admin = False
-                old_store_admin_user.save()            
+                old_store_admin_user.save()
 
         # Create or update global BigCommerce store admin user
         admin_user, __ = AdminUser.objects.get_or_create(bc_id=bc_store_admin_user_id)
@@ -90,12 +89,11 @@ class BigCommerceAppCallbacks():
         store_admin_user.save()
 
         response = redirect(reverse("bigcommerce_app_single_click:index") + '?bc_storeadminuserid={id}'.format(id=store_admin_user.bc_admin_user.bc_id))
-        
+
         # Todo: This doesn't work at the moment.
         # response.set_cookie('bc_storeadminuserid', store_admin_user.bc_admin_user.bc_id, secure=True, max_age=1000)
 
         return response
-
 
     @classmethod
     def load(cls, request):
@@ -146,12 +144,11 @@ class BigCommerceAppCallbacks():
         store_admin_user.save()
 
         response = redirect(reverse("bigcommerce_app_single_click:index") + '?bc_storeadminuserid={id}'.format(id=store_admin_user.bc_admin_user.bc_id))
-        
+
         # Todo: This doesn't work at the moment.
         # response.set_cookie('bc_storeadminuserid', store_admin_user.bc_admin_user.bc_id, secure=True, max_age=1000)
 
         return response
-
 
     @classmethod
     def uninstall(cls, request):
@@ -193,7 +190,7 @@ class BigCommerceAppCallbacks():
         # your app again.
         store_admin_users = StoreAdminUser.objects.filter(store__id=store.id)
         for store_admin_user in store_admin_users:
-            store_admin_user.delete()      
+            store_admin_user.delete()
 
         return HttpResponse("Deleted", status=204)
 
@@ -238,6 +235,5 @@ class BigCommerceAppCallbacks():
         if admin_user is not None:
             store_admin_user = StoreAdminUser.objects.filter(bc_admin_user__id=bc_store_admin_user_id, store__id=store.id).first()
             store_admin_user.delete()
-        
-        return HttpResponse("Deleted", status=204)
 
+        return HttpResponse("Deleted", status=204)

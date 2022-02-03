@@ -19,6 +19,7 @@ from bigcommerce.resources.products import ProductCustomFields
 
 LOGGER = logging.getLogger(__name__)
 
+
 def requires_bigcommerce_enabled(function):
     """
     Decorator that bails a function out early if bigcommerce isn't enabled.
@@ -39,6 +40,7 @@ def bigcommerce_enabled():
     """
     return configuration_helpers.get_value_for_org('ENABLE_BIGCOMMERCE', "SITE_NAME", settings.FEATURES.get('ENABLE_BIGCOMMERCE', False))
 
+
 #
 # Error handling and helpers
 #
@@ -58,6 +60,7 @@ def internal_server_error(e):
     content += _error_info(e)
     return HttpResponse(content, status=500)
 
+
 def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
@@ -73,6 +76,7 @@ def _enabled_current_site_provider():
                 return provider
 
     return None
+
 
 def client_id():
     """
@@ -115,6 +119,7 @@ def _store_hash():
 
     return ""
 
+
 def store_hash():
     return _store_hash()
 
@@ -126,6 +131,7 @@ def access_token():
 
 def platform_lms_url():
     return configuration_helpers.get_value("LMS_ROOT_URL", settings.LMS_ROOT_URL)
+
 
 class BigCommerceAPI():
     """
@@ -152,7 +158,7 @@ class BigCommerceAPI():
 
         if bcapi_client:
             try:
-                customer = bcapi_client.Customers.all(email=bc_customer_email)[0]    
+                customer = bcapi_client.Customers.all(email=bc_customer_email)[0]
                 if customer:
 
                     LOGGER.info(
@@ -160,8 +166,8 @@ class BigCommerceAPI():
                             store=store_hash(),
                             customer=bc_customer_email
                         )
-                    )           
-                    
+                    )
+
                     return customer
             except Exception as e:
                 LOGGER.error(

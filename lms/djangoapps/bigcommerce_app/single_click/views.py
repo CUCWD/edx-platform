@@ -45,13 +45,13 @@ def single_click_index(request):
 
     # Fetch customers for the store.
     customers = client.Customers.all()
-        
+
     context = {
         'document_title': _(u'BigCommerce Single-Click App – EducateWorkforce'),
         'admin_user': admin_user,
         'store': store,
         'customers': customers,
-        # 'client_id': client_id()   
+        # 'client_id': client_id()
     }
 
     if request.method == 'GET':

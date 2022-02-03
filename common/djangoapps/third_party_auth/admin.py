@@ -29,6 +29,7 @@ class EmailProviderConfigForm(forms.ModelForm):
     """ Django Admin form class for EmailProviderConfig """
     backend_name = forms.ChoiceField(choices=((name, name) for name in _PSA_EMAIL_BACKENDS))
 
+
 class EmailProviderConfigAdmin(KeyedConfigurationModelAdmin):
     """ Django Admin class for EmailProviderConfig """
     form = EmailProviderConfigForm

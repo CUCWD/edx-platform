@@ -956,7 +956,7 @@ FEATURES = {
     # .. toggle_target_removal_date: 2021-10-01
     # .. toggle_tickets: 'https://openedx.atlassian.net/browse/MICROBA-1405'
     'ENABLE_V2_CERT_DISPLAY_SETTINGS': False,
-    
+
     # Whether to display the account linked accounts view.
     'ENABLE_ACCOUNT_LINKED_ACCOUNTS': True,
 
