@@ -48,18 +48,18 @@ def bigcommerce_enabled():
 def _error_info(e):
     content = ""
     try:  # it's probably a HttpException, if you're using the bigcommerce client
-        content += str(e.headers) + "<br>" + str(e.content) + "<br>"
+        content += HTML("{}<br />{}<br />").format(str(e.headers), str(e.content))
         req = e.response.request
-        content += "<br>Request:<br>" + req.url + "<br>" + str(req.headers) + "<br>" + str(req.body)
+        content += HTML("<br />Request:<br />{}<br />{}<br />{}").format(req.url, str(req.headers), str(req.body))
     except AttributeError as e:  # not a HttpException
-        content += "<br><br> (This page threw an exception: {})".format(str(e))
-    return HTML(content)
+        content += HTML("<br /><br /> (This page threw an exception: {})").format(str(e))
+    return content
 
 
 def internal_server_error(e):
-    content = "Internal Server Error: " + str(e) + "<br>"
+    content = HTML("Internal Server Error: {}<br />").format(str(e))
     content += _error_info(e)
-    return HttpResponse(HTML(content), status=500)
+    return HttpResponse(content, status=500)
 
 
 def _enabled_current_site_provider():
