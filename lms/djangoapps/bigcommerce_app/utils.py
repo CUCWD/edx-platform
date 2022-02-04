@@ -11,6 +11,7 @@ from django.http import HttpResponse
 from opaque_keys.edx.keys import CourseKey
 from common.djangoapps.student.models import CourseEnrollment
 
+from openedx.core.djangolib.markup import HTML
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from lms.djangoapps.bigcommerce_app.models import Store, Customer, StoreCustomer, StoreCustomerPlatformUser
 
@@ -52,13 +53,13 @@ def _error_info(e):
         content += "<br>Request:<br>" + req.url + "<br>" + str(req.headers) + "<br>" + str(req.body)
     except AttributeError as e:  # not a HttpException
         content += "<br><br> (This page threw an exception: {})".format(str(e))
-    return content
+    return HTML(content)
 
 
 def internal_server_error(e):
     content = "Internal Server Error: " + str(e) + "<br>"
     content += _error_info(e)
-    return HttpResponse(content, status=500)
+    return HttpResponse(HTML(content), status=500)
 
 
 def _enabled_current_site_provider():
