@@ -23,6 +23,8 @@ from social_core.backends.saml import SAMLAuth
 from social_core.exceptions import SocialAuthBaseException
 from social_core.utils import module_member
 
+from lms.djangoapps.bigcommerce_app.utils import access_token, BigCommerceAPI, internal_server_error
+
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.theming.helpers import get_current_request
 from openedx.core.djangoapps.user_api.accounts import USERNAME_MAX_LENGTH
@@ -30,8 +32,6 @@ from openedx.core.lib.hash_utils import create_hash256
 
 from .lti import LTI_PARAMS_KEY, LTIAuthBackend
 from .saml import STANDARD_SAML_PROVIDER_KEY, get_saml_idp_choices, get_saml_idp_class
-
-from lms.djangoapps.bigcommerce_app.utils import access_token, BigCommerceAPI, internal_server_error
 
 log = logging.getLogger(__name__)
 
@@ -392,7 +392,7 @@ class EmailProviderConfig(ProviderConfig):
 
     def clean(self):
         """ Standardize and validate fields """
-        super(EmailProviderConfig, self).clean()
+        super().clean()
         self.other_settings = clean_json(self.other_settings, dict)
 
     def get_setting(self, name):
@@ -419,21 +419,21 @@ class EmailProviderConfig(ProviderConfig):
         """ Get the decoded payload user_data """
         try:
             return BigCommerceAPI.bigcommerce_customer_save(payload)
-        except Exception as e:
+        except Exception as excep:  # pylint: disable=broad-except
             log.error(
                 u"Error decoding Customer payload token and storing in database."
             )
-            return internal_server_error(e)
+            return internal_server_error(excep)
 
     def bigcommerce_save_store_customer_platform_user(self, payload):
         """ Store the mapping of BigCommerce uid and platform user. """
         try:
             return BigCommerceAPI.bigcommerce_store_customer_platform_user_save(payload)
-        except Exception as e:
+        except Exception as excep:  # pylint: disable=broad-except
             log.error(
                 u"Error decoding Customer payload token and storing in database."
             )
-            return internal_server_error(e)
+            return internal_server_error(excep)
 
 
 class OAuth2ProviderConfig(ProviderConfig):
