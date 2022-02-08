@@ -10,4 +10,8 @@ class GlossaryTabSerializer(serializers.Serializer):
     """
     Serializer for the Glossary Tab
     """
+    def create(self, validated_data):
+        pass
 
+    def update(self, instance, validated_data):
+        pass
