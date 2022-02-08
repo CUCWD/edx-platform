@@ -32,6 +32,7 @@ INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
 
+
 def keyterms_reindex(course_id):
     """ Uses key terms API endpoint """
     import requests
@@ -63,7 +64,8 @@ def keyterms_reindex(course_id):
             updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
 
     # send updated data
-    return requests.post(URL, json = json.dumps(updatedlesson))
+    return requests.post(URL, json=json.dumps(updatedlesson))
+
 
 def strip_html_content_to_text(html_content):
     """ Gets only the textual part for html content - useful for building text to be searched """

@@ -1206,6 +1206,7 @@ def dates(request, course_id):
 
     return render_to_response('courseware/dates.html', context)
 
+
 @login_required
 @ensure_csrf_cookie
 @ensure_valid_course_key
