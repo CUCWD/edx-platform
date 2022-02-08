@@ -9,11 +9,14 @@ on:
 
 jobs:
   run-tests:
-    runs-on: [ self-hosted ]
+    runs-on: [ ubuntu-20.04 ]
     strategy:
       matrix:
         python-version: ['3.8']
         django-version: ["3.2"]
+        include:
+          - os: ubuntu-20.04
+            path: ~/.cache/pip
         shard_name: [
             "lms-1",
             "lms-2",
@@ -35,9 +38,39 @@ jobs:
       - name: sync directory owner
         run: sudo chown runner:runner -R .*
       - uses: actions/checkout@v2
-      - name: start mongodb service
+      
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Required Packages
         run: |
-          sudo /etc/init.d/mongodb start
+          sudo apt-get update && sudo apt-get install libxmlsec1-dev
+          sudo systemctl start mongod
+
+      - name: Get pip cache dir
+        id: pip-cache-dir
+        run: |
+          echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Cache pip dependencies
+        id: cache-dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/edx/testing.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+
+      - name: Install Python Dependencies
+        if: steps.cache-dependencies.output.cache-hit != 'true'
+        run: |
+          pip install setuptools wheel
+          pip install -r requirements/edx/testing.txt
+
+      - name: Install Django
+        run: pip install -r requirements/edx/django.txt
 
       - name: set top-level module name
         run: |
