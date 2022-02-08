@@ -79,6 +79,7 @@ class CourseInfoTab(CourseTab):
     def is_enabled(cls, course, user=None):
         return True
 
+
 class GlossaryTab(EnrolledTab):
     """
     A tab representing the glossary for a course.
@@ -99,6 +100,7 @@ class GlossaryTab(EnrolledTab):
 
         tab_dict['link_func'] = link_func
         super().__init__(tab_dict)
+
 
 class SyllabusTab(EnrolledTab):
     """
