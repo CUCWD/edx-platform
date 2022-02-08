@@ -8,7 +8,7 @@ on:
       - open-release/*.master
 
 jobs:
-  run-tests:
+  run-tests-upstream:
     runs-on: [ self-hosted ]
     strategy:
       matrix:
@@ -29,12 +29,13 @@ jobs:
             "common-2",
         ]
 
-
-    name: python-${{ matrix.python-version }},django-${{ matrix.django-version }},${{ matrix.shard_name }}
+    name: upstream python-${{ matrix.python-version }},django-${{ matrix.django-version }},${{ matrix.shard_name }}
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/open-release/*.master'
     steps:
       - name: sync directory owner
         run: sudo chown runner:runner -R .*
       - uses: actions/checkout@v2
+
       - name: start mongodb service
         run: |
           sudo /etc/init.d/mongodb start
@@ -56,6 +57,88 @@ jobs:
           sudo pip install -r requirements/pip.txt
           sudo pip install -r requirements/edx/testing.txt
           sudo pip install "django~=${{ matrix.django-version }}.0"
+
+      - name: get unit tests for shard
+        run: |
+          echo "unit_test_paths=$(python scripts/unit_test_shards_parser.py --shard-name=${{ matrix.shard_name }} )" >> $GITHUB_ENV
+
+      - name: run tests
+        run: |
+          python -Wd -m pytest -p no:randomly --ds=${{ env.settings_path }} ${{ env.unit_test_paths }}
+
+  run-tests-fork:
+    runs-on: [ ubuntu-20.04 ]
+    strategy:
+      matrix:
+        python-version: ['3.8']
+        django-version: ["3.2"]
+        include:
+          - os: ubuntu-20.04
+            path: ~/.cache/pip
+        shard_name: [
+            "lms-1",
+            "lms-2",
+            "lms-3",
+            "lms-4",
+            "lms-5",
+            "lms-6",
+            "openedx-1",
+            "openedx-2",
+            "cms-1",
+            "cms-2",
+            "common-1",
+            "common-2",
+        ]
+
+
+    name: fork python-${{ matrix.python-version }},django-${{ matrix.django-version }},${{ matrix.shard_name }}
+    if: github.ref != 'refs/heads/master' && github.ref != 'refs/heads/open-release/*.master'
+    steps:
+      - name: sync directory owner
+        run: sudo chown runner:runner -R .*
+      - uses: actions/checkout@v2
+      
+      - name: Install Required System Packages
+        run: |
+          sudo apt-get update && sudo apt-get install libxmlsec1-dev
+          sudo systemctl start mongod
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Get pip cache dir
+        id: pip-cache-dir
+        run: |
+          echo "::set-output name=dir::$(pip cache dir)"
+
+      - name: Cache pip dependencies
+        id: cache-dependencies
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.pip-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/edx/testing.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: set top-level module name
+        run: |
+          echo "module_name=$(echo '${{ matrix.shard_name }}' | awk -F '-' '{print $1}')" >> $GITHUB_ENV
+
+      - name: set settings path
+        run: |
+          echo "settings_path=$(if [ '${{ env.module_name }}' = 'cms' ]; then echo 'cms.envs.test'; else echo 'lms.envs.test' ; fi)" >> $GITHUB_ENV
+
+#      - name: set pytest randomly option
+#        run: |
+#          echo "pytest_randomly_option=$(if [ '${{ env.module_name }}' = 'cms' ] || [ '${{ env.module_name }}' = 'common' ]; then echo '-p no:randomly'; else echo '' ; fi)" >> $GITHUB_ENV
+
+      - name: install requirements
+        if: steps.cache-dependencies.output.cache-hit != 'true'
+        run: |
+          sudo pip install -r requirements/pip.txt
+          sudo pip install -r requirements/edx/testing.txt
+          sudo pip install -r requirements/edx/django.txt
 
       - name: get unit tests for shard
         run: |
