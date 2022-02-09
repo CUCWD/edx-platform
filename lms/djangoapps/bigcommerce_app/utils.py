@@ -303,6 +303,7 @@ class BigCommerceAPI():
             courses = []
 
             try:
+                #is ordered by most recent orders first
                 orders = bcapi_client.Orders.all(customer_id=customer_id)
             except Exception as e:
                 LOGGER.error(
@@ -312,6 +313,7 @@ class BigCommerceAPI():
 
             try:
                 for order in orders:
+                    order_status = order.status
                     products = bcapi_client.OrderProducts.all(order.id)
 
                     for product in products:
@@ -321,7 +323,7 @@ class BigCommerceAPI():
                         if custom_fields:
                             for field in custom_fields:
                                 if isinstance(field, ProductCustomFields) and field.name == 'Course ID':
-                                    courses.append(field.text)
+                                    courses.append({'order_status': order_status, 'course_id': field.text})
             except AttributeError as e:
                 LOGGER.error(
                     u"Could not find BigCommerce orders for the customer."
@@ -342,6 +344,9 @@ class BigCommerceAPI():
             enroll_courses = cls.get_order_items(bc_customer_id)
 
             if len(enroll_courses):
-                for course_key in enroll_courses:
-                    course_key = CourseKey.from_string(course_key)
-                    CourseEnrollment.enroll(user, course_key)
+                for course in enroll_courses:
+                    course_key = CourseKey.from_string(course['course_id'])
+                    if course['order_status'] == 'Completed':
+                        CourseEnrollment.enroll(user, course_key)
+                    elif course['order_status'] == 'Refunded' or course['order_status'] == 'Cancelled' or course['order_status'] == 'Declined' or course['order_status'] == 'Disputed':
+                        CourseEnrollment.unenroll(user, course_key)
