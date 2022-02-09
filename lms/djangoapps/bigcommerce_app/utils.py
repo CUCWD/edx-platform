@@ -348,5 +348,5 @@ class BigCommerceAPI():
                     course_key = CourseKey.from_string(course['course_id'])
                     if course['order_status'] == 'Completed':
                         CourseEnrollment.enroll(user, course_key)
-                    elif course['order_status'] == 'Refunded' or course['order_status'] == 'Cancelled':
+                    elif course['order_status'] == 'Refunded' or course['order_status'] == 'Cancelled' or course['order_status'] == 'Declined' or course['order_status'] == 'Disputed':
                         CourseEnrollment.unenroll(user, course_key)
