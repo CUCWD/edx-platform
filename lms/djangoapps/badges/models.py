@@ -2,7 +2,6 @@
 Database models for the badges app
 """
 
-
 from importlib import import_module
 
 from config_models.models import ConfigurationModel
@@ -24,6 +23,7 @@ from lms.djangoapps.badges.utils import deserialize_count_specs
 from openedx.core.djangolib.markup import HTML, Text
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
 
+import six
 
 def validate_badge_image(image):
     """
@@ -68,10 +68,13 @@ class BadgeClass(models.Model):
     mode = models.CharField(max_length=100, default='', blank=True)
     image = models.ImageField(upload_to='badge_classes', validators=[validate_badge_image])
 
-    def __str__(self):  # lint-amnesty, pylint: disable=invalid-str-returned
-        return HTML("<Badge '{slug}' for '{issuing_component}'>").format(
-            slug=HTML(self.slug), issuing_component=HTML(self.issuing_component)
-        )
+    def __str__(self):
+        return HTML("Badge '{slug}' for '{issuing_component}' – {course_id} – {mode}").format(
+            slug=HTML(self.slug),
+            issuing_component=HTML(self.issuing_component),
+            course_id=HTML(six.text_type(self.course_id)),
+            mode=self.mode
+            )
 
     @classmethod
     def get_badge_class(
@@ -370,7 +373,7 @@ class BlockEventBadgesConfiguration(models.Model):
     )
 
     @classmethod
-    def config_for_block_event(cls, course_id, event_type):
+    def config_for_block_event(cls, course_id, event_type=None):
         """
         Return all records matching course identifier and event type.
         """

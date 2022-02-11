@@ -2,7 +2,6 @@
 Admin registration for Badge Models
 """
 
-
 from config_models.admin import ConfigurationModelAdmin
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
@@ -18,6 +17,7 @@ from lms.djangoapps.badges.models import (  # pylint: disable=syntax-error
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from opaque_keys.edx.keys import CourseKey
 
+import six
 
 class CourseIdFilter(admin.SimpleListFilter):
     """
@@ -33,26 +33,27 @@ class CourseIdFilter(admin.SimpleListFilter):
         self.unused_parameters = params.copy()
         self.unused_parameters.pop(self.parameter_name, None)
 
-    def value(self):
+    def value(self):  # pylint: disable=missing-function-docstring
         value = super(CourseIdFilter, self).value()
         if value == "None" or value is None:
             return None
         else:
             return CourseKey.from_string(value)
 
-    def lookups(self, request, model_admin):
+    def lookups(self, request, model_admin):  # pylint: disable=unused-argument,missing-function-docstring
         return (
-            (overview.id, unicode(overview.id)) for overview in CourseOverview.objects.all().order_by('id')
+            (overview.id, six.text_type(overview.id)) \
+                for overview in CourseOverview.objects.all().order_by('id')
         )
 
-    def queryset(self, request, queryset):
+    def queryset(self, request, queryset):  # pylint: disable=unused-argument,missing-function-docstring
         value = self.value()
         if value is None:
             return queryset
         else:
             return queryset.filter(course_id=value)
 
-    def choices(self, changelist):  # pylint: disable=unused-argument
+    def choices(self, changelist):  # pylint: disable=unused-argument,missing-function-docstring
         yield {
             'selected': self.value() is None,
             'value': None,
@@ -61,7 +62,7 @@ class CourseIdFilter(admin.SimpleListFilter):
         for lookup, title in self.lookup_choices:
             yield {
                 'selected': self.value() == lookup,
-                'value': unicode(lookup),
+                'value': six.text_type(lookup),
                 'display': title,
             }
 
