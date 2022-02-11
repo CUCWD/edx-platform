@@ -23,6 +23,8 @@ from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
 from openedx.core.djangoapps.user_api.models import UserPreference
 from openedx.features.course_experience import default_course_url_name
 
+from . import award_chapter_badges
+
 
 class CourseBadgesProgressView(View):
     """
@@ -44,6 +46,9 @@ class CourseBadgesProgressView(View):
         course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=True)
         course_url_name = default_course_url_name(course.id)
         course_url = reverse(course_url_name, kwargs={'course_id': six.text_type(course.id)})
+
+        # Award badges to course chapters if they haven't already been done.
+        award_chapter_badges(course_id, request)
 
         # Render the badges list as a fragment
         badges_fragment = CourseBadgesProgressFragmentView().render_to_fragment(
