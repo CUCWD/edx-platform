@@ -3584,14 +3584,14 @@ BADGR_ENABLE_NOTIFICATIONS = False
 QUALTRICS_API_BASE_URL = None
 QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
 QUALTRICS_API_VERSION = "v3"
-QUALTRICS_API_TOKEN_EXPIRATION = 3599 # 1 hr
+QUALTRICS_API_TOKEN_EXPIRATION = 3599  # 1 hr
 QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
 
 # OAuth2 Authentication (Client Credentials)
 # https://api.qualtrics.com/instructions/docs/Instructions/oauth-authentication.md
 # Client credentials grant type doesn't use `refresh` token for access.
 QUALTRICS_API_CLIENT_ID = None
-QUALTRICS_API_CLIENT_SECRET= None
+QUALTRICS_API_CLIENT_SECRET = None
 
 # API Token Authentication
 # https://api.qualtrics.com/instructions/docs/Instructions/api-key-authentication.md
