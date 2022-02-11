@@ -2232,12 +2232,17 @@ base_vendor_js = [
 
     # Load Bootstrap and supporting libraries
     'js/vendor/bootstrap.bundle.js',
-    
+
     # Finally load RequireJS and dependent vendor libraries
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',
     'js/vendor/URI.min.js',
     'common/js/vendor/backbone.js'
+
+    #Used for Glossary
+    'common/js/jquery.easytabs.js',
+    'common/js/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo.js',
 ]
 
 main_vendor_js = base_vendor_js + [
