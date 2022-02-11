@@ -18,7 +18,6 @@ from web_fragments.fragment import Fragment
 
 from common.djangoapps.edxmako.shortcuts import render_to_response
 from common.djangoapps.util.views import ensure_valid_course_key
-# from lms.djangoapps.badges.api import urls
 from lms.djangoapps.courseware.courses import get_course_with_access
 from openedx.core.djangoapps.plugin_api.views import EdxFragmentView
 from openedx.core.djangoapps.user_api.models import UserPreference
