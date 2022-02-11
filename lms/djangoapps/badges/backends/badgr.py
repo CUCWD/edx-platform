@@ -95,8 +95,8 @@ class BadgrBackend(BadgeBackend):
             response.raise_for_status()
         except HTTPError:
             LOGGER.error(
-                "Encountered an error when contacting the Badgr-Server. Request sent to %r with headers %r.\n"
-                "and data values %r\n"
+                "Encountered an error when contacting the Badgr-Server. Request sent to %r with "
+                "headers %r.\nand data values %r\n"
                 "Response status was %s.\n%s",
                 response.request.url, response.request.headers,
                 data,
@@ -109,12 +109,13 @@ class BadgrBackend(BadgeBackend):
         Create the badge class on Badgr.
         """
         image = badge_class.image
-        # We don't want to bother validating the file any further than making sure we can detect its MIME type,
-        # for HTTP. The Badgr-Server should tell us if there's anything in particular wrong with it.
+        # We don't want to bother validating the file any further than making sure we can detect its
+        # MIME type, for HTTP. The Badgr-Server should tell us if there's anything in particular
+        # wrong with it.
         content_type, __ = mimetypes.guess_type(image.name)
         if not content_type:
             raise ValueError(
-                "Could not determine content-type of image! Make sure it is a properly named .png file. "
+                "Could not determine content-type of image! Make sure it is a properly named .png file. "  # pylint: disable=consider-using-f-string,line-too-long
                 "Filename was: {}".format(image.name)
             )
         with open(image.path, 'rb') as image_file:
@@ -137,8 +138,11 @@ class BadgrBackend(BadgeBackend):
             except Exception as excep:  # pylint: disable=broad-except
                 LOGGER.error(
                     'Error on saving Badgr Server Slug of badge_class slug '
-                    '"{0}" with response json "{1}" : {2}'.format(
-                        badge_class.slug, result.json(), excep))
+                    '"%s" with response json "%s" : %s',
+                    badge_class.slug,
+                    result.json(),
+                    excep
+                    )
 
     def _send_assertion_created_event(self, user, assertion):
         """
@@ -196,10 +200,13 @@ class BadgrBackend(BadgeBackend):
 
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
-                'Error saving BadgeAssertion for user: "{0}" '
-                'with response from server: {1};'
-                'Encountered exception: {2}'.format(
-                    user.email, response.text, exc))
+                'Error saving BadgeAssertion for user: "%s" '
+                'with response from server: %s;'
+                'Encountered exception: %s',
+                user.email,
+                response.text,
+                exc
+                )
 
     @staticmethod
     def _fernet_setup():
@@ -243,7 +250,7 @@ class BadgrBackend(BadgeBackend):
                 'refresh_token': refresh_token
             }
 
-        oauth_url = "{}/o/token".format(settings.BADGR_BASE_URL)
+        oauth_url = f"{settings.BADGR_BASE_URL}/o/token"
 
         response = requests.post(
             oauth_url, data=data, timeout=settings.BADGR_TIMEOUT
@@ -302,7 +309,7 @@ class BadgrBackend(BadgeBackend):
         Headers to send along with the request-- used for authentication.
         """
         access_token = self._get_access_token()
-        return {'Authorization': 'Bearer {}'.format(access_token)}
+        return {'Authorization': f'Bearer {access_token}'}
 
     def _ensure_badge_created(self, badge_class):
         """
@@ -311,14 +318,19 @@ class BadgrBackend(BadgeBackend):
         slug = badge_class.badgr_server_slug
         if slug in BadgrBackend.badges:
             return
-        response = requests.get(self._badge_url(slug), headers=self._get_headers(), timeout=settings.BADGR_TIMEOUT)
+        response = requests.get(
+            self._badge_url(slug),
+            headers=self._get_headers(),
+            timeout=settings.BADGR_TIMEOUT
+            )
         if response.status_code != 200:
             self._create_badge(badge_class)
         BadgrBackend.badges.append(slug)
 
     def award(self, badge_class, user, evidence_url=None):
         """
-        Make sure the badge class has been created on the backend, and then award the badge class to the user.
+        Make sure the badge class has been created on the backend, and then award the badge class
+        to the user.
         """
         self._ensure_badge_created(badge_class)
         return self._create_assertion(badge_class, user, evidence_url)
