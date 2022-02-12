@@ -102,7 +102,7 @@ def get_completion_badge(course_id, user):
         return None
     return BadgeClass.get_badge_class(
         slug=course_slug(course_id, mode),
-        issuing_component='',
+        issuing_component='openedx__course',
         criteria=criteria(course_id),
         description=badge_description(course, mode),
         course_id=course_id,
