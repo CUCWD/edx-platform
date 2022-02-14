@@ -97,6 +97,10 @@ from openedx.core.djangoapps.xmodule_django.models import NoneToEmptyManager
 from openedx.core.djangolib.model_mixins import DeletableByUserValue
 from openedx.core.toggles import ENTRANCE_EXAMS
 
+from organizations import models as org_models
+from organizations.models import Organization, UserOrganizationMapping
+import util.organizations_helpers as org_helpers
+
 log = logging.getLogger(__name__)
 AUDIT_LOG = logging.getLogger("audit")
 SessionStore = import_module(settings.SESSION_ENGINE).SessionStore  # pylint: disable=invalid-name
@@ -1691,6 +1695,24 @@ class CourseEnrollment(models.Model):
                 creation_date=enrollment.created,
             )
         )
+
+        organization_data = org_helpers.get_course_organizations(text_type(course_key))[0]
+        organization = Organization.objects.get(id=organization_data.get('id'))
+        
+        try:
+            user_org = org_models.UserOrganizationMapping.objects.filter(user=user, organization=organization).first()
+            if not (user_org):
+                org_models.UserOrganizationMapping.objects.create(user=user, organization=organization, is_active=True, is_amc_admin=False)
+            else:
+                # Enable `is_active` for the user_org record if it already exists in the database.
+                user_org.is_active = True
+                user_org.save()
+
+        except Exception:
+            log.error(u"Could not create UserOrganizationMapping for org %s, user %s",
+                organization.name,
+                user.username
+            )
 
         return enrollment
 
