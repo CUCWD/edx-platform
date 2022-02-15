@@ -222,8 +222,24 @@ class UserBadgeProgressListView(DeveloperErrorViewMixin, APIView):
                     "image": "http://example.com/media/badge_classes/badges/special_xdpqpBv_9FYOZwN.png"
                 },
                 "assertion": {
-                    "image_url": "http://badges.example.com/media/issued/cd75b69fc1c979fcc1697c8403da2bdf.png",  # pylint: disable=line-too-long
-                    "assertion_url": "http://badges.example.com/public/assertions/07020647-e772-44dd-98b7-d13d34335ca6"  # pylint: disable=line-too-long
+                    "issuedOn": "2019-04-20T02:43:06.566955Z",
+                    "expires": "2019-04-30T00:00:00.000000Z",
+                    "revoked": false,
+                    "image_url": "http://badges.example.com/media/issued/cd75b69fc1c979fcc1697c8403da2bdf.png",
+                    "assertion_url": "http://badges.example.com/public/assertions/07020647-e772-44dd-98b7-d13d34335ca6"
+                    "recipient": {
+                        "plaintextIdentity": "edx@example.com",
+                    },
+                    "issuer": {
+                        "entityType": "Issuer",
+                        "entityId": "npqlh0acRFG5pKKbnb4SRg",
+                        "openBadgeId": "https://api.badgr.io/public/issuers/npqlh0acRFG5pKKbnb4SRg",
+                        "name": "EducateWorkforce",
+                        "image": "https://media.us.badgr.io/uploads/issuers/issuer_logo_77bb4498-838b-45b7-8722-22878fedb5e8.svg",
+                        "email": "cucwd.developer@gmail.com",
+                        "description": "An online learning solution offered with partnering 2-year colleges to help integrate web and digital solutions into their existing courses. The platform was designed by multiple instructional design, usability, and computing experts to include research-based learning features.",
+                        "url": "https://ew-localhost.com",
+                    },
                 },
             },
             ...
@@ -235,6 +251,8 @@ class UserBadgeProgressListView(DeveloperErrorViewMixin, APIView):
         """
         Returns a user's viewable badge progress sorted by course name.
         """
+        user = User.objects.get(username=username)
+
         try:
             course_key = CourseKey.from_string(course_id)
         except InvalidKeyError:
@@ -273,8 +291,7 @@ class UserBadgeProgressListView(DeveloperErrorViewMixin, APIView):
             block_event_assertion = None
             if block_event_badge_config.badge_class:
                 user_course_assertions = BadgeAssertion.assertions_for_user(
-                    User.objects.get(username=username),
-                    course_id=course_key
+                    user, course_id=course_key
                     )
                 for assertion in user_course_assertions:
                     if assertion.badge_class == block_event_badge_config.badge_class:
@@ -312,12 +329,33 @@ class UserBadgeProgressListView(DeveloperErrorViewMixin, APIView):
                                         block_event_badge_config.badge_class.image),
                     },
                     "assertion": {
-                        "image_url": (
-                            block_event_assertion.image_url if block_event_assertion else ""
-                            ),
-                        "assertion_url": (
-                            block_event_assertion.assertion_url if block_event_assertion else ""
-                            ),
+                        "issuedOn": (block_event_assertion.data.get('issuedOn', '') \
+                            if hasattr(block_event_assertion, 'data') else ""),
+                        "expires": (block_event_assertion.data.get('expires', '') \
+                            if hasattr(block_event_assertion, 'data') else ""),
+                        "revoked": (block_event_assertion.data.get('revoked', False) \
+                            if hasattr(block_event_assertion, 'data') else False),
+                        "image_url": (block_event_assertion.image_url \
+                            if block_event_assertion else ""),
+                        "assertion_url": (block_event_assertion.assertion_url \
+                            if block_event_assertion else ""),
+                        "entityId": (block_event_assertion.data.get('entityId', '') \
+                            if hasattr(block_event_assertion, 'data') else ""),
+                        "recipient": {
+                            "plaintextIdentity": (block_event_assertion.user.email \
+                                if block_event_assertion else ""),
+                        },
+                        "issuer": (block_event_assertion.assertion_issuer() \
+                            if block_event_assertion else {
+                            "entityType": "",
+                            "entityId": "",
+                            "openBadgeId": "",
+                            "name": "",
+                            "image": "",
+                            "email": "",
+                            "description": "",
+                            "url": "",
+                        }),
                     },
                 }
             )
