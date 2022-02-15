@@ -1,7 +1,7 @@
 <%! from django.utils.translation import ugettext as _ %>
 <%namespace name='static' file='/static_content.html'/>
 
-<%page args="section_data"/>
+<%page args="section_data" expression_filter="h"/>
 
 <div class="resources-wrapper">
     <h2>${_("Handouts")}</h2>
