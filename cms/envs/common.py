@@ -1271,8 +1271,8 @@ base_vendor_js = [
     'common/js/vendor/owl.carousel.js',
 
     # Used for Glossary
-    'common/js/jquery.easytabs.js',
-    'common/js/jquery.hashchange.js',
+    'common/js/vendor/jquery.easytabs.js',
+    'common/js/vendor/jquery.hashchange.js',
     'common/js/vendor/jquery.scrollTo.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
