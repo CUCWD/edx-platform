@@ -10,6 +10,7 @@ This is the default template for our main set of AWS servers.
 import codecs
 import copy
 import os
+from os.path import abspath, dirname, join
 import yaml
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -554,6 +555,11 @@ add_plugins(__name__, ProjectType.CMS, SettingsType.PRODUCTION)
 ########################## Derive Any Derived Settings  #######################
 
 derive_settings(__name__)
+
+#####################################################################
+# See if the developer has any local overrides.
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
 
 ############# CORS headers for cross-domain requests #################
 if FEATURES.get('ENABLE_CORS_HEADERS'):
