@@ -3518,6 +3518,12 @@ BADGING_BACKEND = 'lms.djangoapps.badges.backends.badgr.BadgrBackend'
 # .. setting_warning: DO NOT include a trailing slash. Review FEATURES['ENABLE_OPENBADGES'] for further context.
 BADGR_BASE_URL = "http://localhost:8005"
 
+# .. setting_name: BADGR_PUBLIC_URL
+# .. setting_default: 'https://badgr.com'
+# .. setting_description: The base URL for the Badgr frontend pages (e.g. Backpack, etc).
+# .. setting_warning: DO NOT include a trailing slash. Review FEATURES['ENABLE_OPENBADGES'] for further context.
+BADGR_PUBLIC_URL = "https://badgr.com"
+
 # .. setting_name: BADGR_ISSUER_SLUG
 # .. setting_default: 'example-issuer'
 # .. setting_description: A string that is the slug for the Badgr issuer. The slug can be obtained from the URL of
