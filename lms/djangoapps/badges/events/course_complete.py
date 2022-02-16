@@ -73,7 +73,7 @@ def evidence_url(user_id, course_key):
     # avoid circular import problems
     from lms.djangoapps.certificates.models import GeneratedCertificate
     cert = GeneratedCertificate.eligible_certificates.get(user__id=int(user_id), course_id=course_id)
-    return site_prefix() + reverse(
+    return site_prefix(course_key.org) + reverse(
         'certificates:render_cert_by_uuid', kwargs={'certificate_uuid': cert.verify_uuid}) + '?evidence_visit=1'
 
 
