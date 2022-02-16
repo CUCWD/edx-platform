@@ -4,14 +4,15 @@ Utility functions used by the badging app.
 
 
 from django.conf import settings
-
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 def site_prefix():
     """
     Get the prefix for the site URL-- protocol and server name.
     """
     scheme = "https" if settings.HTTPS == "on" else "http"
-    return f'{scheme}://{settings.SITE_NAME}'
+    site_name = configuration_helpers.get_value("SITE_NAME", settings.SITE_NAME)
+    return f'{scheme}://{site_name}'
 
 
 def requires_badges_enabled(function):
