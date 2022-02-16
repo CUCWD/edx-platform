@@ -18,6 +18,14 @@ BADGES_URLS = ([
         fr'^progress/user/{settings.USERNAME_PATTERN}/courses/{settings.COURSE_ID_PATTERN}/$',
         views.UserBadgeProgressListView.as_view(), name='user_progress'
     ),
+    re_path(
+        fr'^progress/courses/{settings.COURSE_ID_PATTERN}/$',
+        views.CourseBadgeProgressListView.as_view(), name='course_progress'
+    ),
+    re_path(
+        fr'^progress/courses/{settings.COURSE_ID_PATTERN}/user/{settings.USERNAME_PATTERN}/$',
+        views.UserBadgeProgressListView.as_view(), name='course_progress_user'
+    ),
 ], 'badges')
 
 APP_NAME = 'v1'
