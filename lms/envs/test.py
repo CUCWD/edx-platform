@@ -599,3 +599,7 @@ RESET_PASSWORD_TOKEN_VALIDATE_API_RATELIMIT = '2/m'
 RESET_PASSWORD_API_RATELIMIT = '2/m'
 
 CORS_ORIGIN_WHITELIST = ['https://sandbox.edx.org']
+
+#################### OpenBadges Settings #######################
+
+BADGR_API_TOKEN_CACHE = 'default'
