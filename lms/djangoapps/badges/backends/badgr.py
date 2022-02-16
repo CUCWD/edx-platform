@@ -22,6 +22,7 @@ from edx_django_utils.cache import TieredCache
 
 from lms.djangoapps.badges.backends.base import BadgeBackend
 from lms.djangoapps.badges.models import BadgeAssertion
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 MAX_SLUG_LENGTH = 255
 LOGGER = logging.getLogger(__name__)
@@ -48,24 +49,27 @@ class BadgrBackend(BadgeBackend):
             raise ImproperlyConfigured(error_msg)
 
     @lazy
-    def _base_url(self):
+    def _issuer_base_url(self):
         """
         Base URL for API requests that contain the issuer slug.
         """
-        return f"{settings.BADGR_BASE_URL}/v2/issuers/{settings.BADGR_ISSUER_SLUG}"
+        issuer_slug = configuration_helpers.get_value(
+            "BADGR_ISSUER_SLUG", settings.BADGR_ISSUER_SLUG
+            )
+        return f"{settings.BADGR_BASE_URL}/v2/issuers/{issuer_slug}"
 
     @lazy
     def _badge_create_url(self):
         """
         URL for generating a new Badge specification
         """
-        return f"{self._base_url}/badgeclasses"
+        return f"{self._issuer_base_url}/badgeclasses"
 
     def _badge_url(self, slug):
         """
         Get the URL for a course's badge in a given mode.
         """
-        return f"{settings.BADGR_BASE_URL}/v2/badgeclasses/{slug}"
+        return f"{self._issuer_base_url}/v2/badgeclasses/{slug}"
 
     def _assertion_url(self, slug):
         """
@@ -346,10 +350,14 @@ class BadgrBackend(BadgeBackend):
             'entity_id': badge_assertion.data['issuer']
         }
         response = requests.get(
-            self._base_url, headers=self._get_headers(), params=params,
+            self._issuer_base_url, headers=self._get_headers(), params=params,
             timeout=settings.BADGR_TIMEOUT
         )
         self._log_if_raised(response, params)
 
         if response.ok:
-            return response.json()['result'][0]
+            for issuer in response.json()['result']:
+                if issuer.get("entityId", "") == badge_assertion.data['issuer']:
+                    return issuer
+
+            return None
