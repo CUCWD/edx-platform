@@ -2265,6 +2265,9 @@ base_vendor_js = [
 
     'js/Markdown.Converter.js',
 
+    # Load iFrame-Resizer
+    'common/js/vendor/iframeResizer.js',
+
     # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
 
