@@ -780,14 +780,13 @@ class CourseMode(models.Model):
     def is_eligible_for_certificate(cls, mode_slug, status=None):
         """
         Returns whether or not the given mode_slug is eligible for a
-        certificate. Currently all modes other than 'audit' /*and `honor`*/
-        grant a certificate. Note that audit enrollments which existed
-        prior to December 2015 *were* given certificates, so there will
-        be GeneratedCertificate records with mode='audit' which are
+        certificate. Currently all modes other than 'audit' grant a
+        certificate. Note that audit enrollments which existed prior
+        to December 2015 *were* given certificates, so there will be
+        GeneratedCertificate records with mode='audit' which are
         eligible.
         """
-        if mode_slug == cls.AUDIT: # or mode_slug == cls.HONOR:
-            return False
+        ineligible_modes = [cls.AUDIT]
 
         if settings.FEATURES.get('DISABLE_HONOR_CERTIFICATES', False):
             # Adding check so that we can regenerate the certificate for learners who have
