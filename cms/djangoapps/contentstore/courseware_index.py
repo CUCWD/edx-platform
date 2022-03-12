@@ -41,6 +41,41 @@ INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
 
+def get_estimated_time(cls, modulestore, structure_key):
+    import datetime
+    total_time = datetime.timedelta(0)
+    structure = cls._fetch_top_level(modulestore, structure_key)
+
+    from xmodule.modulestore.django import modulestore
+    for module in structure.get_children():
+        module_time = datetime.timedelta(0)
+
+        for lesson in module.get_children():
+            lesson_time = datetime.timedelta(0)
+
+            for unit in lesson.get_children():
+                unit_time = datetime.timedelta(0)
+
+                for xblock in unit.get_children():
+                    total_time += xblock.estimated_time
+                    unit_time += xblock.estimated_time
+                    module_time += xblock.estimated_time
+                    lesson_time += xblock.estimated_time
+                    modulestore().update_item(xblock, None)
+
+                unit.estimated_time = unit_time
+                modulestore().update_item(unit, None)
+
+            lesson.estimated_time = lesson_time
+            modulestore().update_item(lesson, None)
+
+        module.estimated_time = module_time
+        modulestore().update_item(module, None) 
+
+    structure.estimated_time = total_time
+    modulestore().update_item(structure, None)
+
+    return total_time
 
 def keyterms_reindex(course_id):
     """
@@ -236,6 +271,8 @@ class SearchIndexerBase(metaclass=ABCMeta):
         if settings.FEATURES['ENABLE_KEY_TERMS_GLOSSARY']:
             keyterms_reindex(structure_key)
 
+        get_estimated_time(cls, modulestore, structure_key)
+        
         def get_item_location(item):
             """
             Gets the version agnostic item location
