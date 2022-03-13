@@ -1210,6 +1210,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         'id': str(xblock.location),
         'display_name': xblock.display_name_with_default,
         'estimated_time': estimated_time,
+        'show_estimated_time': xblock.show_estimated_time,
         'category': xblock.category,
         'has_children': xblock.has_children
     }

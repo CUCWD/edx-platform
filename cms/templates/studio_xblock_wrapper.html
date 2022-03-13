@@ -16,6 +16,7 @@ collapsible_class = "is-collapsible" if xblock.has_children else ""
 label = xblock.display_name_with_default or xblock.scope_ids.block_type
 messages = xblock.validate().to_json()
 time = xblock.estimated_time
+show_time = xblock.show_estimated_time
 block_is_unit = is_unit(xblock)
 %>
 
@@ -66,7 +67,9 @@ block_is_unit = is_unit(xblock)
             % endif
             <div class="xblock-display-title">
                 <span class="xblock-display-name">${label}</span>
+                % if time and show_time:
                 <span class="xblock-display-ttc">(Time to Complete: ${time})</span>
+                % endif
                 % if selected_groups_label:
                 <p class="xblock-group-visibility-label">${selected_groups_label}</p>
                 % endif
