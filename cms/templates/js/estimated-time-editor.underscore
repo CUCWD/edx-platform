@@ -2,10 +2,10 @@
 <div class="modal-section-content has-actions">
     <ul class="list-fields list-input">
         <li class="field field-text field-start-time field-release-time">
-            <label for="start_time" class="label"><%- gettext('Estimated Time in HH:MM:SS') %></label>
-            <input type="text" id="start_time" name="start_time"
+            <label for="estimated_time" class="label"><%- gettext('Estimated Time in HH:MM:SS') %></label>
+            <input type="text" id="estimated_time" name="estimated_time"
               value=""
-              placeholder="HH:MM:SS" class="start-time release-time time input input-text" autocomplete="off" />
+              placeholder="HH:MM:SS" class="input input-text"/>
         </li>
     </ul>
 
@@ -20,3 +20,4 @@
       </ul>
     <% } %>
 </div>
+<br>
