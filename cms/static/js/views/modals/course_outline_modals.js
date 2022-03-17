@@ -15,7 +15,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
     'use strict';
     var CourseOutlineXBlockModal, SettingsXBlockModal, PublishXBlockModal, HighlightsXBlockModal,
         AbstractEditor, BaseDateEditor,
-        ReleaseDateEditor, DueDateEditor, SelfPacedDueDateEditor, GradingEditor, PublishEditor, AbstractVisibilityEditor,
+        ReleaseDateEditor, EstimatedTimeEditor, DueDateEditor, SelfPacedDueDateEditor, GradingEditor, PublishEditor, AbstractVisibilityEditor,
         StaffLockEditor, UnitAccessEditor, ContentVisibilityEditor, TimedExaminationPreferenceEditor,
         AccessEditor, ShowCorrectnessEditor, HighlightsEditor, HighlightsEnableXBlockModal, HighlightsEnableEditor;
 
@@ -479,6 +479,41 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         fieldName: 'start',
         templateName: 'release-date-editor',
         className: 'edit-settings-release scheduled-date-input',
+        startingReleaseDate: null,
+
+        afterRender: function() {
+            BaseDateEditor.prototype.afterRender.call(this);
+            // Store the starting date and time so that we can determine if the user
+            // actually changed it when "Save" is pressed.
+            this.startingReleaseDate = this.getValue();
+        },
+
+        getValue: function() {
+            return DateUtils.getDate(this.$('#start_date'), this.$('#start_time'));
+        },
+
+        clearValue: function(event) {
+            event.preventDefault();
+            this.$('#start_time, #start_date').val('');
+        },
+
+        getRequestData: function() {
+            var newReleaseDate = this.getValue();
+            if (JSON.stringify(newReleaseDate) === JSON.stringify(this.startingReleaseDate)) {
+                return {};
+            }
+            return {
+                metadata: {
+                    start: newReleaseDate
+                }
+            };
+        }
+    });
+
+    EstimatedTimeEditor = AbstractEditor.extend({
+        fieldName: 'start',
+        templateName: 'estimated-time-editor',
+        className: 'estimated-time-settings',
         startingReleaseDate: null,
 
         afterRender: function() {
@@ -1173,7 +1208,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                     tabs[0].editors = [ReleaseDateEditor];
                     tabs[1].editors = [StaffLockEditor];
                 } else if (xblockInfo.isSequential()) {
-                    tabs[0].editors = [ReleaseDateEditor, GradingEditor, DueDateEditor];
+                    tabs[0].editors = [ReleaseDateEditor, EstimatedTimeEditor, GradingEditor, DueDateEditor];
                     tabs[1].editors = [ContentVisibilityEditor, ShowCorrectnessEditor];
                     if (course.get('self_paced') && course.get('is_custom_relative_dates_active')) {
                         tabs[0].editors.push(SelfPacedDueDateEditor);
