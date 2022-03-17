@@ -328,7 +328,7 @@ def register_and_enroll_students(request, course_id):  # pylint: disable=too-man
         try:
             upload_file = request.FILES.get('students_list')
             if upload_file.name.endswith('.csv'):
-                students = [row for row in csv.reader(upload_file.read().decode('utf-8').splitlines())]  # lint-amnesty, pylint: disable=unnecessary-comprehension
+                students = [row for row in csv.reader(upload_file.read().decode('utf-8-sig').splitlines())]  # lint-amnesty, pylint: disable=unnecessary-comprehension
                 course = get_course_by_id(course_id)
             else:
                 general_errors.append({
