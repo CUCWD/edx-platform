@@ -156,13 +156,13 @@ class BadgeClass(models.Model):
         """
         return self.backend.award(self, user, evidence_url=evidence_url)  # lint-amnesty, pylint: disable=no-member
 
-    def save(self, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ
+    def save(self, *args, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ
         """
         Slugs must always be lowercase.
         """
         self.slug = self.slug and self.slug.lower()
         self.issuing_component = self.issuing_component and self.issuing_component.lower()
-        super().save(**kwargs)
+        super().save(*args, **kwargs)
 
     class Meta:  # pylint: disable=missing-class-docstring
         app_label = "badges"

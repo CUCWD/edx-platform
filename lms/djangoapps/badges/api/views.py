@@ -38,6 +38,7 @@ from openedx.core.lib.api.serializers import (
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin, view_auth_classes
 from openedx.features.course_experience.utils import get_course_outline_block_tree
 
+from ..handlers import award_section_badges
 from .serializers import BadgeAssertionSerializer, BlockEventBadgesConfigurationSerializer  # pylint: disable=unused-import
 
 USER_MODEL = get_user_model()
@@ -234,6 +235,50 @@ class BadgeProgressViewMixin(DeveloperErrorViewMixin):
                 "email": user.email,
                 "progress": self._get_single_user_badge_progress(course_key, user.username)
             })
+
+        # progress_response.append({
+        #         "user_id": 5,
+        #         "user_name": 'TestUser',
+        #         "name": 'Test Username',
+        #         "email": 'test@edx.org',
+        #         "progress": [
+        #             {
+        #                 "course_id": "course-v1:edX+DemoX+Demo_Course",
+        #                 "block_id": "block-v1:edX+DemoX+Demo_Course+type@chapter+block@dc1e160e5dc348a48a98fa0f4a6e8675",  # pylint: disable=line-too-long
+        #                 "block_display_name": "Example Week 1: Getting Started",
+        #                 "event_type": "chapter_complete",
+        #                 "badge_class": {
+        #                     "slug": "special_award",
+        #                     "issuing_component": "openedx__course",
+        #                     "display_name": "Very Special Award",
+        #                     "course_id": "course-v1:edX+DemoX+Demo_Course",
+        #                     "description": "Awarded for people who did something incredibly special",  # pylint: disable=line-too-long
+        #                     "criteria": "Do something incredibly special.",
+        #                     "image": "https://media.badgr.com/uploads/badges/assertion-vsDktqmrT3GJLbNhBvqLig.svg", # "http://example.com/media/badge_classes/badges/special_xdpqpBv_9FYOZwN.png"  # pylint: disable=line-too-long
+        #                 },
+        #                 "assertion": {
+        #                     "issuedOn": "2019-04-20T02:43:06.566955Z",
+        #                     "expires": "2019-04-30T00:00:00.000000Z",
+        #                     "revoked": False,
+        #                     "image_url": "https://media.badgr.com/uploads/badges/assertion-vsDktqmrT3GJLbNhBvqLig.svg", # "http://badges.example.com/media/issued/cd75b69fc1c979fcc1697c8403da2bdf.png",  # pylint: disable=line-too-long
+        #                     "assertion_url": "http://badges.example.com/public/assertions/07020647-e772-44dd-98b7-d13d34335ca6",  # pylint: disable=line-too-long
+        #                     "recipient": {
+        #                         "plaintextIdentity": "john.doe@example.com",
+        #                     },
+        #                     "issuer": {
+        #                         "entityType": "Issuer",
+        #                         "entityId": "npqlh0acRFG5pKKbnb4SRg",
+        #                         "openBadgeId": "https://api.badgr.io/public/issuers/npqlh0acRFG5pKKbnb4SRg",  # pylint: disable=line-too-long
+        #                         "name": "EducateWorkforce",
+        #                         "image": "https://media.badgr.com/uploads/issuers/issuer_logo_77bb4498-838b-45b7-8722-22878fedb5e8.svg", # "https://media.us.badgr.io/uploads/issuers/issuer_logo_77bb4498-838b-45b7-8722-22878fedb5e8.svg",  # pylint: disable=line-too-long
+        #                         "email": "cucwd.developer@gmail.com",
+        #                         "description": "An online learning solution offered with partnering 2-year colleges to help integrate web and digital solutions into their existing courses. The platform was designed by multiple instructional design, usability, and computing experts to include research-based learning features.",  # pylint: disable=line-too-long
+        #                         "url": "https://ew-localhost.com",
+        #                     },
+        #                 }
+        #             },
+        #         ]
+        #     })
 
         return progress_response
 
@@ -591,6 +636,9 @@ class UserBadgeProgressListView(BadgeProgressViewMixin, APIView):
         # if username:
         # If there is a username passed, get badge progress for a single user
         try:
+            # Award badges to course chapters if they haven't already been done.
+            award_section_badges(course_id, request)
+
             return Response(self._get_single_user_badge_progress(course_key, username))
         except USER_MODEL.DoesNotExist as user_model_not_exist:
             raise self.api_error(

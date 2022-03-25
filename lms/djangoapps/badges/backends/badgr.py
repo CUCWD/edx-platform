@@ -13,7 +13,8 @@ import mimetypes
 import requests
 from cryptography.fernet import Fernet
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.validators import URLValidator
 from eventtracking import tracker
 from lazy import lazy  # lint-amnesty, pylint: disable=no-name-in-module
 from requests.packages.urllib3.exceptions import HTTPError  # lint-amnesty, pylint: disable=import-error
@@ -69,7 +70,7 @@ class BadgrBackend(BadgeBackend):
         """
         Get the URL for a course's badge in a given mode.
         """
-        return f"{self._issuer_base_url}/v2/badgeclasses/{slug}"
+        return f"{settings.BADGR_BASE_URL}/v2/badgeclasses/{slug}"
 
     def _assertion_url(self, slug):
         """
@@ -124,9 +125,20 @@ class BadgrBackend(BadgeBackend):
             )
         with open(image.path, 'rb') as image_file:
             files = {'image': (image.name, image_file, content_type)}
+
+            # Send appropriate criteria.
+            try:  # TODO: eventually we should pass both
+                validator = URLValidator()
+                validator(badge_class.criteria)
+                criteria_type_key = 'criteriaUrl'
+                criteria_type = criteria_type_key
+            except ValidationError:
+                criteria_type_key = 'criteriaNarrative'
+                criteria_type = criteria_type_key
+
             data = {
                 'name': badge_class.display_name,
-                'criteriaUrl': badge_class.criteria,
+                criteria_type: badge_class.criteria,
                 'description': badge_class.description,
             }
             result = requests.post(
@@ -177,13 +189,18 @@ class BadgrBackend(BadgeBackend):
                 "identity": user.email,
                 "type": "email"
             },
-            "evidence": [
-                {
-                    "url": evidence_url
-                }
-            ],
             "notify": settings.BADGR_ENABLE_NOTIFICATIONS,
         }
+
+        if evidence_url:
+            data.update({
+              "evidence": [
+                  {
+                    "url": evidence_url
+                  }
+              ],
+            })
+
         response = requests.post(
             self._assertion_url(badge_class.badgr_server_slug),
             headers=self._get_headers(),

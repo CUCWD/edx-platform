@@ -18,7 +18,7 @@ setup(
     ],
     entry_points={
         "openedx.course_tab": [
-            "course_badges = openedx.features.course_badges.plugins:CourseBadgesTab",
+            "badges_progress = lms.djangoapps.courseware.tabs:BadgesTab",
             "ccx = lms.djangoapps.ccx.plugins:CcxCourseTab",
             "courseware = lms.djangoapps.courseware.tabs:CoursewareTab",
             "course_info = lms.djangoapps.courseware.tabs:CourseInfoTab",

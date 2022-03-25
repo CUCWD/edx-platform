@@ -5,6 +5,7 @@ Common utilities for the course experience, including course outline.
 from django.utils import timezone
 from opaque_keys.edx.keys import CourseKey
 
+from lms.djangoapps.badges.models import BlockEventBadgesConfiguration
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.course_blocks.api import get_course_blocks
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
@@ -88,6 +89,31 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
             block['all_denial_reasons'] = child_denial_reasons
         return child_denial_reasons
 
+    def recurse_mark_badge_progress(block):
+        """
+        Mark this block as 'badge_progress: true' if badge assertions have been awarded.
+        """
+        is_course_block = (True if block.get('type', False) == 'course' else False)
+        is_chapter_block = (True if block.get('type', False) == 'chapter' else False)
+
+        # Loop through all the chapter blocks.
+        if is_course_block:
+            for child in block.get('children', []):
+                recurse_mark_badge_progress(child)
+
+        # Check to see if a chapter block has BlockEventBadgesConfiguration enabled when block is complete.
+        if is_chapter_block and block.get('complete', False):
+
+            for block_event_badge_config in BlockEventBadgesConfiguration.config_for_block_event(
+                course_id=course_key, event_type='chapter_complete'
+            ):
+                if block.get('block_id', False) == block_event_badge_config.usage_key.block_id and block_event_badge_config.badge_class:
+                    block['badge_progress'] = True
+                    return True
+
+        block['badge_progress'] = False
+        return False
+
     course_key = CourseKey.from_string(course_id)
     course_usage_key = modulestore().make_course_usage_key(course_key)
 
@@ -125,7 +151,26 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
         recurse_mark_scored(course_outline_root_block)
         recurse_num_graded_problems(course_outline_root_block)
         recurse_mark_auth_denial(course_outline_root_block)
+        recurse_mark_badge_progress(course_outline_root_block)
+
     return course_outline_root_block
+
+
+def set_badge_progress_for_blocks(block):
+    """
+    Traverse through the course blocks and tag badge progress.
+
+    """
+    if not block.get('complete'):
+        return None
+    if not block.get('children'):
+        return block
+
+    for child in block['children']:
+        complete_block = set_badge_progress_for_blocks(child)
+        if complete_block:
+            return complete_block
+    return block
 
 
 def get_resume_block(block):
