@@ -511,7 +511,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
     });
 
     EstimatedTimeEditor = AbstractEditor.extend({
-        fieldName: 'start',
+        fieldName: 'estimated_time',
         templateName: 'estimated-time-editor',
         className: 'estimated-time-settings',
         defaultEstimatedTime: null,
@@ -524,7 +524,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         },
 
         getValue: function() {
-            return DateUtils.getDate(this.$('#estimated_time'), this.$('#estimated_time'));
+            return this.$('#estimated_time');
         },
 
         clearValue: function(event) {
@@ -533,13 +533,13 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         },
 
         getRequestData: function() {
-            var newReleaseDate = this.getValue();
-            if (JSON.stringify(newReleaseDate) === JSON.stringify(this.startingReleaseDate)) {
+            var newEstimatedTime = this.getValue();
+            if (JSON.stringify(newEstimatedTime) === JSON.stringify(this.newEstimatedTime)) {
                 return {};
             }
             return {
                 metadata: {
-                    start: newReleaseDate
+                    estimated_time: newEstimatedTime
                 }
             };
         }
@@ -1205,7 +1205,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                     }
                 ];
                 if (xblockInfo.isChapter()) {
-                    tabs[0].editors = [ReleaseDateEditor];
+                    tabs[0].editors = [ReleaseDateEditor, EstimatedTimeEditor];
                     tabs[1].editors = [StaffLockEditor];
                 } else if (xblockInfo.isSequential()) {
                     tabs[0].editors = [ReleaseDateEditor, EstimatedTimeEditor, GradingEditor, DueDateEditor];

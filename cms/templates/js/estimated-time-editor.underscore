@@ -5,7 +5,7 @@
             <label for="estimated_time" class="label"><%- gettext('Estimated Time in HH:MM:SS') %></label>
             <input type="text" id="estimated_time" name="estimated_time"
               value=""
-              placeholder="HH:MM:SS" class="input input-text"/>
+              placeholder="HH:MM:SS" class="time input input-text"/>
         </li>
     </ul>
 
@@ -20,4 +20,3 @@
       </ul>
     <% } %>
 </div>
-<br>
