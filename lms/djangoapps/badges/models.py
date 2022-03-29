@@ -10,7 +10,7 @@ from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imp
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.defaultfilters import slugify
-from django.utils.crypto import get_random_string
+# from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext_noop
@@ -22,6 +22,7 @@ from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys.edx.keys import CourseKey
 
 from lms.djangoapps.badges.utils import deserialize_count_specs
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangolib.markup import HTML, Text
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
 
@@ -81,14 +82,15 @@ class BadgeClass(models.Model):
     @classmethod
     def get_legacy_course_slug(cls, course_key, mode):
         """
-        Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility with the original badge
-        type, awarded on course completion.
-         Slug ought to be deterministic and limited in size so it's not too big for Badgr.
-         Badgr's max slug length is 255.
+        Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility
+        with the original badge type, awarded on course completion. Slug ought to be deterministic
+        and limited in size so it's not too big for Badgr.
+        Badgr's max slug length is 255.
         """
-        # Seven digits should be enough to realistically avoid collisions. That's what git services use.
-        digest = hashlib.sha256(u"{}{}".format(six.text_type(course_key), six.text_type(mode))).hexdigest()[:7]
-        base_slug = slugify(six.text_type(course_key) + u'_{}_'.format(mode))[:248]
+        # Seven digits should be enough to realistically avoid collisions. That's what
+        # git services use.
+        digest = hashlib.sha256(f"{six.text_type(course_key)}{six.text_type(mode)}").hexdigest()[:7]
+        base_slug = slugify(six.text_type(course_key) + '_{mode}_')[:248]
         return base_slug + digest
 
     @classmethod
@@ -387,7 +389,14 @@ class BlockEventBadgesConfiguration(models.Model):
     Contains the assignment of BadgeClass to a specific block (chapter, sequential, etc).
     """
 
-    course_id = CourseKeyField(max_length=255, db_index=True)
+    course = models.ForeignKey(
+        CourseOverview,
+        db_constraint=False,
+        db_index=True,
+        related_name='block_event_badges_configuration',
+        on_delete=models.DO_NOTHING,
+    )
+    # course_id = CourseKeyField(max_length=255, db_index=True)
 
     usage_key = UsageKeyField(
         max_length=255, db_index=True, help_text=_('The course block identifier.')
@@ -412,7 +421,7 @@ class BlockEventBadgesConfiguration(models.Model):
         except cls.DoesNotExist:
             # Fall back to default, if there is one.
             return None
-    
+
     @classmethod
     def get_badgeclass_for_chapter_complete(cls, course_id='', usage_key=''):
         """
