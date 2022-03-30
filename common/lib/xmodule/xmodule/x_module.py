@@ -341,6 +341,12 @@ class XModuleFields:
         scope=Scope.settings,
         default=False
     )
+    override_estimated_time = Boolean(
+        display_name=_("Estimated Time Override"),
+        help=_("Used to determine if estimated time has been overrided for this module by another one above."),
+        scope=Scope.settings,
+        default=False
+    )
 
 
 class XModuleMixin(XModuleFields, XBlock):

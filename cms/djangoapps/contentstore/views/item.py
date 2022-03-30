@@ -1211,6 +1211,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         'display_name': xblock.display_name_with_default,
         'estimated_time': estimated_time,
         'show_estimated_time': xblock.show_estimated_time,
+        'override_estimated_time': xblock.override_estimated_time,
         'category': xblock.category,
         'has_children': xblock.has_children
     }
