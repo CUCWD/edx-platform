@@ -1,5 +1,5 @@
-<h3 class="modal-section-title"><%- gettext('Estimated Time Override') %></h3>
-<div class="modal-section-content has-actions">
+<h3 class="modal-section-title"><%- gettext('Estimated Time') %></h3>
+<div class="modal-section-content has-actions" style="margin-bottom:10px">
     <ul class="list-fields list-input">
         <li class="field field-text field-start-time field-release-time">
             <label for="estimated_time" class="label"><%- gettext('Estimated Time in HH:MM:SS') %></label>
@@ -8,20 +8,20 @@
               placeholder="HH:MM:SS" class="estimated-time input input-text" autocomplete="off"/>
         </li>
         <li>
-            <label for="estimated_time_override" class="label"><%- gettext('Override Estimated Time') %></label>
-            <input type="checkbox" id="estimated_time_override" name="estimated_time_override"
-              value="1" class="estimated-time-override input input-checkbox" autocomplete="off"/>
+            <label for="estimated_time_override" class="label" style="font-weight:normal"
+             title="By checking this box, the value set above won't change on a reindex of the course.">
+                <input type="checkbox" id="estimated_time_override" name="estimated_time_override"
+                value="1" class="estimated-time-override input input-checkbox" autocomplete="off"/>
+                <%- gettext('Override Estimated Time') %>
+            </label>
+        </li>
+        <li>
+            <label for="show_estimated_time" class="label" style="font-weight:normal"
+            title="By checking this box, the estimated time will show up on the learners side.">
+                <input type="checkbox" id="show_estimated_time" name="show_estimated_time"
+                value="1" class="show_estimated_time input input-checkbox" autocomplete="off"/>
+              <%- gettext('Toggle Estimated Time Visibility') %>
+            </label>
         </li>
     </ul>
-
-    <% if (xblockInfo.isSequential()) { %>
-      <ul class="list-actions">
-          <li class="action-item">
-              <a href="#" data-tooltip="<%- gettext('Clear Estimated Time') %>" class="clear-date action-button action-clear">
-                  <span class="icon fa fa-undo" aria-hidden="true"></span>
-                  <span class="sr"><%- gettext('Clear Estimated Time') %></span>
-              </a>
-          </li>
-      </ul>
-    <% } %>
 </div>
