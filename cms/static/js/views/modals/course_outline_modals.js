@@ -525,10 +525,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             BaseDateEditor.prototype.afterRender.call(this);
             this.defaultEstimatedTime = this.model.get('estimated_time');
             this.startOverrideVal = this.model.get('override_estimated_time');
+            this.startVisibilityVal = this.model.get('show_estimated_time');
             this.$('#estimated_time').val(new Date(this.defaultEstimatedTime * 60 * 1000).toISOString().substr(11, 8));
-            if (this.startOverrideVal) {
-                this.$('#estimated_time_override').prop('checked', true);
-            }
+            if (this.startOverrideVal) this.$('#estimated_time_override').prop('checked', true);
+            if (this.startVisibilityVal) this.$('#show_estimated_time').prop('checked', true);
         },
 
         getValue: function() {
@@ -543,13 +543,15 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getRequestData: function() {
             var newEstimatedTime = this.getValue();
             if (JSON.stringify(newEstimatedTime) === JSON.stringify(this.defaultEstimatedTime) 
-                && startOverrideVal === this.$('#estimated_time_override').prop('checked')) {
+                && this.startOverrideVal === this.$('#estimated_time_override').prop('checked')
+                && this.startVisibilityVal === this.$('#show_estimated_time').prop('checked')) {
                 return {};
             }
             return {
                 metadata: {
                     estimated_time: newEstimatedTime,
-                    override_estimated_time: this.$('#estimated_time_override').prop('checked') ? true : false
+                    override_estimated_time: this.$('#estimated_time_override').prop('checked') ? true : false,
+                    show_estimated_time: this.$('#show_estimated_time').prop('checked') ? true : false,
                 }
             };
         }

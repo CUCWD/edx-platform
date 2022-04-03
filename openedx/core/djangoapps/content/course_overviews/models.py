@@ -173,7 +173,9 @@ class CourseOverview(TimeStampedModel):
         except ValueError:
             lowest_passing_grade = None
 
+        print("COURSE: ", course)
         display_name = course.display_name
+        estimated_time = course.estimated_time
         start = course.start
         end = course.end
         max_student_enrollments_allowed = course.max_student_enrollments_allowed
@@ -203,6 +205,7 @@ class CourseOverview(TimeStampedModel):
         course_overview._location = course.location  # lint-amnesty, pylint: disable=protected-access
         course_overview.org = course.location.org
         course_overview.display_name = display_name
+        course_overview.estimated_time = estimated_time
         course_overview.display_number_with_default = course.display_number_with_default
         course_overview.display_org_with_default = course.display_org_with_default
 
