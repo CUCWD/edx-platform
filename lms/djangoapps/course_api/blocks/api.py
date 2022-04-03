@@ -147,6 +147,6 @@ def get_blocks(
         serializer = BlockDictSerializer(blocks, context=serializer_context, many=False)
     else:
         serializer = BlockSerializer(blocks, context=serializer_context, many=True)
-
+    
     # return serialized data
     return serializer.data

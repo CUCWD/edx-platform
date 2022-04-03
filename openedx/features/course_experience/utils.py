@@ -36,7 +36,6 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
         of those children.
         """
         children = block.get('children', [])
-
         for i in range(len(children)):
             child_id = block['children'][i]
             child_detail = populate_children(all_blocks[child_id], all_blocks)
@@ -103,6 +102,7 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
             'due',
             'effort_activities',
             'effort_time',
+            'estimated_time',
             'format',
             'graded',
             'has_scheduled_content',
