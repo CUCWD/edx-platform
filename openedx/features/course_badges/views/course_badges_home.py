@@ -67,7 +67,7 @@ class CourseBadgesHomeFragmentView(EdxFragmentView):
     """
     Fragment view that shows a user's badges for a course.
     """
-    def render_to_fragment(self, request, course_id=None, **kwargs):  # pylint: disable=unused-argument
+    def render_to_fragment(self, request, course_id=None, **kwargs):  # lint-amnesty, pylint: disable=arguments-differ,unused-argument
         """
         Renders the user's course badges as a fragment.
         """

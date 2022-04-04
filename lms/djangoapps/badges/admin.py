@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from lms.djangoapps.badges.exceptions import BlockEventBadgesConfigurationException
 from lms.djangoapps.badges.forms import BlockEventBadgesConfigurationForm
-from lms.djangoapps.badges.models import (  # pylint: disable=syntax-error
+from lms.djangoapps.badges.models import (
     BadgeAssertion,
     BadgeClass,
     CourseCompleteImageConfiguration,
@@ -35,31 +35,31 @@ class CourseIdFilter(admin.SimpleListFilter):
     parameter_name = "course_id"
 
     def __init__(self, request, params, model, model_admin):
-        super(CourseIdFilter, self).__init__(request, params, model, model_admin)
+        super().__init__(request, params, model, model_admin)
         self.unused_parameters = params.copy()
         self.unused_parameters.pop(self.parameter_name, None)
 
-    def value(self):  # pylint: disable=missing-function-docstring
-        value = super(CourseIdFilter, self).value()
+    def value(self):  # lint-amnesty, pylint: disable=missing-function-docstring
+        value = super().value()
         if value == "None" or value is None:
             return None
         else:
             return CourseKey.from_string(value)
 
-    def lookups(self, request, model_admin):  # pylint: disable=unused-argument,missing-function-docstring
+    def lookups(self, request, model_admin):  # lint-amnesty, pylint: disable=unused-argument,missing-function-docstring
         return (
             (overview.id, six.text_type(overview.id)) \
                 for overview in CourseOverview.objects.all().order_by('id')
         )
 
-    def queryset(self, request, queryset):  # pylint: disable=unused-argument,missing-function-docstring
+    def queryset(self, request, queryset):  # lint-amnesty, pylint: disable=unused-argument,missing-function-docstring
         value = self.value()
         if value is None:
             return queryset
         else:
             return queryset.filter(course_id=value)
 
-    def choices(self, changelist):  # pylint: disable=unused-argument,missing-function-docstring
+    def choices(self, changelist):  # lint-amnesty, pylint: disable=unused-argument,missing-function-docstring
         yield {
             'selected': self.value() is None,
             'value': None,
@@ -107,7 +107,7 @@ class BlockEventBadgesConfigurationAdmin(admin.ModelAdmin):
         Define the `request`, so that, the call to locate the course blocks works properly.
         https://stackoverflow.com/questions/727928/django-admin-how-to-access-the-request-object-in-admin-py-for-list-display-met
         """
-        query_set = super(BlockEventBadgesConfigurationAdmin, self).get_queryset(request)
+        query_set = super().get_queryset(request)
         self.request = request
         return query_set
 
@@ -147,13 +147,13 @@ class BlockEventBadgesConfigurationAdmin(admin.ModelAdmin):
             msg = SAVE_BLOCKEVENTBADGESCONFIGURATION_FAILURE_MSG_TPL.format(model='course run')
             messages.add_message(request, messages.ERROR, msg)
 
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form(self, request, obj=None, change=False, **kwargs):  # lint-amnesty, pylint: disable=unused-argument
         """
         Append the `request` into the form.
         https://stackoverflow.com/questions/54150994/django-how-to-set-the-request-in-the-admin-form
         """
-        FooForm = super(BlockEventBadgesConfigurationAdmin, self).get_form(request, obj, **kwargs)  # pylint: disable=invalid-name
-        class RequestFooForm(FooForm):  # pylint: disable=missing-class-docstring
+        FooForm = super().get_form(request, obj, **kwargs)  # lint-amnesty, pylint: disable=invalid-name
+        class RequestFooForm(FooForm):  # lint-amnesty, pylint: disable=missing-class-docstring
             def __new__(cls, *args, **kwargs):
                 # kwargs['request'] = request
                 return FooForm(request, *args, **kwargs)

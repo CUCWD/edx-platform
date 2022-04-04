@@ -71,7 +71,7 @@ class BadgeClass(models.Model):
     mode = models.CharField(max_length=100, default='', blank=True)
     image = models.ImageField(upload_to='badge_classes', validators=[validate_badge_image])
 
-    def __str__(self):
+    def __str__(self):  # lint-amnesty, pylint: disable=invalid-str-returned
         return HTML("Badge '{slug}' for '{issuing_component}' – {course_id} – {mode}").format(
             slug=HTML(self.slug),
             issuing_component=HTML(self.issuing_component),
@@ -166,7 +166,7 @@ class BadgeClass(models.Model):
         self.issuing_component = self.issuing_component and self.issuing_component.lower()
         super().save(*args, **kwargs)
 
-    class Meta:  # pylint: disable=missing-class-docstring
+    class Meta:  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "badges"
         unique_together = (('slug', 'issuing_component', 'course_id'),)
         verbose_name_plural = "Badge Classes"
@@ -216,12 +216,12 @@ class BadgeAssertion(TimeStampedModel):
             return cls.objects.filter(user=user, badge_class__course_id=course_id)
         return cls.objects.filter(user=user)
 
-    class Meta:  # pylint: disable=missing-class-docstring
+    class Meta:  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "badges"
 
 
 # Abstract model doesn't index this, so we have to.
-BadgeAssertion._meta.get_field('created').db_index = True  # pylint: disable=protected-access
+BadgeAssertion._meta.get_field('created').db_index = True  # lint-amnesty, pylint: disable=protected-access
 
 
 class CourseCompleteImageConfiguration(models.Model):
@@ -277,7 +277,7 @@ class CourseCompleteImageConfiguration(models.Model):
             # Fall back to default, if there is one.
             return cls.objects.get(default=True).icon
 
-    class Meta:  # pylint: disable=missing-class-docstring
+    class Meta:  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "badges"
 
 
@@ -380,7 +380,7 @@ class CourseEventBadgesConfiguration(ConfigurationModel):
         if errors:
             raise ValidationError(errors)
 
-    class Meta:  # pylint: disable=missing-class-docstring
+    class Meta:  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "badges"
 
 
@@ -437,6 +437,6 @@ class BlockEventBadgesConfiguration(models.Model):
             # Fall back to default, if there is one.
             return None
 
-    class Meta(object):  # pylint: disable=missing-class-docstring
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "badges"
         unique_together = ('course_id', 'usage_key', 'event_type')

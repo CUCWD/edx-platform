@@ -1061,7 +1061,7 @@ def badges_progress(request, course_id):
     Display the course's dates.html, or 404 if there is no such course.
     Assumes the course_id is in a valid format.
     """
-    from lms.urls import COURSE_DATES_NAME, RESET_COURSE_DEADLINES_NAME
+    from lms.urls import COURSE_DATES_NAME
 
     course_key = CourseKey.from_string(course_id)
     if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
