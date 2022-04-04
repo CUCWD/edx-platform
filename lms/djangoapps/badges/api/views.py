@@ -5,7 +5,6 @@ API views for badges
 import logging
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 from edx_rest_framework_extensions import permissions
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication \
@@ -601,7 +600,7 @@ class UserBadgeProgressListView(BadgeProgressViewMixin, APIView):
         BearerAuthenticationAllowInactiveUser,
         SessionAuthenticationAllowInactiveUser,
     )
-    
+
     permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
 
     def get(self, request, course_id=None, username=None, *args, **kwargs):  # pylint: disable=unused-argument,disable=keyword-arg-before-vararg
@@ -744,6 +743,7 @@ class UserBadgeProgressListView(BadgeProgressViewMixin, APIView):
 
 def _get_course_section_mapping(request, course_id):
     """
+    Return the course block block_order and display_name.
     """
     course_section_mapping = {}
 

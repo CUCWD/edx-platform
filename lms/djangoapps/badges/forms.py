@@ -1,11 +1,14 @@
-# pylint: disable=missing-module-docstring
+"""
+This form allows the administrator to manage friendly block names rather than look at the
+block usage_id value.
+"""
 
 from django import forms
 from django.core.exceptions import ValidationError
 from django.http.request import QueryDict
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ugettext_lazy as _
-from opaque_keys.edx.keys import CourseKey, UsageKey
+from opaque_keys.edx.keys import UsageKey
 
 from lms.djangoapps.badges.models import BlockEventBadgesConfiguration
 from openedx.features.course_experience.utils import get_course_outline_block_tree
@@ -14,7 +17,7 @@ CHAPTER_BLOCK_CHOICES = [
     ('', '---------')
 ]
 
-def load_chapter_block_choices(request, course_id):  # pylint: disable=useless-return
+def load_chapter_block_choices(request, course_id):  # lint-amnesty, pylint: disable=useless-return
     """
     Return choice list for course chapter blocks.
     """
@@ -50,7 +53,7 @@ class BlockEventBadgesConfigurationForm(forms.ModelForm):
     Admin form for adding a block event badges configuration.
     """
 
-    class Meta:  # pylint: disable=missing-class-docstring
+    class Meta:  # lint-amnesty, pylint: disable=missing-class-docstring
         model = BlockEventBadgesConfiguration
         fields = (
             'course',
