@@ -1178,6 +1178,8 @@ PIPELINE['STYLESHEETS'] = {
             'css/vendor/jquery.qtip.min.css',
             'js/vendor/markitup/skins/simple/style.css',
             'js/vendor/markitup/sets/wiki/style.css',
+            'common/css/vendor/owl.carousel.css',
+            'common/css/vendor/owl.theme.default.css',
         ],
         'output_filename': 'css/cms-style-vendor.css',
     },
@@ -1237,6 +1239,14 @@ base_vendor_js = [
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/backbone.js',
     'js/vendor/URI.min.js',
+
+    # Load Owl Carousel
+    'common/js/vendor/owl.carousel.js',
+
+    # Used for Glossary
+    'common/js/vendor/jquery.easytabs.js',
+    'common/js/vendor/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
