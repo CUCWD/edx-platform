@@ -69,7 +69,7 @@ def plugin_settings(settings):
         # .. toggle_use_cases: opt_in
         # .. toggle_creation_date: 2014-10-21
         # .. toggle_tickets: https://github.com/edx/edx-platform/pull/5670
-        'ALLOW_AUTOMATED_SIGNUPS': True,
+        'ALLOW_AUTOMATED_SIGNUPS': False,
 
         # .. toggle_name: FEATURES['CERTIFICATES_INSTRUCTOR_GENERATION']  # lint-amnesty, pylint: disable=annotation-missing-token
         # .. toggle_implementation: DjangoSetting
