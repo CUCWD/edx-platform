@@ -47,6 +47,11 @@ def get_estimated_time(cls, modulestore, structure_key):
     structure = cls._fetch_top_level(modulestore, structure_key)
 
     from xmodule.modulestore.django import modulestore
+    try:
+        import edxval.api as edxval_api
+    except ImportError:
+        edxval_api = None
+    
     for module in structure.get_children(): 
         module_time = datetime.timedelta(0)
 
@@ -69,6 +74,17 @@ def get_estimated_time(cls, modulestore, structure_key):
                     continue
 
                 for xblock in unit.get_children():
+                    # if the xblock is a video, change the estimated time to the video length
+                    if xblock.category == 'video':
+                        print(xblock)
+                        vid_time = 240
+                        vid_url = xblock.youtube_id_1_0
+                        if xblock.edx_video_id != '':
+                            vid_info = edxval_api.get_video_info(vid_url)
+                            vid_time = vid_info.get("duration", 240)
+                        
+                        xblock.estimated_time = datetime.timedelta(seconds=vid_time)
+                    
                     unit_time += xblock.estimated_time
                     modulestore().update_item(xblock, None)
 
