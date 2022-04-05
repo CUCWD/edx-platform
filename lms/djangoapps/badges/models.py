@@ -79,19 +79,19 @@ class BadgeClass(models.Model):
             mode=self.mode
             )
 
-    @classmethod
-    def get_legacy_course_slug(cls, course_key, mode):
-        """
-        Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility
-        with the original badge type, awarded on course completion. Slug ought to be deterministic
-        and limited in size so it's not too big for Badgr.
-        Badgr's max slug length is 255.
-        """
-        # Seven digits should be enough to realistically avoid collisions. That's what
-        # git services use.
-        digest = hashlib.sha256(f"{six.text_type(course_key)}{six.text_type(mode)}").hexdigest()[:7]
-        base_slug = slugify(six.text_type(course_key) + '_{mode}_')[:248]
-        return base_slug + digest
+    # @classmethod
+    # def get_legacy_course_slug(cls, course_key, mode):
+    #     """
+    #     Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility
+    #     with the original badge type, awarded on course completion. Slug ought to be deterministic
+    #     and limited in size so it's not too big for Badgr.
+    #     Badgr's max slug length is 255.
+    #     """
+    #     # Seven digits should be enough to realistically avoid collisions. That's what
+    #     # git services use.
+    #     digest = hashlib.sha256(f"{six.text_type(course_key)}{six.text_type(mode)}").hexdigest()[:7]
+    #     base_slug = slugify(six.text_type(course_key) + '_{mode}_')[:248]
+    #     return base_slug + digest
 
     @classmethod
     def get_badge_class(
@@ -124,7 +124,7 @@ class BadgeClass(models.Model):
             if not create:
                 return None
         badge_class = cls(
-            slug=cls.get_legacy_course_slug(course_key=course_id, mode=mode),
+            slug=slug,
             issuing_component=(issuing_component if issuing_component else ''),
             display_name=display_name,
             course_id=course_id,

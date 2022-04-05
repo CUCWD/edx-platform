@@ -1,11 +1,16 @@
 ## mako
 
 <%page expression_filter="h"/>
-
 <%namespace name='static' file='../static_content.html'/>
 
 <%!
-from openedx.core.djangolib.js_utils import dump_js_escaped_json, js_escaped_string
+import json
+
+from django.conf import settings
+from django.utils.translation import ugettext as _
+from django.template.defaultfilters import escapejs
+
+from openedx.core.djangolib.markup import strip_all_tags_but_br
 %>
 
 
@@ -16,22 +21,22 @@ from openedx.core.djangolib.js_utils import dump_js_escaped_json, js_escaped_str
 
         <%static:badgesfrontend entry="progress">
             {
-                "lang": "${language_preference | n, js_escaped_string}",
+                "lang": "${language_preference | n, strip_all_tags_but_br}",
                 "course": {
-                    "id": "${course.id | n, js_escaped_string}",
-                    "name": "${course.display_name_with_default | n, js_escaped_string}",
-                    "url_name": "${course.location.name | n, js_escaped_string}",
-                    "org": "${course.location.org | n, js_escaped_string}",
-                    "num": "${course.location.course | n, js_escaped_string}",
-                    "display_course_number": "${course.display_coursenumber | n, js_escaped_string}",
-                    "revision": "${course.location.revision | n, js_escaped_string}"
+                    "id": "${course.id | n, strip_all_tags_but_br}",
+                    "name": "${course.display_name_with_default | n, strip_all_tags_but_br}",
+                    "url_name": "${course.location.name | n, strip_all_tags_but_br}",
+                    "org": "${course.location.org | n, strip_all_tags_but_br}",
+                    "num": "${course.location.course | n, strip_all_tags_but_br}",
+                    "display_course_number": "${course.display_coursenumber | n, strip_all_tags_but_br}",
+                    "revision": "${course.location.revision | n, strip_all_tags_but_br}"
                 },
                 "user": {
-                    "username": "${user.username | n, js_escaped_string}",
-                    "email": "${user.email | n, js_escaped_string}",
-                    "is_staff": "${user.is_staff | n, js_escaped_string}",
-                    "is_superuser": "${user.is_superuser | n, js_escaped_string}",
-                    "is_authenticated": "${user.is_authenticated | n, js_escaped_string}"
+                    "username": "${user.username | n, strip_all_tags_but_br}",
+                    "email": "${user.email | n, strip_all_tags_but_br}",
+                    "is_staff": "${user.is_staff | n, strip_all_tags_but_br}",
+                    "is_superuser": "${user.is_superuser | n, strip_all_tags_but_br}",
+                    "is_authenticated": "${user.is_authenticated | n, strip_all_tags_but_br}"
                 }
             }
         </%static:badgesfrontend>

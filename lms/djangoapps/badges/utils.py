@@ -7,7 +7,7 @@ from django.conf import settings
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 
-def site_prefix(org):
+def site_prefix(org=None):
     """
     Get the prefix for the site URL-- protocol and server name.
     """
