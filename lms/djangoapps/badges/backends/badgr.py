@@ -120,7 +120,7 @@ class BadgrBackend(BadgeBackend):
         content_type, __ = mimetypes.guess_type(image.name)
         if not content_type:
             raise ValueError(
-                "Could not determine content-type of image! Make sure it is a properly named .png file. "  # lint-amnesty, pylint: disable=line-too-long,consider-using-f-string,bad-option-value
+                "Could not determine content-type of image! Make sure it is a properly named .png file. "
                 "Filename was: {}".format(image.name)
             )
         with open(image.path, 'rb') as image_file:

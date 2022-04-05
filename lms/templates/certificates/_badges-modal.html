@@ -5,12 +5,6 @@
 <%!
 from django.utils.translation import ugettext as _
 from openedx.core.djangolib.js_utils import dump_js_escaped_json, js_escaped_string
-
-def escapeToJS(text):
-    """
-    Handles escaping from Python value with wrapping " to make a string within Javascript.
-    """
-    return '"' + text + '"'
 %>
 
 
@@ -71,8 +65,8 @@ def escapeToJS(text):
                         <p id="badge-details-issued-date">
                             <script type="text/javascript">
                                 $(document).ready(function() {
-                                   issuedOnDate = moment( ${_( badge_assertion.get('issuedOn') ) | n,escapeToJS } ).format("MMM DD, YYYY");
-                                   $("#badge-details-issued-date").html(issuedOnDate);
+                                   var issuedOnDate = moment( "${badge_assertion.get('issuedOn') | n, js_escaped_string }" ).format("MMM DD, YYYY");
+                                   $("#badge-details-issued-date").text(issuedOnDate);
                                 });
                             </script>
                         </p>
@@ -91,7 +85,7 @@ def escapeToJS(text):
                               <script type="text/javascript">
                                   $(document).ready(function() {
                                       var converter = new Markdown.Converter();
-                                      $("#badge-details-criteria").html(converter.makeHtml( ${_( badge_class.get('criteria') ) | n,escapeToJS } ));
+                                      $("#badge-details-criteria").html(converter.makeHtml( "${badge_class.get('criteria') | n, js_escaped_string }" ));
                                   });
                               </script>
                           </p>
