@@ -17,7 +17,7 @@
         </li>
         <li>
             <label for="show_estimated_time" class="label" style="font-weight:normal"
-            title="By checking this box, the estimated time will show up on the learners side.">
+            title="By checking this box, the estimated time will be displayed for this component.">
                 <input type="checkbox" id="show_estimated_time" name="show_estimated_time"
                 value="1" class="show_estimated_time input input-checkbox" autocomplete="off"/>
               <%- gettext('Toggle Estimated Time Visibility') %>
