@@ -9,7 +9,8 @@ on:
 
 jobs:
   run-tests:
-    runs-on: [ self-hosted ]
+    if: github.repository == 'openedx/edx-platform' || github.repository == 'edx/edx-platform-private'
+    runs-on: [ edx-platform-runner ]
     strategy:
       matrix:
         python-version: ['3.8']
@@ -54,24 +55,41 @@ jobs:
           sudo chmod -R a+rw /data/db
           mongod &
 
-      - name: set settings path
-        run: |
-          echo "settings_path=$(python scripts/unit_test_shards_parser.py --shard-name=${{ matrix.shard_name }} --output settings )" >> $GITHUB_ENV
-
-#      - name: set pytest randomly option
-#        run: |
-#          echo "pytest_randomly_option=$(if [ '${{ env.module_name }}' = 'cms' ] || [ '${{ env.module_name }}' = 'common' ]; then echo '-p no:randomly'; else echo '' ; fi)" >> $GITHUB_ENV
-
       - name: install requirements
         run: |
           sudo pip install -r requirements/pip.txt
           sudo pip install -r requirements/edx/testing.txt
           sudo pip install "django~=${{ matrix.django-version }}.0"
 
-      - name: get unit tests for shard
-        run: |
-          echo "unit_test_paths=$(python scripts/unit_test_shards_parser.py --shard-name=${{ matrix.shard_name }} )" >> $GITHUB_ENV
+      - name: Setup and run tests
+        uses: ./.github/actions/unit-tests
 
-      - name: run tests
+  compile-warnings-report:
+    runs-on: [ edx-platform-runner ]
+    needs: [ run-tests ]
+    steps:
+      - name: sync directory owner
+        run: sudo chown runner:runner -R .*
+      - uses: actions/checkout@v2
+      - name: collect pytest warnings files
+        uses: actions/download-artifact@v2
+        with:
+          name: pytest-warnings-json
+          path: test_root/log
+
+      - name: display structure of downloaded files
+        run: ls -la test_root/log
+
+      - name: compile warnings report
         run: |
-          python -Wd -m pytest -p no:randomly --ds=${{ env.settings_path }} ${{ env.unit_test_paths }}
+          python openedx/core/process_warnings.py --dir-path test_root/log --html-path reports/pytest_warnings/warning_report_all.html
+
+      - name: save warning report
+        if: success()
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest-warning-report-html
+          path: |
+            reports/pytest_warnings/warning_report_all.html
+
+
