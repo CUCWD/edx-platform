@@ -85,6 +85,16 @@ def get_estimated_time(cls, modulestore, structure_key):
                         
                         xblock.estimated_time = datetime.timedelta(seconds=vid_time)
                     
+                    # if the xblock is a drag and drop change the estimated time to 5 minutes
+                    if xblock.category == 'drag-and-drop-v2' and xblock.override_estimated_time == False \
+                    and xblock.estimated_time == datetime.timedelta(minutes=1):
+                        xblock.estimated_time = datetime.timedelta(minutes=5)
+
+                        # if the block is open response change the estimated time to 10 minutes
+                    if xblock.category == 'openassessment' and xblock.override_estimated_time == False \
+                    and xblock.estimated_time == datetime.timedelta(minutes=1):
+                        xblock.estimated_time = datetime.timedelta(minutes=10)
+                    
                     unit_time += xblock.estimated_time
                     modulestore().update_item(xblock, None)
 
