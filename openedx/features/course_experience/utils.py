@@ -103,6 +103,7 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
             'effort_activities',
             'effort_time',
             'estimated_time',
+            'show_estimated_time',
             'format',
             'graded',
             'has_scheduled_content',

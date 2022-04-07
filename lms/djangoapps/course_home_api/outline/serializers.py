@@ -56,7 +56,7 @@ class CourseBlockSerializer(serializers.Serializer):
                 'resume_block': block.get('resume_block', False),
                 'type': block_type,
                 'has_scheduled_content': block.get('has_scheduled_content'),
-                'estimated_time': block.get('estimated_time'),
+                'show_estimated_time': block.get('show_estimated_time'),
             },
         }
         for child in children:

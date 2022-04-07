@@ -181,7 +181,7 @@ if (is_proctored_exam) {
         </div>
     </div>
     <div class="<%- xblockType %>-status">
-        <% if (xblockInfo.get('estimated_time') !=null) { %>
+        <% if (xblockInfo.get('estimated_time') !=null && xblockInfo.get('show_estimated_time') !=false)  { %>
                 <%- gettext('Estimated Time To Complete:') %>
                 <%- xblockInfo.get('estimated_time') %> 
                 <% if (xblockInfo.get('estimated_time')==1) %> <%- gettext('minute') %>

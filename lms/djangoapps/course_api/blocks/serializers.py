@@ -49,6 +49,7 @@ SUPPORTED_FIELDS = [
     SupportedFieldType('effort_activities'),
     SupportedFieldType('effort_time'),
     SupportedFieldType('estimated_time', default_value=''),
+    SupportedFieldType('show_estimated_time', default_value=''),
     SupportedFieldType('graded'),
     SupportedFieldType('format'),
     SupportedFieldType('start'),
@@ -96,6 +97,7 @@ SUPPORTED_FIELDS = [
 FIELDS_ALLOWED_IN_AUTH_DENIED_CONTENT = [
     "display_name",
     "estimated_time"
+    "show_estimated_time"
     "block_id",
     "student_view_url",
     "student_view_multi_device",

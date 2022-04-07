@@ -67,14 +67,23 @@ def get_estimated_time(cls, modulestore, structure_key):
                 for xblock in unit.get_children():
                     # if the xblock is a video, change the estimated time to the video length
                     if xblock.category == 'video':
-                        print(xblock)
                         vid_time = 240
-                        vid_url = xblock.youtube_id_1_0
+                        vid_url = xblock.edx_video_id
                         if xblock.edx_video_id != '':
                             vid_info = edxval_api.get_video_info(vid_url)
                             vid_time = vid_info.get("duration", 240)
                         
                         xblock.estimated_time = datetime.timedelta(seconds=vid_time)
+                    
+                    # if the xblock is a drag and drop change the estimated time to 5 minutes
+                    if xblock.category == 'drag-and-drop-v2' and xblock.override_estimated_time == False \
+                    and xblock.estimated_time == datetime.timedelta(minutes=1):
+                        xblock.estimated_time = datetime.timedelta(minutes=5)
+
+                        # if the block is open response change the estimated time to 10 minutes
+                    if xblock.category == 'openassessment' and xblock.override_estimated_time == False \
+                    and xblock.estimated_time == datetime.timedelta(minutes=1):
+                        xblock.estimated_time = datetime.timedelta(minutes=10)
                     
                     unit_time += xblock.estimated_time
                     modulestore().update_item(xblock, None)
