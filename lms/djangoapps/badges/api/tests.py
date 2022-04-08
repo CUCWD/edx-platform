@@ -74,7 +74,7 @@ class UserAssertionTestCase(UrlResetMixin, ModuleStoreTestCase, ApiTestCase):
             return RandomBadgeClassFactory.create(
                 course_id=self.course.location.course_key,
                 **kwargs
-                )
+            )
         return RandomBadgeClassFactory.create(**kwargs)
 
     def get_qs_args(self, check_course, wildcard, badge_class):
@@ -105,7 +105,7 @@ class TestUserBadgeAssertions(UserAssertionTestCase):
         BadgeAssertionFactory(
             user=self.user,
             badge_class=BadgeClassFactory(course_id=self.course.location.course_key)
-            )
+        )
         # Should not be included.
         for dummy in range(3):
             self.create_badge_class(False)
@@ -146,7 +146,7 @@ class TestUserCourseBadgeAssertions(UserAssertionTestCase):
         unused_course = CourseFactory.create()
         response = self.get_json(
             self.url(), data={'course_id': str(unused_course.location.course_key)}
-            )
+        )
         assert len(response['results']) == 0
 
     def test_assertion_structure(self):
@@ -200,7 +200,7 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
         assert len(response['results']) == expected_length
         unused_class = self.create_badge_class(
             check_course, slug='unused_slug', issuing_component='unused_component'
-            )
+        )
 
         response = self.get_json(
             self.url(),
@@ -228,7 +228,7 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
         """
         self.check_badge_class_assertion(
             check_course, wildcard, self.create_badge_class(check_course)
-            )
+        )
 
     @unpack
     @data((False, False), (True, False), (True, True))

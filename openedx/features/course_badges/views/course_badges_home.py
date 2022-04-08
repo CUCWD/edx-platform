@@ -48,7 +48,7 @@ class CourseBadgesHomeView(View):
         badges_fragment = CourseBadgesHomeFragmentView().render_to_fragment(
             request,
             course_id=course_id
-            )
+        )
 
         # Render the course badges page
         context = {
@@ -82,7 +82,7 @@ class CourseBadgesHomeFragmentView(EdxFragmentView):
             'badges_api_url': reverse(
                 "badges_api:badges-user-assertions",
                 kwargs={'username': request.user}
-                ),
+            ),
             'language_preference': language,
         }
         html = render_to_string('course_badges/course-badges-home-fragment.html', context)

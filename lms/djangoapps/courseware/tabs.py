@@ -371,6 +371,7 @@ class BadgesTab(EnrolledTab):
             return course_fields.issue_badges
 
         return False
+
     @classmethod
     def is_feature_enabled(cls):
         """

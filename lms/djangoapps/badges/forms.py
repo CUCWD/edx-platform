@@ -17,6 +17,7 @@ CHAPTER_BLOCK_CHOICES = [
     ('', '---------')
 ]
 
+
 def load_chapter_block_choices(request, course_id):  # lint-amnesty, pylint: disable=useless-return
     """
     Return choice list for course chapter blocks.
@@ -37,6 +38,7 @@ def load_chapter_block_choices(request, course_id):  # lint-amnesty, pylint: dis
 
     return chapter_options
 
+
 def validate_usage_id(value):
     """
     Validates that a string is lowercase.
@@ -44,8 +46,10 @@ def validate_usage_id(value):
     Raises: ValidationError
     """
     if value.strip() and not isinstance(UsageKey.from_string(value), UsageKey):
-        raise ValidationError(_("This field may not be blank and must reflect "
-            "UsageKey data (e.g. 'block-v1:')"))
+        raise ValidationError(_(
+            "This field may not be blank and must reflect "
+            "UsageKey data (e.g. 'block-v1:')"
+        ))
 
 
 class BlockEventBadgesConfigurationForm(forms.ModelForm):

@@ -11,6 +11,7 @@ from lms.djangoapps.badges.utils import requires_badges_enabled  # pylint: disab
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
+
 @requires_badges_enabled
 def award_section_badge(user, course_id, section_id):
     """
@@ -25,7 +26,7 @@ def award_section_badge(user, course_id, section_id):
     badge_class = BlockEventBadgesConfiguration.get_badgeclass_for_chapter_complete(
         CourseKey.from_string(course_id),
         UsageKey.from_string(section_id)
-        )
+    )
 
     # Continue without awarding badge if no configuration is found in BlockEventBadgesConfiguration
     if not badge_class:

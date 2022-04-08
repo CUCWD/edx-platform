@@ -54,7 +54,7 @@ class CourseBadgesProgressView(View):
         badges_fragment = CourseBadgesProgressFragmentView().render_to_fragment(
             request,
             course_id=course_id
-            )
+        )
 
         # Render the course badges page
         context = {
@@ -88,7 +88,7 @@ class CourseBadgesProgressFragmentView(EdxFragmentView):
             'badges_api_url': reverse(
                 "badges_api:badges-user-assertions",
                 kwargs={'username': request.user}
-                ),
+            ),
             'language_preference': language,
             'user': User.objects.get(id=request.user.id)
         }

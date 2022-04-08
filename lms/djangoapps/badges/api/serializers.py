@@ -24,7 +24,7 @@ class BadgeClassSerializer(serializers.ModelSerializer):
             'description',
             'criteria',
             'image_url'
-            )
+        )
 
 
 class BadgeAssertionSerializer(serializers.ModelSerializer):
@@ -40,7 +40,7 @@ class BadgeAssertionSerializer(serializers.ModelSerializer):
             'image_url',
             'assertion_url',
             'created'
-            )
+        )
 
 
 class BlockEventBadgesConfigurationSerializer(serializers.ModelSerializer):
@@ -56,4 +56,4 @@ class BlockEventBadgesConfigurationSerializer(serializers.ModelSerializer):
             'usage_key',
             'badge_class',
             'event_type'
-            )
+        )

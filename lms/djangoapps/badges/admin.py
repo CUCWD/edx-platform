@@ -25,6 +25,7 @@ from opaque_keys.edx.keys import CourseKey
 
 logger = logging.getLogger(__name__)
 
+
 class CourseIdFilter(admin.SimpleListFilter):
     """
     Filter schedules to by course id using a dropdown list.
@@ -48,8 +49,8 @@ class CourseIdFilter(admin.SimpleListFilter):
 
     def lookups(self, request, model_admin):  # lint-amnesty, pylint: disable=unused-argument,missing-function-docstring
         return (
-            (overview.id, six.text_type(overview.id)) \
-                for overview in CourseOverview.objects.all().order_by('id')
+            (overview.id, six.text_type(overview.id))
+            for overview in CourseOverview.objects.all().order_by('id')
         )
 
     def queryset(self, request, queryset):  # lint-amnesty, pylint: disable=unused-argument,missing-function-docstring
@@ -82,6 +83,8 @@ SAVE_BLOCKEVENTBADGESCONFIGURATION_FAILURE_MSG_TPL = _(
     'An error occurred while saving the {model} to the BlockEventBadgesConfigurationAdmin. '
     'Please try again. If the error persists, please contact the Engineering Team.'
 )
+
+
 @admin.register(BlockEventBadgesConfiguration)
 class BlockEventBadgesConfigurationAdmin(admin.ModelAdmin):
     """
@@ -119,7 +122,7 @@ class BlockEventBadgesConfigurationAdmin(admin.ModelAdmin):
         if self.request:
             course_blocks = get_course_outline_block_tree(
                 self.request, str(obj.course_id), self.request.user
-                )
+            )
 
             for block in course_blocks.get('children'):
 
@@ -141,8 +144,10 @@ class BlockEventBadgesConfigurationAdmin(admin.ModelAdmin):
         try:
             super().save_model(request, obj, form, change)
         except BlockEventBadgesConfigurationException:
-            logger.exception('An error occurred while saving BlockEventBadgesConfiguration'
-                ' in Django Admin for course run [%s].', obj.key)
+            logger.exception(
+                'An error occurred while saving BlockEventBadgesConfiguration'
+                ' in Django Admin for course run [%s].', obj.key
+            )
 
             msg = SAVE_BLOCKEVENTBADGESCONFIGURATION_FAILURE_MSG_TPL.format(model='course run')
             messages.add_message(request, messages.ERROR, msg)
@@ -153,6 +158,7 @@ class BlockEventBadgesConfigurationAdmin(admin.ModelAdmin):
         https://stackoverflow.com/questions/54150994/django-how-to-set-the-request-in-the-admin-form
         """
         FooForm = super().get_form(request, obj, **kwargs)  # lint-amnesty, pylint: disable=invalid-name
+
         class RequestFooForm(FooForm):  # lint-amnesty, pylint: disable=missing-class-docstring
             def __new__(cls, *args, **kwargs):
                 # kwargs['request'] = request

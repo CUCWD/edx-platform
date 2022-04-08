@@ -56,7 +56,7 @@ class BadgrBackend(BadgeBackend):
         """
         issuer_slug = configuration_helpers.get_value(
             "BADGR_ISSUER_SLUG", settings.BADGR_ISSUER_SLUG
-            )
+        )
         return f"{settings.BADGR_BASE_URL}/v2/issuers/{issuer_slug}"
 
     @lazy
@@ -158,7 +158,7 @@ class BadgrBackend(BadgeBackend):
                     badge_class.slug,
                     result.json(),
                     excep
-                    )
+                )
 
     def _send_assertion_created_event(self, user, assertion):
         """
@@ -194,11 +194,9 @@ class BadgrBackend(BadgeBackend):
 
         if evidence_url:
             data.update({
-              "evidence": [
-                  {
+                "evidence": [{
                     "url": evidence_url
-                  }
-              ],
+                }],
             })
 
         response = requests.post(
@@ -227,7 +225,7 @@ class BadgrBackend(BadgeBackend):
                 user.email,
                 response.text,
                 exc
-                )
+            )
 
     @staticmethod
     def _fernet_setup():
@@ -343,7 +341,7 @@ class BadgrBackend(BadgeBackend):
             self._badge_url(slug),
             headers=self._get_headers(),
             timeout=settings.BADGR_TIMEOUT
-            )
+        )
         if response.status_code != 200:
             self._create_badge(badge_class)
         BadgrBackend.badges.append(slug)

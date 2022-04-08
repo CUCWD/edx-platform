@@ -80,7 +80,7 @@ def evidence_url(user_id, course_key):
     from lms.djangoapps.certificates.models import GeneratedCertificate  # lint-amnesty, pylint: disable=import-outside-toplevel
     cert = GeneratedCertificate.eligible_certificates.get(
         user__id=int(user_id), course_id=course_id
-        )
+    )
     return site_prefix(course_key.org) + reverse(
         'certificates:render_cert_by_uuid', kwargs={'certificate_uuid': cert.verify_uuid}) + '?evidence_visit=1'  # lint-amnesty, pylint: disable=line-too-long
 
