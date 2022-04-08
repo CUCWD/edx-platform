@@ -3,8 +3,8 @@ Views to show a course's badges.
 """
 
 import six
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from django.template.context_processors import csrf
 from django.urls import reverse
 from django.template.loader import render_to_string
@@ -25,6 +25,7 @@ from openedx.features.course_experience import default_course_url_name
 
 from ..handlers import award_section_badges
 
+User = get_user_model()
 
 class CourseBadgesProgressView(View):
     """

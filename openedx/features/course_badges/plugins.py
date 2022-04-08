@@ -2,13 +2,13 @@
 Platform plugins to support course bookmarks.
 """
 
-from lms.djangoapps.badges.utils import badges_enabled
-from django.conf import settings
+
+# from django.conf import settings
 from django.utils.translation import ugettext_noop
 
+from lms.djangoapps.badges.utils import badges_enabled
 from lms.djangoapps.courseware.tabs import EnrolledTab
 from lms.djangoapps.courseware.courses import get_course_by_id
-
 
 class CourseBadgesTab(EnrolledTab):
     """
@@ -41,9 +41,10 @@ class CourseBadgesTab(EnrolledTab):
         if user and not user.is_authenticated:
             return False
 
-        # Retrieve the Advanced Settings Issue Open Badges (`issue_badges`) field from the CourseFields instance.
-        # CourseDescriptorWithMixins will be `course` instance when called from the `^/api/courseware/course/` url.
-        # CourseOverview will be `course` instance when called from the `^courses/{}/courseware` url.
+        # Retrieve the Advanced Settings Issue Open Badges (`issue_badges`) field from the
+        # CourseFields instance. CourseDescriptorWithMixins will be `course` instance when called
+        # from the `^/api/courseware/course/` url. CourseOverview will be `course` instance when
+        # called from the `^courses/{}/courseware` url.
         if course.id:
             course_fields = get_course_by_id(course.id)
             return course_fields.issue_badges
