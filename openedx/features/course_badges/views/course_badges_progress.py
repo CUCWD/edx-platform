@@ -27,6 +27,7 @@ from ..handlers import award_section_badges
 
 User = get_user_model()
 
+
 class CourseBadgesProgressView(View):
     """
     View showing the user's badges for a course.
