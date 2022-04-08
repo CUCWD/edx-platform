@@ -9,6 +9,7 @@ from django.utils.translation import ugettext_noop
 from lms.djangoapps.courseware.tabs import EnrolledTab
 from lms.djangoapps.courseware.courses import get_course_by_id
 
+
 class CourseBadgesTab(EnrolledTab):
     """
     The course bookmarks tool.
@@ -48,6 +49,7 @@ class CourseBadgesTab(EnrolledTab):
             return course_fields.issue_badges
 
         return False
+
 
 def is_feature_enabled():
     """

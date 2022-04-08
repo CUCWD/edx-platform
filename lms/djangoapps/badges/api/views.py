@@ -44,12 +44,14 @@ USER_MODEL = get_user_model()
 
 log = logging.getLogger(__name__)
 
+
 class InvalidCourseKeyError(APIException):
     """
     Raised the course key given isn't valid.
     """
     status_code = 400
     default_detail = "The course key provided was invalid."
+
 
 @view_auth_classes()
 class UserBadgeAssertions(generics.ListAPIView):
@@ -161,9 +163,10 @@ class UserBadgeAssertions(generics.ListAPIView):
                 badge_class__slug=self.request.query_params['slug'],
                 badge_class__issuing_component=self.request.query_params.get(
                     'issuing_component', ''
-                    )
+                )
             )
         return queryset
+
 
 @view_auth_classes()
 class BadgeProgressViewMixin(DeveloperErrorViewMixin):
@@ -201,7 +204,7 @@ class BadgeProgressViewMixin(DeveloperErrorViewMixin):
             if block_event_badge_config.badge_class:
                 user_course_assertions = BadgeAssertion.assertions_for_user(
                     progress_user, course_id=course_key
-                    )
+                )
                 for assertion in user_course_assertions:
                     if assertion.badge_class == block_event_badge_config.badge_class:
                         block_event_assertion = assertion
@@ -224,7 +227,7 @@ class BadgeProgressViewMixin(DeveloperErrorViewMixin):
         # paged_enrollments = self.paginator.paginate_queryset(
         #     enrollments_in_course, self.request, view=self
         # )
-        enrolled_users = (enrollment.user for enrollment in enrollments_in_course) # paged_enrollments)  pylint: disable=line-too-long
+        enrolled_users = (enrollment.user for enrollment in enrollments_in_course)  # paged_enrollments)  pylint: disable=line-too-long
 
         for user in enrolled_users:
             progress_response.append({
@@ -286,59 +289,57 @@ class BadgeProgressViewMixin(DeveloperErrorViewMixin):
         Return JSON response for course block id based on configuration and assertion information.
         """
         return {
-            "course_id": CourseKeyFieldSerializer(source='course_key').\
-                to_representation(course_key),
-            "block_id": UsageKeyFieldSerializer(source='usage_key').\
-                to_representation(block_event_badge_config.usage_key),
+            "course_id": CourseKeyFieldSerializer(source='course_key').
+            to_representation(course_key),
+            "block_id": UsageKeyFieldSerializer(source='usage_key').
+            to_representation(block_event_badge_config.usage_key),
             "block_display_name": self.course_section_mapping.get(
-                UsageKeyFieldSerializer(source='usage_key').\
-                    to_representation(block_event_badge_config.usage_key), ''
-                    ).get('display_name', ''),
+                UsageKeyFieldSerializer(source='usage_key').
+                to_representation(block_event_badge_config.usage_key), '').get('display_name', ''),
             "block_order": self.course_section_mapping.get(
-                UsageKeyFieldSerializer(source='usage_key').\
-                    to_representation(block_event_badge_config.usage_key), '')\
-                        .get('block_order', ''),
+                UsageKeyFieldSerializer(source='usage_key').
+                    to_representation(block_event_badge_config.usage_key), '').get('block_order', ''),
             "event_type": block_event_badge_config.event_type,
             "badge_class": {
                 "slug": block_event_badge_config.badge_class.slug,
                 "issuing_component": block_event_badge_config.badge_class.issuing_component,
                 "display_name": block_event_badge_config.badge_class.display_name,
-                "course_id": CourseKeyFieldSerializer(source='course_key').\
+                "course_id": CourseKeyFieldSerializer(source='course_key').
                     to_representation(block_event_badge_config.badge_class.course_id),
                 "description": block_event_badge_config.badge_class.description,
                 "criteria": block_event_badge_config.badge_class.criteria,
-                "image": branding_api.get_base_url(self.request.is_secure()) + \
-                    serializers.ImageField(source='image').\
+                "image": branding_api.get_base_url(self.request.is_secure()) +
+                    serializers.ImageField(source='image').
                         to_representation(block_event_badge_config.badge_class.image),
             },
             "assertion": {
-                "issuedOn": (block_event_assertion.data.get('issuedOn', '') \
-                    if hasattr(block_event_assertion, 'data') else ""),
-                "expires": (block_event_assertion.data.get('expires', '') \
-                    if hasattr(block_event_assertion, 'data') else ""),
-                "revoked": (block_event_assertion.data.get('revoked', False) \
-                    if hasattr(block_event_assertion, 'data') else False),
-                "image_url": (block_event_assertion.image_url \
-                    if block_event_assertion else ""),
-                "assertion_url": (block_event_assertion.assertion_url \
-                    if block_event_assertion else ""),
-                "entityId": (block_event_assertion.data.get('entityId', '') \
-                    if hasattr(block_event_assertion, 'data') else ""),
+                "issuedOn": (block_event_assertion.data.get('issuedOn', '')
+                             if hasattr(block_event_assertion, 'data') else ""),
+                "expires": (block_event_assertion.data.get('expires', '')
+                            if hasattr(block_event_assertion, 'data') else ""),
+                "revoked": (block_event_assertion.data.get('revoked', False)
+                            if hasattr(block_event_assertion, 'data') else False),
+                "image_url": (block_event_assertion.image_url
+                              if block_event_assertion else ""),
+                "assertion_url": (block_event_assertion.assertion_url
+                                  if block_event_assertion else ""),
+                "entityId": (block_event_assertion.data.get('entityId', '')
+                             if hasattr(block_event_assertion, 'data') else ""),
                 "recipient": {
-                    "plaintextIdentity": (block_event_assertion.user.email \
-                        if block_event_assertion else ""),
+                    "plaintextIdentity": (block_event_assertion.user.email
+                                          if block_event_assertion else ""),
                 },
-                "issuer": (block_event_assertion.assertion_issuer() \
-                    if block_event_assertion else {
-                    "entityType": "",
-                    "entityId": "",
-                    "openBadgeId": "",
-                    "name": "",
-                    "image": "",
-                    "email": "",
-                    "description": "",
-                    "url": "",
-                }),
+                "issuer": (block_event_assertion.assertion_issuer()
+                           if block_event_assertion else {
+                           "entityType": "",
+                           "entityId": "",
+                           "openBadgeId": "",
+                           "name": "",
+                           "image": "",
+                           "email": "",
+                           "description": "",
+                           "url": "",
+                           }),
             },
         }
 
@@ -349,6 +350,7 @@ class BadgeProgressViewMixin(DeveloperErrorViewMixin):
     #     super(BadgeProgressViewMixin, self).perform_authentication(request)
     #     if request.user.is_anonymous():
     #         raise AuthenticationFailed
+
 
 @view_auth_classes()
 class CourseBadgeProgressListView(BadgeProgressViewMixin, APIView):
@@ -500,6 +502,7 @@ class CourseBadgeProgressListView(BadgeProgressViewMixin, APIView):
         # else:
         # If no username passed, get paginated list of grades for all users in course
         return Response(self._get_course_badge_progress(course_key))
+
 
 @view_auth_classes()
 class UserBadgeProgressListView(BadgeProgressViewMixin, APIView):
@@ -741,6 +744,7 @@ class UserBadgeProgressListView(BadgeProgressViewMixin, APIView):
         #         }
         #     )
 
+
 def _get_course_section_mapping(request, course_id):
     """
     Return the course block block_order and display_name.
@@ -761,11 +765,10 @@ def _get_course_section_mapping(request, course_id):
     for section in course_sections:
         course_section_mapping.update(
             {
-                section['id']:
-                    {
-                        'block_order': course_section_mapping_id,
-                        'display_name': section['display_name']
-                    }
+                section['id']: {
+                    'block_order': course_section_mapping_id,
+                    'display_name': section['display_name']
+                }
             })
 
         course_section_mapping_id += 1

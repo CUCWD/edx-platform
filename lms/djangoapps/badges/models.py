@@ -28,6 +28,7 @@ from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disa
 
 import six
 
+
 def validate_badge_image(image):
     """
     Validates that a particular image is small enough to be a badge and square.
@@ -62,7 +63,7 @@ class BadgeClass(models.Model):
     badgr_server_slug = models.SlugField(max_length=255, default='', blank=True)
     issuing_component = models.SlugField(
         max_length=50, default='', blank=True, validators=[validate_lowercase]
-        )
+    )
     display_name = models.CharField(max_length=255)
     course_id = CourseKeyField(max_length=255, blank=True, default=None)
     description = models.TextField()
@@ -77,7 +78,7 @@ class BadgeClass(models.Model):
             issuing_component=HTML(self.issuing_component),
             course_id=HTML(six.text_type(self.course_id)),
             mode=self.mode
-            )
+        )
 
     # @classmethod
     # def get_legacy_course_slug(cls, course_key, mode):
@@ -119,7 +120,7 @@ class BadgeClass(models.Model):
         try:
             return cls.objects.get(
                 slug=slug, issuing_component=issuing_component, course_id=course_id
-                )
+            )
         except cls.DoesNotExist:
             if not create:
                 return None
@@ -263,7 +264,7 @@ class CourseCompleteImageConfiguration(models.Model):
         Make sure there's not more than one default.
         """
         if self.default and \
-            CourseCompleteImageConfiguration.objects.filter(default=True).exclude(id=self.id):
+                CourseCompleteImageConfiguration.objects.filter(default=True).exclude(id=self.id):
             raise ValidationError(_("There can be only one default image."))
 
     @classmethod
@@ -400,7 +401,7 @@ class BlockEventBadgesConfiguration(models.Model):
 
     usage_key = UsageKeyField(
         max_length=255, db_index=True, help_text=_('The course block identifier.')
-        )
+    )
 
     badge_class = models.ForeignKey(BadgeClass, on_delete=models.CASCADE)
 
@@ -432,7 +433,7 @@ class BlockEventBadgesConfiguration(models.Model):
                 course_id=course_id,
                 event_type="chapter_complete",
                 usage_key=usage_key
-                ).badge_class
+            ).badge_class
         except cls.DoesNotExist:
             # Fall back to default, if there is one.
             return None
