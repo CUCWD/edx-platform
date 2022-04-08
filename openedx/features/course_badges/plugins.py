@@ -10,6 +10,7 @@ from lms.djangoapps.badges.utils import badges_enabled
 from lms.djangoapps.courseware.tabs import EnrolledTab
 from lms.djangoapps.courseware.courses import get_course_by_id
 
+
 class CourseBadgesTab(EnrolledTab):
     """
     The course bookmarks tool.

@@ -85,7 +85,7 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
         """
         own_denial_reason = \
             {block['authorization_denial_reason']} \
-                if 'authorization_denial_reason' in block else set()
+            if 'authorization_denial_reason' in block else set()
         # Use a list comprehension to force the recursion over all children, rather than
         # just stopping at the first child that is scored.
         child_denial_reasons = own_denial_reason.union(
@@ -264,8 +264,8 @@ def is_block_structure_complete_for_assignments(block_data, block_key):
     """
     children = block_data.get_children(block_key)
     if children:
-        return all(is_block_structure_complete_for_assignments(block_data, child_key) \
-            for child_key in children)
+        return all(is_block_structure_complete_for_assignments(block_data, child_key)
+                   for child_key in children)
 
     category = block_data.get_xblock_field(block_key, 'category')
     if category in ('course', 'chapter', 'sequential', 'vertical'):
