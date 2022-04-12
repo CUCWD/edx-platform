@@ -397,7 +397,6 @@ class BlockEventBadgesConfiguration(models.Model):
         related_name='block_event_badges_configuration',
         on_delete=models.DO_NOTHING,
     )
-    # course_id = CourseKeyField(max_length=255, db_index=True)
 
     usage_key = UsageKeyField(
         max_length=255, db_index=True, help_text=_('The course block identifier.')
