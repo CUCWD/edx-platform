@@ -85,12 +85,12 @@ def course_group_check(user, course_key):
                 else:
                     awards.append((slug,))
 
-    for slug in awards:
+    for award in awards:
         badge_class = BadgeClass.get_badge_class(
-            slug=slug, issuing_component='openedx__course', create=False,
+            slug=award[0], issuing_component='openedx__course', create=False,
         )
         if badge_class and not badge_class.get_for_user(user):
             try:
-                badge_class.award(user, evidence_url=slug[1])
+                badge_class.award(user, evidence_url=award[1])
             except IndexError:
                 badge_class.award(user)

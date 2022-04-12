@@ -196,7 +196,7 @@ class BadgeClassTest(ModuleStoreTestCase):
         Verify handing incomplete data for required fields when making a badge class raises an Integrity error.
         """
         image = get_image('good')
-        pytest.raises(IntegrityError, BadgeClass.get_badge_class, slug='new_slug', issuing_component='new_component',
+        pytest.raises((IntegrityError, ValidationError), BadgeClass.get_badge_class, slug='new_slug', issuing_component='new_component',
                       image_file_handle=image)
 
     def test_get_for_user(self):
