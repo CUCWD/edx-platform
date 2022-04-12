@@ -60,3 +60,32 @@
     // XBlock initialization functions must be global
     window.VisibilityEditorInit = initializeVisibilityEditor;
 }($));
+
+/**
+ * Client-side logic to support XBlock authoring.
+ */
+ (function($) {
+    'use strict';
+
+    function EstimatedTimeEditorView(runtime, element) {
+        this.getEstimatedTimeVisibility = function() {
+            return element.find('#show_estimated_time').val()
+        };
+    }
+
+    EstimatedTimeEditorView.prototype.collectFieldData = function collectFieldData() {
+        alert(getEstimatedTimeVisibility())
+        return {
+            metadata: {
+                show_estimated_time: getEstimatedTimeVisibility(),
+            }
+        };
+    };
+
+    function initializeEstimatedTimeEditor(runtime, element) {
+        return new EstimatedTimeEditorView(runtime, element);
+    }
+
+    // XBlock initialization functions must be global
+    window.EstimatedTimeEditor = initializeEstimatedTimeEditor;
+}($));

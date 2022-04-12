@@ -1,0 +1,43 @@
+<%page expression_filter="h"/>
+<%
+from django.conf import settings
+from django.utils.translation import ugettext as _
+from cms.djangoapps.contentstore.utils import ancestor_has_staff_lock, get_visibility_partition_info
+from openedx.core.djangolib.markup import HTML, Text
+from lms.lib.utils import is_unit
+
+partition_info = get_visibility_partition_info(xblock)
+selectable_partitions = partition_info["selectable_partitions"]
+selected_partition_index = partition_info["selected_partition_index"]
+selected_groups_label = partition_info["selected_groups_label"]
+
+is_staff_locked = ancestor_has_staff_lock(xblock)
+block_is_unit = is_unit(xblock)
+%>
+<h3 class="modal-section-title">${_('Estimated Time')}</h3>
+<div class="modal-section-content has-actions" style="margin-bottom:10px">
+    <ul class="list-fields list-input">
+        <li class="field field-text field-start-time field-release-time">
+            <label for="estimated_time" class="label">${_('Estimated Time in HH:MM:SS')}</label>
+            <input type="text" id="estimated_time" name="estimated_time"
+              value=""
+              placeholder="HH:MM:SS" class="estimated-time input input-text" autocomplete="off"/>
+        </li>
+        <li>
+            <label for="estimated_time_override" class="label" style="font-weight:normal"
+             title="By checking this box, the value set above won't change on a reindex of the course.">
+                <input type="checkbox" id="estimated_time_override" name="estimated_time_override"
+                value="1" class="estimated-time-override input input-checkbox" autocomplete="off"/>
+                ${_('Override Estimated Time')}
+            </label>
+        </li>
+        <li>
+            <label for="show_estimated_time" class="label" style="font-weight:normal"
+            title="By checking this box, the estimated time will be displayed for this component.">
+                <input type="checkbox" id="show_estimated_time" name="show_estimated_time"
+                value="1" class="show_estimated_time input input-checkbox" autocomplete="off"/>
+                ${_('Toggle Estimated Time Visibility')}
+            </label>
+        </li>
+    </ul>
+</div>
