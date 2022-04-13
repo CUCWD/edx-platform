@@ -78,6 +78,14 @@ class BadgeAssertionFactory(factory.django.DjangoModelFactory):
     image_url = 'http://example.com/image.png'
 
 
+class BadgeIssuerFactory(factory.django.DjangoModelFactory):
+    """
+    Factory for BadgeIssuers
+    """
+    assertion = factory.SubFactory(BadgeAssertionFactory)
+    issuer = 'npqlh0acRFG5pKKbnb4SRg'
+
+
 class CourseEventBadgesConfigurationFactory(factory.django.DjangoModelFactory):
     """
     Factory for CourseEventsBadgesConfiguration

@@ -56,6 +56,7 @@ from common.djangoapps.util import views as util_views
 
 RESET_COURSE_DEADLINES_NAME = 'reset_course_deadlines'
 RENDER_XBLOCK_NAME = 'render_xblock'
+COURSE_BADGES_PROGRESS = 'badges_progress'
 COURSE_DATES_NAME = 'dates'
 COURSE_PROGRESS_NAME = 'progress'
 
@@ -216,8 +217,18 @@ if settings.FEATURES.get('ENABLE_MOBILE_REST_API'):
     ]
 
 if settings.FEATURES.get('ENABLE_OPENBADGES'):
+    # badges api
     urlpatterns += [
-        path('api/badges/v1/', include(('lms.djangoapps.badges.api.urls', 'badges'), namespace='badges_api')),
+        path('api/badges/v1/', include(('lms.djangoapps.badges.api.urls', 'badges_api'), namespace='badges_api')),
+    ]
+
+    # badges progress page
+    urlpatterns += [
+        re_path(
+            fr'^courses/{settings.COURSE_ID_PATTERN}/badges/',
+            courseware_views.badges_progress,
+            name=COURSE_BADGES_PROGRESS,
+        ),
     ]
 
 urlpatterns += [

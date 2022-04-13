@@ -479,10 +479,12 @@ class JavaScriptLinter(BaseLinter):
                 function_argument = file_contents[inner_start_index:close_paren_index].strip()
                 if is_argument_safe is not None and is_caller_safe is None:
                     is_violation = is_argument_safe(function_argument) is False
+                    # print("_check_jquery_function – is_argument_safe = {} {} {}".format(is_violation, is_argument_safe, function_argument))
                 elif is_caller_safe is not None and is_argument_safe is None:
                     line_start_index = StringLines(file_contents).index_to_line_start_index(start_index)
                     caller_line_start = file_contents[line_start_index:start_index]
                     is_violation = is_caller_safe(caller_line_start) is False
+                    # print("_check_jquery_function – is_caller_safe = {} {} {}".format(is_violation, is_caller_safe, caller_line_start))
                 else:
                     raise ValueError("Must supply either is_argument_safe, or is_caller_safe, but not both.")
             if is_violation:
@@ -577,6 +579,7 @@ class JavaScriptLinter(BaseLinter):
             True if the argument is safe, and False otherwise.
 
         """
+        # print("_is_jquery_html_argument_safe {}".format(argument))
         if argument == "" or argument == "''" or argument == '""':
             return True
         elif self._is_jquery_argument_safe_html_utils_call(argument):

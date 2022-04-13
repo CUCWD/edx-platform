@@ -2225,6 +2225,11 @@ base_vendor_js = [
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
 
+    'js/Markdown.Converter.js',
+
+    # Load iFrame-Resizer
+    'common/js/vendor/iframeResizer.js',
+
     # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
 
@@ -2336,8 +2341,12 @@ certificates_web_view_js = [
     'common/js/vendor/jquery.js',
     'common/js/vendor/jquery-migrate.js',
     'js/vendor/jquery.cookie.js',
+    'js/vendor/jquery-ui.min.js',
+    'common/js/vendor/moment-with-locales.js',
+    'common/js/vendor/moment-timezone-with-data.js',
     'js/src/logger.js',
     'js/utils/facebook.js',
+    'js/Markdown.Converter.js',
 ]
 
 credit_web_view_js = [
@@ -3148,6 +3157,7 @@ INSTALLED_APPS = [
 
     # Features
     'openedx.features.calendar_sync',
+    'openedx.features.course_badges',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',
@@ -3516,6 +3526,12 @@ BADGING_BACKEND = 'lms.djangoapps.badges.backends.badgr.BadgrBackend'
 # .. setting_description: The base URL for the Badgr server.
 # .. setting_warning: DO NOT include a trailing slash. Review FEATURES['ENABLE_OPENBADGES'] for further context.
 BADGR_BASE_URL = "http://localhost:8005"
+
+# .. setting_name: BADGR_PUBLIC_URL
+# .. setting_default: 'https://badgr.com'
+# .. setting_description: The base URL for the Badgr frontend pages (e.g. Backpack, etc).
+# .. setting_warning: DO NOT include a trailing slash. Review FEATURES['ENABLE_OPENBADGES'] for further context.
+BADGR_PUBLIC_URL = "https://badgr.com"
 
 # .. setting_name: BADGR_ISSUER_SLUG
 # .. setting_default: 'example-issuer'
@@ -4741,6 +4757,12 @@ USER_STATE_BATCH_SIZE = 5000
 
 ############### Settings for edx-rbac  ###############
 SYSTEM_WIDE_ROLE_CLASSES = []
+
+
+############## Settings for Frontend #########################
+# Setup for badges-frontend
+LMS_FRONTEND_BADGES_CONTAINER_URL = None
+
 
 ############## Plugin Django Apps #########################
 
