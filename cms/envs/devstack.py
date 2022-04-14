@@ -261,3 +261,9 @@ SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT = 'http://localhost:18000'  # used in bro
 
 # Don't form the return redirect URL with HTTPS on devstack
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
+
+
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+    'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    'LOCATION': 'qualtrics_backends_api_tokens'
+}
