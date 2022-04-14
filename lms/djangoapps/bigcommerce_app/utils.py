@@ -10,8 +10,6 @@ from django.http import HttpResponse
 from opaque_keys.edx.keys import CourseKey
 
 from common.djangoapps.student.models import CourseEnrollment
-from common.djangoapps import third_party_auth
-from common.djangoapps.third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
 
 from openedx.core.djangolib.markup import HTML
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
@@ -84,6 +82,13 @@ def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
     """
+
+    # Importing these applications here prevents this error.
+    # cannot import name 'EmailProviderConfig' from partially initialized module
+    # 'common.djangoapps.third_party_auth.models' (most likely due to a circular import)
+    from common.djangoapps import third_party_auth  # lint-amnesty, pylint: disable=import-outside-toplevel
+    from common.djangoapps.third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS  # lint-amnesty, pylint: disable=import-outside-toplevel
+
     if third_party_auth.is_enabled():
         email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
         for email_backend_name in email_backend_names:
