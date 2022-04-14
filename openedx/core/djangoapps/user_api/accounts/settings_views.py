@@ -138,7 +138,16 @@ def account_settings_context(request):
         'show_program_listing': ProgramsApiConfig.is_enabled(),
         'show_dashboard_tabs': True,
         'order_history': user_orders,
-        'disable_order_history_tab': should_redirect_to_order_history_microfrontend(),
+        'disable_linked_accounts_tab': not configuration_helpers.get_value(
+            'ENABLE_ACCOUNT_LINKED_ACCOUNTS',
+            settings.FEATURES.get('ENABLE_ACCOUNT_LINKED_ACCOUNTS', False)
+        ),
+        'disable_order_history_tab':
+            should_redirect_to_order_history_microfrontend()
+            or not configuration_helpers.get_value(
+            'ENABLE_ACCOUNT_ORDER_HISTORY',
+            settings.FEATURES.get('ENABLE_ACCOUNT_ORDER_HISTORY', False)
+        ),
         'enable_account_deletion': configuration_helpers.get_value(
             'ENABLE_ACCOUNT_DELETION', settings.FEATURES.get('ENABLE_ACCOUNT_DELETION', False)
         ),

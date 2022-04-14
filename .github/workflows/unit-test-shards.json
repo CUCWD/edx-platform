@@ -3,6 +3,7 @@
     "settings": "lms.envs.test",
     "paths": [
       "lms/djangoapps/badges/",
+      "lms/djangoapps/bigcommerce_app/",
       "lms/djangoapps/branding/",
       "lms/djangoapps/bulk_email/",
       "lms/djangoapps/bulk_enroll/",
