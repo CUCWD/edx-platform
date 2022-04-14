@@ -1,3 +1,7 @@
+"""
+Model class for BigCommerce.
+"""
+
 import logging
 
 from django.db import models
@@ -17,13 +21,9 @@ class Store(models.Model):
     scope = models.TextField()
 
     def __str__(self):
-        return u"Hash: {store_hash}\nScope: {scope}\nAccess Token: {access_token}".format(
-            store_hash=self.store_hash,
-            scope=self.scope,
-            access_token=self.access_token
-        )
+        return f"Hash: {self.store_hash}\nScope: {self.scope}\nAccess Token: {self.access_token}"
 
-    class Meta(object):
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
 
 
@@ -39,12 +39,9 @@ class AdminUser(models.Model):
     )
 
     def __str__(self):
-        return u"Id: {id}\nEmail: {email}".format(
-            id=self.bc_id,
-            email=self.bc_email
-        )
+        return f"Id: {self.bc_id}\nEmail: {self.bc_email}"
 
-    class Meta(object):
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
 
 
@@ -57,13 +54,9 @@ class StoreAdminUser(models.Model):
     is_admin = models.BooleanField(blank=False, default=False)
 
     def __str__(self):
-        return u"Store: {bc_store}\nAdmin User: {admin_user}\nIs Admin: {is_admin}".format(
-            bc_store=self.store,
-            admin_user=self.bc_admin_user,
-            is_admin=self.is_admin
-        )
+        return f"Store: {self.store}\nAdmin User: {self.bc_admin_user}\nIs Admin: {self.is_admin}"
 
-    class Meta(object):
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
 
 
@@ -82,14 +75,10 @@ class Customer(models.Model):
     bc_last_name = models.TextField(blank=True)
 
     def __str__(self):
-        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}\nFull Name: {full_name}".format(
-            id=self.bc_id,
-            email=self.bc_email,
-            group_id=self.bc_group_id,
-            full_name="{first} {last}".format(first=self.bc_first_name, last=self.bc_last_name)
-        )
+        return f"Id: {self.bc_id}\nEmail: {self.bc_email}\nGroup: {self.bc_group_id}\n" \
+            "Full Name: {self.bc_first_name} {self.bc_last_name}"
 
-    class Meta(object):
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
 
 
@@ -101,12 +90,9 @@ class StoreCustomer(models.Model):
     bc_customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
     def __str__(self):
-        return u"Store: {bc_store}\nCustomer: {bc_customer}".format(
-            bc_store=self.store,
-            bc_customer=self.bc_customer
-        )
+        return f"Store: {self.store}\nCustomer: {self.bc_customer}"
 
-    class Meta(object):
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
 
 
@@ -130,21 +116,23 @@ class StoreCustomerPlatformUser(models.Model):
 
             if bc_site_store:
                 for platform_store_customer in platform_user_store_customers:
-                    if platform_store_customer.bc_store_customer.store.store_hash == bc_site_store.store_hash:
+                    if platform_store_customer.bc_store_customer.store.store_hash == \
+                       bc_site_store.store_hash:
                         LOGGER.info(
-                            u"Located {customer} from {store} for {platform_user} platform account".format(
-                                customer=platform_store_customer.bc_store_customer.bc_customer, store=store_hash, platform_user=platform_user
-                            )
+                            "Located %s from %s for %s platform account",
+                            platform_store_customer.bc_store_customer.bc_customer,
+                            store_hash,
+                            platform_user
                         )
                         return platform_store_customer.bc_store_customer.bc_customer.bc_id
 
         LOGGER.error(
-            u"Could not locate BigCommerce {store} Store Customer for {platform_user} platform account".format(
-                store=store_hash, platform_user=platform_user
-            )
+            "Could not locate BigCommerce %s Store Customer for %s platform account",
+            store_hash,
+            platform_user
         )
 
         return None
 
-    class Meta(object):
+    class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"

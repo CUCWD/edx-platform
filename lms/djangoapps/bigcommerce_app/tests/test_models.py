@@ -1,13 +1,14 @@
+"""
+Tests for integration with BigCommerce ecommerce service.
+"""
 
 from django.test import TestCase
 from django.test.utils import override_settings
 
-from mock import Mock
-
 from lms.djangoapps.bigcommerce_app.models import (
     Store,
-    AdminUser,
-    StoreAdminUser,
+    # AdminUser,
+    # StoreAdminUser,
     Customer,
     StoreCustomer,
     StoreCustomerPlatformUser
@@ -15,7 +16,7 @@ from lms.djangoapps.bigcommerce_app.models import (
 
 from lms.djangoapps.bigcommerce_app.tests.factories import (
     StoreFactory,
-    RandomStoreFactory,
+    # RandomStoreFactory,
     CustomerFactory,
     StoreCustomerFactory,
     StoreCustomerPlatformUserFactory
@@ -29,7 +30,11 @@ class StoreCustomerPlatformUserTest(TestCase):
     Test the validation features of StoreCustomerPlatformUser.
     """
 
-    def setUp(self):
+    def setUp(self):  # lint-amnesty, pylint: disable=invalid-name
+        """
+        Setup defaults for BigCommerce store, customer, and platform accounts.
+        """
+
         super(StoreCustomerPlatformUserTest, self).setUp()
 
         # Create BigCommerce store
@@ -56,7 +61,11 @@ class StoreCustomerPlatformUserTest(TestCase):
             platform_user=self.platform_user
         )
 
-    def tearDown(self):
+    def tearDown(self):  # lint-amnesty, pylint: disable=invalid-name
+        """
+        Remove test objects.
+        """
+
         super(StoreCustomerPlatformUserTest, self).tearDown()
         Store.objects.all().delete()
         Customer.objects.all().delete()
@@ -89,7 +98,8 @@ class StoreCustomerPlatformUserTest(TestCase):
     @override_settings(BIGCOMMERCE_APP_STORE_HASH='3r4l2hj8jc')
     def test_locate_customer_multiple_stores(self):
         """
-        Verify that we cannot get a BigCommerce Store Customer from an existing platform User registered for two separate BigCommerce storefronts.
+        Verify that we cannot get a BigCommerce Store Customer from an existing platform User
+        registered for two separate BigCommerce storefronts.
         """
 
         # Create a separate BigCommerce store
@@ -101,14 +111,16 @@ class StoreCustomerPlatformUserTest(TestCase):
         # Create BigCommerce customer account with same email as another store.
         new_customer_same_email = CustomerFactory.create(bc_email='john.doe@gmail.com')
 
-        # Create a store customer mapping for new_store with similar customer email as the setUp store.
+        # Create a store customer mapping for new_store with similar customer email as the
+        # setUp store.
         new_store_customer = StoreCustomerFactory.create(
             store=new_store,
             bc_customer=new_customer_same_email
         )
 
-        # Create store customer platform user mapping for new_store, similar customer email, and same platform_user in setUp.
-        new_store_customer_platform_user = StoreCustomerPlatformUserFactory(
+        # Create store customer platform user mapping for new_store, similar customer email, and
+        # same platform_user in setUp.
+        new_store_customer_platform_user = StoreCustomerPlatformUserFactory(  # lint-amnesty, pylint: disable=unused-variable
             bc_store_customer=new_store_customer,
             platform_user=self.platform_user
         )
@@ -130,7 +142,8 @@ class StoreCustomerPlatformUserTest(TestCase):
     @override_settings(BIGCOMMERCE_APP_STORE_HASH='3r4l2hj8jc')
     def test_locate_customer_multiple_stores_not_exists(self):
         """
-        Verify that we cannot get a BigCommerce Store Customer from an existing platform User registered for two separate BigCommerce storefronts.
+        Verify that we cannot get a BigCommerce Store Customer from an existing platform User
+        registered for two separate BigCommerce storefronts.
         """
 
         # Create a separate BigCommerce store
@@ -142,8 +155,9 @@ class StoreCustomerPlatformUserTest(TestCase):
         # Create BigCommerce customer account with same email as another store.
         new_customer_same_email = CustomerFactory.create(bc_email='john.doe@gmail.com')
 
-        # Create a store customer mapping for new_store with similar customer email as the setUp store.
-        new_store_customer = StoreCustomerFactory.create(
+        # Create a store customer mapping for new_store with similar customer email as the
+        # setUp store.
+        new_store_customer = StoreCustomerFactory.create(  # lint-amnesty, pylint: disable=unused-variable
             store=new_store,
             bc_customer=new_customer_same_email
         )

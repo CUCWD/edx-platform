@@ -3,17 +3,24 @@ Utility functions used by the bigcommerce_app.
 """
 
 import logging
-from threading import local
 
 from django.conf import settings
 from django.http import HttpResponse
 
 from opaque_keys.edx.keys import CourseKey
+
 from common.djangoapps.student.models import CourseEnrollment
+from common.djangoapps import third_party_auth
+from common.djangoapps.third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
 
 from openedx.core.djangolib.markup import HTML
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-from lms.djangoapps.bigcommerce_app.models import Store, Customer, StoreCustomer, StoreCustomerPlatformUser
+from lms.djangoapps.bigcommerce_app.models import (
+    Store,
+    Customer,
+    StoreCustomer,
+    StoreCustomerPlatformUser
+)
 
 import bigcommerce.api as bigcommerce_client
 from bigcommerce.resources.products import ProductCustomFields
@@ -39,7 +46,11 @@ def bigcommerce_enabled():
     """
     returns a boolean indicating whether or not BigCommerce app is enabled.
     """
-    return configuration_helpers.get_value_for_org('ENABLE_BIGCOMMERCE', "SITE_NAME", settings.FEATURES.get('ENABLE_BIGCOMMERCE', False))
+    return configuration_helpers.get_value_for_org(
+        'ENABLE_BIGCOMMERCE',
+        "SITE_NAME",
+        settings.FEATURES.get('ENABLE_BIGCOMMERCE', False)
+    )
 
 
 #
@@ -73,9 +84,6 @@ def _enabled_current_site_provider():
     """
     Helper method to return current provider for the current site.
     """
-    import common.djangoapps.third_party_auth as third_party_auth
-    from common.djangoapps.third_party_auth.models import EmailProviderConfig, _PSA_EMAIL_BACKENDS
-
     if third_party_auth.is_enabled():
         email_backend_names = EmailProviderConfig.key_values('backend_name', flat=True)
         for email_backend_name in email_backend_names:
@@ -94,7 +102,9 @@ def client_id():
         return _enabled_current_site_provider().key
     except Exception as excep:  # pylint: disable=broad-except
         LOGGER.error(
-            u"Could not retrieve `client_id` from current site enabled Third-party Auth Backend.\n{error}".format(error=excep)
+            "Could not retrieve `client_id` from current site enabled"
+            "Third-party Auth Backend.\n%s",
+            excep
         )
 
     return ""
@@ -108,7 +118,9 @@ def client_secret():
         return _enabled_current_site_provider().secret
     except Exception as excep:  # pylint: disable=broad-except
         LOGGER.error(
-            u"Could not retrieve `client_secret` from current site enabled Third-party Auth Backend.\n{error}".format(error=excep)
+            "Could not retrieve `client_secret` from current site enabled"
+            "Third-party Auth Backend.\n%s",
+            excep
         )
 
     return ""
@@ -122,22 +134,32 @@ def _store_hash():
         return _enabled_current_site_provider().get_setting("STOREFRONT").get("HASH")
     except Exception as excep:  # pylint: disable=broad-except
         LOGGER.error(
-            u"Could not retrieve `Storefront hash_code` from current site enabled Third-party Auth Backend.\n{error}".format(error=excep)
+            "Could not retrieve `Storefront hash_code` from current site enabled"
+            "Third-party Auth Backend.\n%s",
+            excep
         )
 
     return ""
 
 
 def store_hash():
+    """
+    Return BigCommerce store hash identifier.
+    """
     return _store_hash()
 
 
 def access_token():
-    store_hash = _store_hash()
-    return Store.objects.filter(store_hash=store_hash).first().access_token
+    """
+    Return API access token for the BigCommerce store.
+    """
+    return Store.objects.filter(store_hash=_store_hash()).first().access_token
 
 
 def platform_lms_url():
+    """
+    Return the platform LMS root url.
+    """
     return configuration_helpers.get_value("LMS_ROOT_URL", settings.LMS_ROOT_URL)
 
 
@@ -147,19 +169,28 @@ class BigCommerceAPI():
     """
 
     def __init__(self):
-        self._api_client = bigcommerce_client.BigcommerceApi(client_id=client_id(), store_hash=store_hash(), access_token=access_token())
+        self._api_client = bigcommerce_client.BigcommerceApi(
+            client_id=client_id(),
+            store_hash=store_hash(),
+            access_token=access_token()
+        )
 
     @property
     def api_client(self):
+        """
+        Return the BigCommerce client used to make API calls.
+        """
         return self._api_client
 
     @classmethod
     def bcapi_customer_metadata(cls, bc_customer_email):
         """
-        Returns Customer information from BigCommerce for current platform user. This is needed for third-party auth to load full name registration form field.
+        Returns Customer information from BigCommerce for current platform user. This is needed for
+        third-party auth to load full name registration form field.
 
-        At the moment this calls V2 of the BigCommerce API which doesn't have an 'id' to make get calls against.
-        https://developer.bigcommerce.com/api-reference/store-management/customers-v2/customers/getallcustomers
+        At the moment this calls V2 of the BigCommerce API which doesn't have an 'id' to make get
+        calls against.
+        https://developer.bigcommerce.com/api-reference/store-management/customers-v2/customers/getallcustomers  # lint-amnesty, pylint: disable=line-too-long
         """
         # cls._setup_api_client(cls)
         bcapi_client = cls().api_client
@@ -170,51 +201,57 @@ class BigCommerceAPI():
                 if customer:
 
                     LOGGER.info(
-                        u"Successfully located BigCommerce {store} Store Customer {customer} meta data".format(
-                            store=store_hash(),
-                            customer=bc_customer_email
-                        )
+                        "Successfully located BigCommerce %s Store Customer %s meta data",
+                        store_hash(),
+                        bc_customer_email
                     )
 
                     return customer
             except Exception as excep:  # pylint: disable=broad-except
                 LOGGER.error(
-                    u"Could not get access token from BigCommerce in `auth_callback`"
+                    "Could not get access token from BigCommerce in `auth_callback`"
                 )
                 return internal_server_error(excep)
 
         LOGGER.error(
-            u"Could not locate BigCommerce {store} Store Customer {customer} meta data".format(
-                store=store_hash(),
-                customer=bc_customer_email
-            )
+            "Could not locate BigCommerce %s Store Customer %s meta data",
+            store_hash(),
+            bc_customer_email
         )
         return {}
 
     @classmethod
     def bigcommerce_customer_save(cls, payload):
         """
-        Returns decode payload from JWT token passed in from BigCommerce third-party-auth complete and saves the customer information on the platform.
+        Returns decode payload from JWT token passed in from BigCommerce third-party-auth complete
+        and saves the customer information on the platform.
         """
         bcapi_client = cls().api_client
         if bcapi_client:
             try:
-                user_data = bcapi_client.oauth_verify_payload_jwt(payload, client_secret(), client_id())
+                user_data = bcapi_client.oauth_verify_payload_jwt(
+                    payload,
+                    client_secret(),
+                    client_id()
+                )
 
                 bc_customer = cls.bcapi_customer_metadata(user_data['customer']['email'])
 
                 # Save the BigCommerce Customer for the platform
                 try:
-                    new_customer, __ = Customer.objects.get_or_create(bc_id=bc_customer.id, bc_email=bc_customer.email)
+                    new_customer, __ = Customer.objects.get_or_create(
+                        bc_id=bc_customer.id,
+                        bc_email=bc_customer.email
+                    )
                     new_customer.bc_group_id = bc_customer.customer_group_id
                     new_customer.bc_first_name = bc_customer.first_name
                     new_customer.bc_last_name = bc_customer.last_name
                     new_customer.save()
                 except Exception as excep:  # pylint: disable=broad-except
                     LOGGER.error(
-                        u"Could save BigCommerce Customer {customer}".format(
-                            customer=bc_customer.email
-                        )
+                        "Could save BigCommerce Customer %s\n%s",
+                        bc_customer.email,
+                        excep
                     )
                     return {}
 
@@ -229,18 +266,17 @@ class BigCommerceAPI():
                         new_store_customer.save()
                     except Exception as excep:  # pylint: disable=broad-except
                         LOGGER.error(
-                            u"Could save BigCommerce StoreCustomer {store_hash} – {customer}".format(
-                                store_hash=store_hash(),
-                                customer=bc_customer.email
-                            )
+                            "Could save BigCommerce StoreCustomer %s – %s\n%s",
+                            store_hash(),
+                            bc_customer.email,
+                            excep
                         )
                         return {}
                 else:
                     LOGGER.error(
-                        u"Could not create StoreCustomer for {store} – {customer}.".format(
-                            store=store_hash(),
-                            customer=new_customer.email
-                        )
+                        "Could not create StoreCustomer for %s – %s.",
+                        store_hash(),
+                        new_customer.email
                     )
 
                 return {
@@ -254,7 +290,7 @@ class BigCommerceAPI():
 
             except Exception as excep:  # pylint: disable=broad-except
                 LOGGER.error(
-                    u"Could not decode JWT payload from BigCommerce Customer."
+                    "Could not decode JWT payload from BigCommerce Customer."
                 )
                 return internal_server_error(excep)
 
@@ -276,10 +312,11 @@ class BigCommerceAPI():
                         bc_customer__bc_id=payload.get('bc_uid')
                     ).first()
 
-                    bc_store_customer_platform_user, bc_store_customer_platform_user_created = StoreCustomerPlatformUser.objects.get_or_create(
-                        bc_store_customer=bc_store_customer,
-                        platform_user=platform_user
-                    )
+                    bc_store_customer_platform_user, bc_store_customer_platform_user_created = \
+                        StoreCustomerPlatformUser.objects.get_or_create(
+                            bc_store_customer=bc_store_customer,
+                            platform_user=platform_user
+                        )
                     bc_store_customer_platform_user.save()
 
                     if bc_store_customer_platform_user_created:
@@ -287,23 +324,20 @@ class BigCommerceAPI():
 
                 except Exception as excep:  # pylint: disable=broad-except
                     LOGGER.error(
-                        u"Could save StoreCustomerPlatformUser: BigCommerce {bc_customer} "
-                        "– Platform {platform_user}".format(
-                            bc_customer=payload.get('bc_uid'),
-                            platform_user=platform_user.id
-                        )
+                        "Could save StoreCustomerPlatformUser: BigCommerce %s – Platform %s",
+                        payload.get('bc_uid'),
+                        platform_user.id
                     )
                     return internal_server_error(excep)
             else:
                 LOGGER.error(
-                    u"Could not locate {store} to make StoreCustomerPlatformUser mapping.".format(
-                        store=store_hash()
-                    )
+                    "Could not locate %s to make StoreCustomerPlatformUser mapping.",
+                    store_hash()
                 )
 
         except Exception as excep:  # pylint: disable=broad-except
             LOGGER.error(
-                u"Could not find BigCommerce StoreCustomer."
+                "Could not find BigCommerce StoreCustomer."
             )
             return internal_server_error(excep)
 
@@ -311,6 +345,9 @@ class BigCommerceAPI():
 
     @classmethod
     def get_order_items(cls, customer_id):
+        """
+        Locate BigCommerce orders for the customer.
+        """
 
         bcapi_client = cls().api_client
 
@@ -321,7 +358,9 @@ class BigCommerceAPI():
                 orders = bcapi_client.Orders.all(customer_id=customer_id)
             except Exception as excep:  # pylint: disable=broad-except
                 LOGGER.error(
-                    u"Could not find BigCommerce Orders for {customer_id}".format(customer_id=customer_id)
+                    "Could not find BigCommerce Orders for %s\n%s",
+                    customer_id,
+                    excep
                 )
                 return courses
 
@@ -335,11 +374,13 @@ class BigCommerceAPI():
 
                         if custom_fields:
                             for field in custom_fields:
-                                if isinstance(field, ProductCustomFields) and field.name == 'Course ID':
+                                if isinstance(field, ProductCustomFields) and \
+                                   field.name == 'Course ID':
                                     courses.append(field.text)
-            except AttributeError as e:
+            except AttributeError as excep:
                 LOGGER.error(
-                    u"Could not find BigCommerce orders for the customer."
+                    "Could not find BigCommerce orders for the customer.\n%s",
+                    excep
                 )
                 return courses
 
@@ -347,10 +388,17 @@ class BigCommerceAPI():
 
     @classmethod
     def get_bc_course_enrollments(cls, user):
+        """
+        Enroll BigCommerce customer in LMS courses from purchased BigCommerce course orders.
+        """
 
         try:
             bc_customer_id = StoreCustomerPlatformUser.locate_store_customer(store_hash(), user.id)
         except Exception as excep:  # pylint: disable=broad-except
+            LOGGER.error(
+                "Could not find BigCommerce customer.\n%s",
+                excep
+            )
             return
 
         if bc_customer_id:
