@@ -53,7 +53,7 @@ class AdminUserFactory(factory.django.DjangoModelFactory):
         model = AdminUser
 
     bc_id = factory.lazy_attribute(lambda _: randrange(0, 10000))
-    bc_email = factory.Sequence('admin-user-bigcommerce-{0}@gmail.com'.format)  # lint-amnesty, pylint: disable=consider-using-f-string
+    bc_email = factory.Sequence('admin+user+bigcommerce+{}@gmail.com'.format)  # lint-amnesty, pylint: disable=bad-option-value, consider-using-f-string
 
 
 class StoreAdminUserFactory(factory.django.DjangoModelFactory):
@@ -78,7 +78,7 @@ class CustomerFactory(factory.django.DjangoModelFactory):
         model = Customer
 
     bc_id = factory.lazy_attribute(lambda _: randrange(0, 10000))
-    bc_email = factory.Sequence('customer-bigcommerce-{0}@gmail.com'.format)  # lint-amnesty, pylint: disable=consider-using-f-string
+    bc_email = factory.Sequence('customer+bigcommerce+{}@edx.org'.format)  # lint-amnesty, pylint: disable=bad-option-value, consider-using-f-string
     bc_group_id = factory.lazy_attribute(lambda _: randrange(0, 10000))
 
 

@@ -5,9 +5,8 @@ Model class for BigCommerce.
 import logging
 
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 
-from django.conf import settings
 
 LOGGER = logging.getLogger(__name__)
 

@@ -35,7 +35,7 @@ class StoreCustomerPlatformUserTest(TestCase):
         Setup defaults for BigCommerce store, customer, and platform accounts.
         """
 
-        super(StoreCustomerPlatformUserTest, self).setUp()
+        super().setUp()
 
         # Create BigCommerce store
         self.store = StoreFactory.create(
@@ -66,7 +66,7 @@ class StoreCustomerPlatformUserTest(TestCase):
         Remove test objects.
         """
 
-        super(StoreCustomerPlatformUserTest, self).tearDown()
+        super().tearDown()
         Store.objects.all().delete()
         Customer.objects.all().delete()
         StoreCustomer.objects.all().delete()

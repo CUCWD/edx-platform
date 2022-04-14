@@ -55,6 +55,9 @@ def bigcommerce_enabled():
 # Error handling and helpers
 #
 def _error_info(excep):
+    """
+    Return HTML error message.
+    """
     content = ""
     try:  # it's probably a HttpException, if you're using the bigcommerce client
         content += HTML("{}<br />{}<br />").format(str(excep.headers), str(excep.content))
@@ -356,7 +359,7 @@ class BigCommerceAPI():
 
         bcapi_client = cls().api_client
 
-        if bcapi_client:
+        if bcapi_client:  # lint-amnesty, pylint: disable=too-many-nested-blocks
             courses = []
 
             try:
