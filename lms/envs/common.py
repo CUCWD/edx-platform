@@ -4388,7 +4388,7 @@ FINANCIAL_ASSISTANCE_MAX_LENGTH = 2500
 # need to add the model's app to the ADDL_INSTALLED_APPS array in your
 # lms.yml file.
 
-REGISTRATION_EXTENSION_FORM = 'custom_reg_form.forms.ExtraInfoForm'
+REGISTRATION_EXTENSION_FORM = None
 
 # Identifier included in the User Agent from open edX mobile apps.
 MOBILE_APP_USER_AGENT_REGEXES = [
