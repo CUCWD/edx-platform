@@ -556,11 +556,6 @@ add_plugins(__name__, ProjectType.CMS, SettingsType.PRODUCTION)
 
 derive_settings(__name__)
 
-#####################################################################
-# See if the developer has any local overrides.
-if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
-    from .private import *  # pylint: disable=import-error,wildcard-import
-
 ############# CORS headers for cross-domain requests #################
 if FEATURES.get('ENABLE_CORS_HEADERS'):
     CORS_ALLOW_CREDENTIALS = True
@@ -608,3 +603,8 @@ COURSE_OLX_VALIDATION_IGNORE_LIST = ENV_TOKENS.get(
 SHOW_ACCOUNT_ACTIVATION_CTA = ENV_TOKENS.get('SHOW_ACCOUNT_ACTIVATION_CTA', SHOW_ACCOUNT_ACTIVATION_CTA)
 
 LANGUAGE_COOKIE_NAME = ENV_TOKENS.get('LANGUAGE_COOKIE', None) or ENV_TOKENS.get('LANGUAGE_COOKIE_NAME')
+
+################# Import private.py only if running production #################
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
+    os.environ["DJANGO_SETTINGS_MODULE"] == 'cms.envs.production' :
+    from .private import *  # pylint: disable=import-error,wildcard-import
