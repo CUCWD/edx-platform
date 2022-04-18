@@ -330,9 +330,9 @@ class BadgesTab(EnrolledTab):
     type = "badges_progress"
     title = gettext_noop(
         "Badges")  # We don't have the user in this context, so we don't want to translate it at this level.
-    priority = 50
+    priority = None
     view_name = "badges_progress"
-    is_dynamic = True
+    is_default = True
     is_movable = True
     is_hideable = True
 

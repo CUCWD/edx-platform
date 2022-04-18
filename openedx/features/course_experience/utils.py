@@ -6,6 +6,7 @@ from django.utils import timezone
 from opaque_keys.edx.keys import CourseKey
 
 from lms.djangoapps.badges.models import BlockEventBadgesConfiguration
+from lms.djangoapps.courseware.tabs import get_course_tab_list
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.course_blocks.api import get_course_blocks
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
@@ -114,8 +115,10 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
             for block_event_badge_config in BlockEventBadgesConfiguration.config_for_block_event(
                 course_id=course_key, event_type='chapter_complete'
             ):
+                # Indicate the a module has completed badge progress if configured and badges tab
+                # is enabled for the course.
                 if block.get('block_id', False) == block_event_badge_config.usage_key.block_id and \
-                        block_event_badge_config.badge_class:
+                        block_event_badge_config.badge_class and course_badge_tab_exists:
                     block['badge_progress'] = True
                     return True
 
@@ -154,6 +157,13 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
     )
 
     course_outline_root_block = all_blocks['blocks'].get(all_blocks['root'], None)
+
+    # Identify if the `Badges` tab is enabled.
+    course_badge_tab_exists = False
+    for tab in get_course_tab_list(user, CourseOverview.objects.get(id=str(course_key))):
+        if tab.tab_id == "badges_progress":
+            course_badge_tab_exists = True
+
     if course_outline_root_block:
         populate_children(course_outline_root_block, all_blocks['blocks'])
         recurse_mark_scored(course_outline_root_block)
