@@ -1075,5 +1075,5 @@ REST_FRAMEWORK.update(ENV_TOKENS.get('REST_FRAMEWORK', {}))
 
 ################# Import private.py only if running production #################
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
-    os.environ["DJANGO_SETTINGS_MODULE"] == 'lms.envs.production' :
+   os.environ["DJANGO_SETTINGS_MODULE"] == 'lms.envs.production':
     from .private import *  # pylint: disable=import-error,wildcard-import
