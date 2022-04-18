@@ -606,5 +606,5 @@ LANGUAGE_COOKIE_NAME = ENV_TOKENS.get('LANGUAGE_COOKIE', None) or ENV_TOKENS.get
 
 ################# Import private.py only if running production #################
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
-    os.environ["DJANGO_SETTINGS_MODULE"] == 'cms.envs.production' :
+   os.environ["DJANGO_SETTINGS_MODULE"] == 'cms.envs.production':
     from .private import *  # pylint: disable=import-error,wildcard-import
