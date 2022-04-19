@@ -43,9 +43,6 @@ class AuthoringMixin(XBlockMixin):
             'xblock': self,
             'manage_groups_url': reverse_course_url('group_configurations_list_handler', self.location.course_key),
         }))
-        fragment.add_content(self.system.render_template('estimated_time_editor.html', {
-            'xblock': self,
-        }))
         fragment.add_javascript_url(self._get_studio_resource_url('/js/xblock/authoring.js'))
         fragment.initialize_js('VisibilityEditorInit')
         return fragment
