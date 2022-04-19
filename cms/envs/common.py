@@ -472,6 +472,9 @@ FEATURES = {
     # .. toggle_target_removal_date: 2021-10-01
     # .. toggle_tickets: 'https://openedx.atlassian.net/browse/MICROBA-1405'
     'ENABLE_V2_CERT_DISPLAY_SETTINGS': False,
+
+    # Enables functionality for the key terms glossary within the courseware.
+    'ENABLE_KEY_TERMS_GLOSSARY': False,
 }
 
 ENABLE_JASMINE = False
@@ -1255,7 +1258,7 @@ base_vendor_js = [
 
     # Load Bootstrap and supporting libraries
     'common/js/vendor/popper.js',
-    'common/js/vendor/bootstrap.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Finally load RequireJS
     'common/js/vendor/require.js'
@@ -2542,3 +2545,8 @@ TEAMS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-runn
 TEXTBOOKS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/textbooks.html"
 WIKI_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/course_wiki.html"
 CUSTOM_PAGES_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/pages.html#adding-custom-pages"
+
+
+################# Key Terms and Glossary API #################
+KEY_TERMS_API_ROOT_URL = "https://localhost:18500"
+KEY_TERMS_API_REINDEX_URL = KEY_TERMS_API_ROOT_URL + '/api/v1/platform_course_reindex/'

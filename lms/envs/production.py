@@ -968,11 +968,6 @@ add_plugins(__name__, ProjectType.LMS, SettingsType.PRODUCTION)
 
 derive_settings(__name__)
 
-#####################################################################
-# See if the developer has any local overrides.
-if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
-    from .private import *  # pylint: disable=import-error,wildcard-import
-
 ############## Settings for Completion API #########################
 
 # Once a user has watched this percentage of a video, mark it as complete:
@@ -1059,3 +1054,8 @@ SHOW_ACCOUNT_ACTIVATION_CTA = ENV_TOKENS.get('SHOW_ACCOUNT_ACTIVATION_CTA', SHOW
 CHROME_DISABLE_SUBFRAME_DIALOG_SUPPRESSION_TOKEN = ENV_TOKENS.get(
     'CHROME_DISABLE_SUBFRAME_DIALOG_SUPPRESSION_TOKEN', CHROME_DISABLE_SUBFRAME_DIALOG_SUPPRESSION_TOKEN
 )
+
+################# Import private.py only if running production #################
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
+   os.environ["DJANGO_SETTINGS_MODULE"] == 'lms.envs.production':
+    from .private import *  # pylint: disable=import-error,wildcard-import
