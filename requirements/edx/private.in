@@ -2,3 +2,5 @@
 -e git+https://github.com/CUCWD/bigcommerce-api-python.git@bigcommerce-0.22.2-maple.1#egg=bigcommerce==0.22.2
 -e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.1#egg=social-auth-backend-bigcommerce==0.1.0-maple.1
 
+# Organizations (reworked for Figures)
+-e git+https://github.com/CUCWD/edx-organizations.git@6.10.0-cucwd-maple.1#egg=edx-organizations==6.10.0-cucwd-maple.1

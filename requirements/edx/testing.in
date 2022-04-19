@@ -16,7 +16,6 @@
 
 -r base.txt               # Core edx-platform production dependencies
 -r coverage.txt           # Utilities for calculating test coverage
--r private.txt            # Include our EducateWorkforce specific packages
 
 beautifulsoup4            # Library for extracting data from HTML and XML files
 bok-choy                  # Framework for browser automation tests, based on selenium
@@ -51,3 +50,4 @@ unidiff                   # Required by coverage_pytest_plugin
 pylint-pytest==0.3.0      # A Pylint plugin to suppress pytest-related false positives.
 pact-python               # Library for contract testing 
 
+-r private.txt            # Include our EducateWorkforce specific packages
