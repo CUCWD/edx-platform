@@ -1720,21 +1720,30 @@ class CourseEnrollment(models.Model):
         organization_data = organizations_api.get_course_organizations(six.text_type(course_key))
         if len(organization_data):
             organization = Organization.objects.get(id=organization_data[0].get('id'))
-            
+
             try:
-                user_org = UserOrganizationMapping.objects.filter(user=user, organization=organization).first()
-                if not (user_org):
-                    UserOrganizationMapping.objects.create(user=user, organization=organization, is_active=True, is_amc_admin=False)
+                user_org = UserOrganizationMapping.objects.filter(
+                    user=user,
+                    organization=organization
+                ).first()
+                if not user_org:
+                    UserOrganizationMapping.objects.create(
+                        user=user,
+                        organization=organization,
+                        is_active=True,
+                        is_amc_admin=False
+                    )
                 else:
-                    # Enable `is_active` for the user_org record if it already exists in the database.
+                    # Enable `is_active` for the user_org record if it already exists in
+                    # the database.
                     user_org.is_active = True
                     user_org.save()
 
             except Exception:
                 log.error(u"Could not create UserOrganizationMapping for org %s, user %s",
-                    organization.name,
-                    user.username
-                )
+                          organization.name,
+                          user.username
+                          )
 
         return enrollment
 
