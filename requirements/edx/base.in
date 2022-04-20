@@ -84,7 +84,7 @@ edx-drf-extensions
 edx-enterprise
 edx-milestones
 edx-name-affirmation
-edx-organizations
+# edx-organizations                 # Using our own CUCWD verison for EducateWorkforce
 edx-proctoring>=2.0.1
 edx-proctoring-proctortrack==1.0.5  # Intentionally and permanently pinned to ensure code changes are reviewed
 edx-rest-api-client
@@ -165,3 +165,5 @@ XBlock                              # Courseware component architecture
 xblock-utils                        # Provides utilities used by the Discussion XBlock
 xss-utils                           # https://github.com/edx/edx-platform/pull/20633 Fix XSS via Translations
 enmerkar-underscore                 # Implements a underscore extractor for django-babel.
+
+-r private.txt            # Include our EducateWorkforce specific packages
