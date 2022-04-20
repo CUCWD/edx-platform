@@ -1719,10 +1719,11 @@ class CourseEnrollment(models.Model):
                     user_org.is_active = True
                     user_org.save()
 
-            except Exception:
-                log.error(u"Could not create UserOrganizationMapping for org %s, user %s",
+            except Exception as excep:  # lint-amnesty, pylint: disable=broad-except
+                log.error(u"Could not create UserOrganizationMapping for org %s, user %s\n%s",
                           organization.name,
-                          user.username
+                          user.username,
+                          excep
                           )
 
         return enrollment
