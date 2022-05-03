@@ -163,7 +163,10 @@ from django.urls import reverse
     <header class="mast has-actions has-subtitle">
         <h1 class="page-header">
             <small class="subtitle">${_("Content")}</small>
-            <span class="sr">&gt; </span>${_("Course Outline")}
+            <span class="sr">&gt; </span>${_("Course Outline")}        
+            <span class="subtitle" style="font-weight: 550;font-size: 12px;">
+              Estimated Time to Complete: ${ int(context_course.estimated_time.total_seconds() / 60) } ${ "minute" if int(context_course.estimated_time.total_seconds() / 60) == 1 else "minutes" }
+            </span>
         </h1>
 
         <nav class="nav-actions" aria-label="${_('Page Actions')}">

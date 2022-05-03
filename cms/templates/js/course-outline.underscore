@@ -181,11 +181,14 @@ if (is_proctored_exam) {
         </div>
     </div>
     <div class="<%- xblockType %>-status">
-        <% if (xblockInfo.get('estimated_time') !=null && xblockInfo.get('show_estimated_time') !=false)  { %>
-                <%- gettext('Estimated Time To Complete:') %>
+        <% if (xblockInfo.get('estimated_time') !=null)  { %>
+                <%- gettext('Estimated Time To Complete:') %> 
                 <%- xblockInfo.get('estimated_time') %> 
                 <% if (xblockInfo.get('estimated_time')==1) %> <%- gettext('minute') %>
                 <% else %> <%- gettext('minutes') %>
+                <% if (xblockInfo.get('override_estimated_time') == true)  { %>
+                <%- gettext('(Overrided)') %> 
+                <% } %>
         <% } %>
         <% if (!xblockInfo.isVertical()) { %>
             <% if (xblockInfo.get('explanatory_message') !=null) { %>
