@@ -1549,7 +1549,7 @@ def textbooks_list_api_handler(request, course_key_string):
     store = modulestore()
     with store.bulk_operations(course_key):
         course = store.get_course(course_key, depth=0)
-    # import pdb;pdb.set_trace()
+
     return JsonResponse(course.pdf_textbooks)
 
 
@@ -1561,18 +1561,14 @@ def textbooks_api_handler(request, course_key_string, textbook_name):
     GET
         pdf: return pdf of ebook chapter
     '''
-    from django.http.response import HttpResponse
-    from xmodule.contentstore.content import StaticContent
     course_key = CourseKey.from_string(course_key_string)
     content = contentstore()
     # gets location of textbook pdf
-    # import pdb;pdb.set_trace()
     content_key = StaticContent.compute_location(course_key, textbook_name)
     # gets textbook pdf from contentstore
     textbook_data = content.find(content_key)
-    textbook = textbook_data._data
+    textbook = textbook_data._data  # lint-amnesty, pylint: disable=protected-access
     if request.method == 'GET':
-        # import pdb;pdb.set_trace()
         response = HttpResponse(textbook, content_type='application/pdf')
         return response
 

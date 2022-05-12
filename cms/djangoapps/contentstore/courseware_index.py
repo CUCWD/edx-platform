@@ -1,9 +1,13 @@
 """ Code to allow module store to interface with courseware index """
 
-import logging
-import re
+
 from abc import ABCMeta, abstractmethod
 from datetime import timedelta
+
+import json
+import logging
+import re
+import requests
 
 from django.conf import settings
 from django.urls import resolve
@@ -15,10 +19,13 @@ from requests.exceptions import ConnectionError, Timeout  # pylint: disable=rede
 
 from cms.djangoapps.contentstore.course_group_config import GroupConfiguration
 from common.djangoapps.course_modes.models import CourseMode
+from lms.lib.utils import get_parent_unit
+from opaque_keys.edx.keys import UsageKey
 from openedx.core.lib.courses import course_image_url
 from xmodule.annotator_mixin import html_to_text
 from xmodule.library_tools import normalize_key_for_search
 from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.django import modulestore as module_store
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
 # REINDEX_AGE is the default amount of time that we look back for changes
@@ -36,19 +43,16 @@ log = logging.getLogger('edx.modulestore')
 
 
 def keyterms_reindex(course_id):
-    """ Uses key terms API endpoint """
-    import requests
-    import json
-    from xmodule.modulestore.django import modulestore
-    from lms.lib.utils import get_parent_unit
-    from opaque_keys.edx.keys import UsageKey
-    # url for api endpoint
-    URL = settings.KEY_TERMS_API_REINDEX_URL + "?course_id=" + str(course_id)
+    """
+    Uses key terms API endpoint
+    """
+    # url for keyterms api endpoint for reindexing a course
+    url_key_terms_api_reindex = settings.KEY_TERMS_API_REINDEX_URL + "?course_id=" + str(course_id)
 
     try:
         # when request is sent to endpoint, starts process of retrieving and searching through
         # textbooks for key terms
-        requests.post(URL)
+        requests.post(url_key_terms_api_reindex)
 
         # retrieve lesson data to be updated
         payload = json.dumps({})
@@ -57,7 +61,7 @@ def keyterms_reindex(course_id):
             'Content-Type': 'application/json',
             # 'Cookie': 'csrftoken=<token>'
         }
-        response = requests.request("GET", URL, headers=headers, data=payload)
+        response = requests.request("GET", url_key_terms_api_reindex, headers=headers, data=payload)
 
         if response.status_code == 200:
             # holds our updated lesson links
@@ -68,20 +72,21 @@ def keyterms_reindex(course_id):
                 if "vertical+block" not in lesson['lesson_link']:
                     usage_key = UsageKey.from_string(lesson['lesson_link'])
                     try:
-                        item = modulestore().get_item(usage_key)
+                        item = module_store().get_item(usage_key)
                         newlink = str(get_parent_unit(item).location)
                         print(item)
                         updatedlesson[lesson['lesson_link']] = newlink
                     except (ItemNotFoundError) as excep:
-                       log.info(
-                            '[keyterms_reindex] Cannot find block %s in modulestore for course %s.\nException: %s',
+                        log.info(
+                            '[keyterms_reindex] Cannot find block %s in modulestore for course'
+                            ' %s.\nException: %s',
                             lesson['lesson_link'], str(course_id), str(excep)
                         )
                 else:
                     updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
 
             # send updated data
-            return requests.post(URL, json=json.dumps(updatedlesson))
+            return requests.post(url_key_terms_api_reindex, json=json.dumps(updatedlesson))
         elif response.status_code == 204:
             log.info(
                 '[key-terms-api endpoint] No keyterms found when reindexing %s',
