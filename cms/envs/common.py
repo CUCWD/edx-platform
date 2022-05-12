@@ -2548,5 +2548,5 @@ CUSTOM_PAGES_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-a
 
 
 ################# Key Terms and Glossary API #################
-KEY_TERMS_API_ROOT_URL = "https://localhost:18500"
+KEY_TERMS_API_ROOT_URL = "http://localhost:18500"
 KEY_TERMS_API_REINDEX_URL = KEY_TERMS_API_ROOT_URL + '/api/v1/platform_course_reindex/'

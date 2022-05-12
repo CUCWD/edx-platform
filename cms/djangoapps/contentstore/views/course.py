@@ -75,6 +75,7 @@ from openedx.features.content_type_gating.partitions import CONTENT_TYPE_GATING_
 from openedx.features.course_experience.waffle import ENABLE_COURSE_ABOUT_SIDEBAR_HTML
 from openedx.features.course_experience.waffle import waffle as course_experience_waffle
 from xmodule.contentstore.content import StaticContent
+from xmodule.contentstore.django import contentstore
 from xmodule.course_module import CourseBlock, DEFAULT_START_DATE, CourseFields
 from xmodule.error_module import ErrorBlock
 from xmodule.modulestore import EdxJSONEncoder
@@ -127,6 +128,7 @@ __all__ = ['course_info_handler', 'course_handler', 'course_listing',
            'grading_handler',
            'advanced_settings_handler',
            'course_notifications_handler',
+           'textbooks_list_api_handler', 'textbooks_api_handler',
            'textbooks_list_handler', 'textbooks_detail_handler',
            'group_configurations_list_handler', 'group_configurations_detail_handler',
            'get_course_and_check_access']
@@ -1531,6 +1533,44 @@ def assign_textbook_id(textbook, used_ids=()):
         # add a random ASCII character to the end
         tid = tid + random.choice(string.ascii_lowercase)
     return tid
+
+
+# @ensure_csrf_cookie
+def textbooks_list_api_handler(request, course_key_string):
+    '''
+    Gets list of all textbooks for specified course
+    Allows access to info without being logged in as Django user
+    GET
+        json: return JSON representation of all textbooks in this course
+    '''
+    course_key = CourseKey.from_string(course_key_string)
+    store = modulestore()
+    # returns list of textbooks associated with provided course
+    store = modulestore()
+    with store.bulk_operations(course_key):
+        course = store.get_course(course_key, depth=0)
+
+    return JsonResponse(course.pdf_textbooks)
+
+
+# @ensure_csrf_cookie
+def textbooks_api_handler(request, course_key_string, textbook_name):
+    '''
+    Gets PDF for a specific textbook chapter
+    Allows access to info without being logged in as Django user
+    GET
+        pdf: return pdf of ebook chapter
+    '''
+    course_key = CourseKey.from_string(course_key_string)
+    content = contentstore()
+    # gets location of textbook pdf
+    content_key = StaticContent.compute_location(course_key, textbook_name)
+    # gets textbook pdf from contentstore
+    textbook_data = content.find(content_key)
+    textbook = textbook_data._data  # lint-amnesty, pylint: disable=protected-access
+    if request.method == 'GET':
+        response = HttpResponse(textbook, content_type='application/pdf')
+        return response
 
 
 @require_http_methods(("GET", "POST", "PUT"))
