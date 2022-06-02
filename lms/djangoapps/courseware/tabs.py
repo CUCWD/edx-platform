@@ -8,7 +8,9 @@ from django.conf import settings
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_noop
 
+from lms.djangoapps.badges.utils import badges_enabled
 from lms.djangoapps.courseware.access import has_access
+from lms.djangoapps.courseware.courses import get_course_by_id
 from lms.djangoapps.courseware.entrance_exams import user_can_skip_entrance_exam
 from lms.djangoapps.course_home_api.toggles import course_home_legacy_is_active, course_home_mfe_progress_tab_is_active
 from openedx.core.lib.course_tabs import CourseTabPluginManager
@@ -78,6 +80,55 @@ class CourseInfoTab(CourseTab):
     @classmethod
     def is_enabled(cls, course, user=None):
         return True
+
+
+class GlossaryTab(EnrolledTab):
+    """
+    A tab representing the glossary for a course.
+    """
+    type = "glossary"
+    title = gettext_noop('Glossary')
+    priority = None
+    view_name = "glossary"
+    is_default = True
+    is_hideable = True
+    is_movable = True
+
+    def __init__(self, tab_dict):
+        def link_func(course, reverse_func):
+            if course_home_legacy_is_active(course.id):
+                return reverse_func(self.view_name, args=[str(course.id)])
+            else:
+                return get_learning_mfe_home_url(course_key=course.id, view_name=self.view_name)
+
+        tab_dict['link_func'] = link_func
+        super().__init__(tab_dict)
+
+    @classmethod
+    def is_enabled(cls, course, user=None):
+        """Returns true if the key terms glossary feature is enabled in the course.
+
+        Args:
+            course (CourseDescriptor): the course using the feature
+            user (User): the user interacting with the course
+        """
+        if not super(GlossaryTab, cls).is_enabled(course, user=user):
+            return False
+
+        if not cls.is_feature_enabled():
+            return False
+
+        if user and not user.is_authenticated:
+            return False
+
+        return True
+
+    @classmethod
+    def is_feature_enabled(cls):
+        """
+        Returns True if the teams feature is enabled.
+        """
+        return settings.FEATURES.get('ENABLE_KEY_TERMS_GLOSSARY', False)
 
 
 class SyllabusTab(EnrolledTab):
@@ -319,6 +370,63 @@ class SingleTextbookTab(CourseTab):
 
     def to_json(self):
         raise NotImplementedError('SingleTextbookTab should not be serialized.')
+
+
+class BadgesTab(EnrolledTab):
+    """
+    A tab representing the relevant badge progress for a course.
+    """
+    type = "badges_progress"
+    title = gettext_noop(
+        "Badges")  # We don't have the user in this context, so we don't want to translate it at this level.
+    priority = None
+    view_name = "badges_progress"
+    is_default = True
+    is_movable = True
+    is_hideable = True
+
+    def __init__(self, tab_dict):
+        def link_func(course, reverse_func):
+            if course_home_legacy_is_active(course.id):
+                return reverse_func(self.view_name, args=[str(course.id)])
+            else:
+                return get_learning_mfe_home_url(course_key=course.id, view_name='badges/progress')
+
+        tab_dict['link_func'] = link_func
+        super().__init__(tab_dict)
+
+    @classmethod
+    def is_enabled(cls, course, user=None):
+        """Returns true if the badges feature is enabled in the course.
+
+        Args:
+            course (CourseDescriptor): the course using the feature
+            user (User): the user interacting with the course
+        """
+        if not super(BadgesTab, cls).is_enabled(course, user=user):
+            return False
+
+        if not cls.is_feature_enabled():
+            return False
+
+        if user and not user.is_authenticated:
+            return False
+
+        # Retrieve the Advanced Settings Issue Open Badges (`issue_badges`) field from the CourseFields instance.
+        # CourseDescriptorWithMixins will be `course` instance when called from the `^/api/courseware/course/` url.
+        # CourseOverview will be `course` instance when called from the `^courses/{}/courseware` url.
+        if course.id:
+            course_fields = get_course_by_id(course.id)
+            return course_fields.issue_badges
+
+        return False
+
+    @classmethod
+    def is_feature_enabled(cls):
+        """
+        Returns True if the teams feature is enabled.
+        """
+        return badges_enabled()
 
 
 class DatesTab(EnrolledTab):

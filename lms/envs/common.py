@@ -477,6 +477,11 @@ FEATURES = {
     # .. toggle_tickets: https://github.com/edx/edx-platform/pull/5220
     'ALWAYS_REDIRECT_HOMEPAGE_TO_DASHBOARD_FOR_AUTHENTICATED_USER': True,
 
+    # When an non logged in user (Anonymous) goes to the homepage ('/') shoud the user be
+    # redirected to the dashboard - this is default Microsite behaviour for EducateWorkforce.
+    # Set to False to not redirect the user.
+    'ALWAYS_REDIRECT_HOMEPAGE_TO_LOGIN_FOR_UNAUTHENTICATED_USER': False,
+
     # .. toggle_name: FEATURES['ENABLE_COURSE_SORTING_BY_START_DATE']
     # .. toggle_implementation: DjangoSetting
     # .. toggle_default: True
@@ -694,6 +699,9 @@ FEATURES = {
     # .. toggle_creation_date: 2015-04-30
     # .. toggle_tickets: https://openedx.atlassian.net/browse/SOL-1325
     'ENABLE_OPENBADGES': False,
+
+    # Enable BigCommerce Integration
+    'ENABLE_BIGCOMMERCE': False,
 
     # .. toggle_name: FEATURES['ENABLE_LTI_PROVIDER']
     # .. toggle_implementation: DjangoSetting
@@ -948,6 +956,15 @@ FEATURES = {
     # .. toggle_target_removal_date: 2021-10-01
     # .. toggle_tickets: 'https://openedx.atlassian.net/browse/MICROBA-1405'
     'ENABLE_V2_CERT_DISPLAY_SETTINGS': False,
+
+    # Whether to display the account linked accounts view.
+    'ENABLE_ACCOUNT_LINKED_ACCOUNTS': True,
+
+    # Whether to display the account order history view.
+    'ENABLE_ACCOUNT_ORDER_HISTORY': True,
+
+    # Enables functionality for the key terms glossary within the courseware.
+    'ENABLE_KEY_TERMS_GLOSSARY': False,
 }
 
 # Specifies extra XBlock fields that should available when requested via the Course Blocks API
@@ -2219,6 +2236,15 @@ base_vendor_js = [
     'common/js/vendor/underscore.js',
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
+    'common/js/vendor/bootstrap.bundle.js',
+
+    'js/Markdown.Converter.js',
+
+    # Load iFrame-Resizer
+    'common/js/vendor/iframeResizer.js',
+
+    # Load Owl Carousel
+    'common/js/vendor/owl.carousel.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
@@ -2229,7 +2255,12 @@ base_vendor_js = [
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',
     'js/vendor/URI.min.js',
-    'common/js/vendor/backbone.js'
+    'common/js/vendor/backbone.js',
+
+    # Used for Glossary
+    'common/js/vendor/jquery.easytabs.js',
+    'common/js/vendor/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo.js',
 ]
 
 main_vendor_js = base_vendor_js + [
@@ -2323,8 +2354,12 @@ certificates_web_view_js = [
     'common/js/vendor/jquery.js',
     'common/js/vendor/jquery-migrate.js',
     'js/vendor/jquery.cookie.js',
+    'js/vendor/jquery-ui.min.js',
+    'common/js/vendor/moment-with-locales.js',
+    'common/js/vendor/moment-timezone-with-data.js',
     'js/src/logger.js',
     'js/utils/facebook.js',
+    'js/Markdown.Converter.js',
 ]
 
 credit_web_view_js = [
@@ -2339,6 +2374,8 @@ PIPELINE['STYLESHEETS'] = {
         'source_filenames': [
             'css/vendor/font-awesome.css',
             'css/vendor/jquery.qtip.min.css',
+            'common/css/vendor/owl.carousel.css',
+            'common/css/vendor/owl.theme.default.css',
         ],
         'output_filename': 'css/lms-style-vendor.css',
     },
@@ -3133,6 +3170,7 @@ INSTALLED_APPS = [
 
     # Features
     'openedx.features.calendar_sync',
+    'openedx.features.course_badges',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',
@@ -3191,6 +3229,9 @@ INSTALLED_APPS = [
 
     # Content Library LTI 1.3 Support.
     'pylti1p3.contrib.django.lti1p3_tool_config',
+
+    # BigCommerce App
+    'lms.djangoapps.bigcommerce_app',
 ]
 
 ######################### CSRF #########################################
@@ -3502,6 +3543,12 @@ BADGING_BACKEND = 'lms.djangoapps.badges.backends.badgr.BadgrBackend'
 # .. setting_warning: DO NOT include a trailing slash. Review FEATURES['ENABLE_OPENBADGES'] for further context.
 BADGR_BASE_URL = "http://localhost:8005"
 
+# .. setting_name: BADGR_PUBLIC_URL
+# .. setting_default: 'https://badgr.com'
+# .. setting_description: The base URL for the Badgr frontend pages (e.g. Backpack, etc).
+# .. setting_warning: DO NOT include a trailing slash. Review FEATURES['ENABLE_OPENBADGES'] for further context.
+BADGR_PUBLIC_URL = "https://badgr.com"
+
 # .. setting_name: BADGR_ISSUER_SLUG
 # .. setting_default: 'example-issuer'
 # .. setting_description: A string that is the slug for the Badgr issuer. The slug can be obtained from the URL of
@@ -3548,6 +3595,32 @@ BADGR_TIMEOUT = 10
 # .. toggle_creation_date: 2021-07-29
 # .. toggle_warnings: Review FEATURES['ENABLE_OPENBADGES'] for further context.
 BADGR_ENABLE_NOTIFICATIONS = False
+
+#################### BigCommerce Settings #######################
+
+BIGCOMMERCE_APP_CLIENT_ID = None
+BIGCOMMERCE_APP_CLIENT_SECRET = None
+BIGCOMMERCE_APP_STORE_HASH = None
+BIGCOMMERCE_APP_STORE_URL = None
+
+#################### Qualtrics Settings #######################
+QUALTRICS_API_BASE_URL = None
+QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
+QUALTRICS_API_VERSION = "v3"
+QUALTRICS_API_TOKEN_EXPIRATION = 3599  # 1 hr
+QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
+
+# OAuth2 Authentication (Client Credentials)
+# https://api.qualtrics.com/instructions/docs/Instructions/oauth-authentication.md
+# Client credentials grant type doesn't use `refresh` token for access.
+QUALTRICS_API_CLIENT_ID = None
+QUALTRICS_API_CLIENT_SECRET = None
+
+# API Token Authentication
+# https://api.qualtrics.com/instructions/docs/Instructions/api-key-authentication.md
+# Recommend OAuth2 Authentication to limit scope of API calls.
+# This is automatically switch over to OAuth2 after API v1.
+QUALTRICS_API_TOKEN = None
 
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
@@ -4725,6 +4798,12 @@ USER_STATE_BATCH_SIZE = 5000
 
 ############### Settings for edx-rbac  ###############
 SYSTEM_WIDE_ROLE_CLASSES = []
+
+
+############## Settings for Frontend #########################
+# Setup for badges-frontend
+LMS_FRONTEND_BADGES_CONTAINER_URL = None
+
 
 ############## Plugin Django Apps #########################
 

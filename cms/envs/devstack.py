@@ -229,8 +229,7 @@ MODULESTORE = convert_module_store_setting_if_needed(MODULESTORE)
 # Dummy secret key for dev
 SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 
-###############################################################################
-# See if the developer has any local overrides.
+################# Import private.py for additional overrides #################
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
     from .private import *  # pylint: disable=import-error,wildcard-import
 
@@ -261,3 +260,9 @@ SOCIAL_AUTH_EDX_OAUTH2_PUBLIC_URL_ROOT = 'http://localhost:18000'  # used in bro
 
 # Don't form the return redirect URL with HTTPS on devstack
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
+
+
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+    'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    'LOCATION': 'qualtrics_backends_api_tokens'
+}

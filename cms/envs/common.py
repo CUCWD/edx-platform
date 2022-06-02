@@ -472,6 +472,9 @@ FEATURES = {
     # .. toggle_target_removal_date: 2021-10-01
     # .. toggle_tickets: 'https://openedx.atlassian.net/browse/MICROBA-1405'
     'ENABLE_V2_CERT_DISPLAY_SETTINGS': False,
+
+    # Enables functionality for the key terms glossary within the courseware.
+    'ENABLE_KEY_TERMS_GLOSSARY': False,
 }
 
 ENABLE_JASMINE = False
@@ -1178,6 +1181,8 @@ PIPELINE['STYLESHEETS'] = {
             'css/vendor/jquery.qtip.min.css',
             'js/vendor/markitup/skins/simple/style.css',
             'js/vendor/markitup/sets/wiki/style.css',
+            'common/css/vendor/owl.carousel.css',
+            'common/css/vendor/owl.theme.default.css',
         ],
         'output_filename': 'css/cms-style-vendor.css',
     },
@@ -1238,6 +1243,14 @@ base_vendor_js = [
     'common/js/vendor/backbone.js',
     'js/vendor/URI.min.js',
 
+    # Load Owl Carousel
+    'common/js/vendor/owl.carousel.js',
+
+    # Used for Glossary
+    'common/js/vendor/jquery.easytabs.js',
+    'common/js/vendor/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo.js',
+
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
     'edx-ui-toolkit/js/utils/string-utils.js',
@@ -1245,7 +1258,7 @@ base_vendor_js = [
 
     # Load Bootstrap and supporting libraries
     'common/js/vendor/popper.js',
-    'common/js/vendor/bootstrap.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Finally load RequireJS
     'common/js/vendor/require.js'
@@ -2315,6 +2328,25 @@ BULK_EMAIL_LOG_SENT_EMAILS = False
 ############### Settings for django file storage ##################
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
+#################### Qualtrics Settings #######################
+QUALTRICS_API_BASE_URL = None
+QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
+QUALTRICS_API_VERSION = "v3"
+QUALTRICS_API_TOKEN_EXPIRATION = 3599  # 1 hr
+QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
+
+# OAuth2 Authentication (Client Credentials)
+# https://api.qualtrics.com/instructions/docs/Instructions/oauth-authentication.md
+# Client credentials grant type doesn't use `refresh` token for access.
+QUALTRICS_API_CLIENT_ID = None
+QUALTRICS_API_CLIENT_SECRET = None
+
+# API Token Authentication
+# https://api.qualtrics.com/instructions/docs/Instructions/api-key-authentication.md
+# Recommend OAuth2 Authentication to limit scope of API calls.
+# This is automatically switch over to OAuth2 after API v1.
+QUALTRICS_API_TOKEN = None
+
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
 # the ones that contain information other than grades.
@@ -2513,3 +2545,8 @@ TEAMS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-runn
 TEXTBOOKS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/textbooks.html"
 WIKI_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/course_wiki.html"
 CUSTOM_PAGES_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/pages.html#adding-custom-pages"
+
+
+################# Key Terms and Glossary API #################
+KEY_TERMS_API_ROOT_URL = "http://localhost:18500"
+KEY_TERMS_API_REINDEX_URL = KEY_TERMS_API_ROOT_URL + '/api/v1/platform_course_reindex/'

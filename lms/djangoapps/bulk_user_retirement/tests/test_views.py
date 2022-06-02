@@ -84,6 +84,7 @@ class BulkUserRetirementViewTests(APITestCase):
             response = self.client.post(user_retirement_url, {
                 "usernames": f'{self.user3.username},{self.user4.username}'
             })
+
             assert response.status_code == 200
             assert sorted(response.data['successful_user_retirements']) == sorted(expected_response['successful_user_retirements'])  # pylint: disable=line-too-long
 
@@ -99,6 +100,7 @@ class BulkUserRetirementViewTests(APITestCase):
             'successful_user_retirements': [self.user3.username, self.user4.username],
             'failed_user_retirements': ['non_existing_user']
         }
+
         with self.settings(RETIREMENT_SERVICE_WORKER_USERNAME=self.user1.username):
             response = self.client.post(user_retirement_url, {
                 "usernames": '{user1},{user2}, non_existing_user'.format(

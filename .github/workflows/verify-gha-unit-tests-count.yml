@@ -8,6 +8,7 @@ on:
 
 jobs:
   collect-and-verify:
+    if: github.repository == 'openedx/edx-platform' || github.repository == 'edx/edx-platform-private'
     runs-on: [ edx-platform-runner ]
     steps:
       - name: sync directory owner
@@ -51,7 +52,4 @@ jobs:
           echo All shards unit tests count: ${{ env.shards_all_unit_tests_count }}
 
       - name: verify unit tests count
-        if: ${{ env.root_all_unit_tests_count != env.shards_all_unit_tests_count }}
-        run: |
-          echo "::error title='Unit test modules in unit-test-shards.json (unit-tests.yml workflow) are outdated'::unit tests running in unit-tests workflow don't match the count for unit tests for entire edx-platform suite, please update the unit-test-shards.json under .github/workflows to add any missing apps and match the count"
-          exit 1
+        uses: ./.github/actions/verify-tests-count

@@ -1,9 +1,13 @@
 """ Code to allow module store to interface with courseware index """
 
-import logging
-import re
+
 from abc import ABCMeta, abstractmethod
 from datetime import timedelta
+
+import json
+import logging
+import re
+import requests
 
 from django.conf import settings
 from django.urls import resolve
@@ -11,13 +15,18 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from eventtracking import tracker
 from search.search_engine_base import SearchEngine
+from requests.exceptions import ConnectionError, Timeout  # pylint: disable=redefined-builtin
 
 from cms.djangoapps.contentstore.course_group_config import GroupConfiguration
 from common.djangoapps.course_modes.models import CourseMode
+from lms.lib.utils import get_parent_unit
+from opaque_keys.edx.keys import UsageKey
 from openedx.core.lib.courses import course_image_url
 from xmodule.annotator_mixin import html_to_text
 from xmodule.library_tools import normalize_key_for_search
 from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.django import modulestore as module_store
+from xmodule.modulestore.exceptions import ItemNotFoundError
 
 # REINDEX_AGE is the default amount of time that we look back for changes
 # that might have happened. If we are provided with a time at which the
@@ -31,6 +40,73 @@ REINDEX_AGE = timedelta(0, 60)  # 60 seconds
 INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
+
+
+def keyterms_reindex(course_id):
+    """
+    Uses key terms API endpoint
+    """
+    # url for keyterms api endpoint for reindexing a course
+    url_key_terms_api_reindex = settings.KEY_TERMS_API_REINDEX_URL + "?course_id=" + str(course_id)
+
+    try:
+        # when request is sent to endpoint, starts process of retrieving and searching through
+        # textbooks for key terms
+        requests.post(url_key_terms_api_reindex)
+
+        # retrieve lesson data to be updated
+        payload = json.dumps({})
+        headers = {
+            # 'Authorization': 'Bearer <token>',
+            'Content-Type': 'application/json',
+            # 'Cookie': 'csrftoken=<token>'
+        }
+        response = requests.request("GET", url_key_terms_api_reindex, headers=headers, data=payload)
+
+        if response.status_code == 200:
+            # holds our updated lesson links
+            updatedlesson = {}
+
+            # go through all lessons and update lesson link to find vertical xblock
+            for lesson in response.json():
+                if "vertical+block" not in lesson['lesson_link']:
+                    usage_key = UsageKey.from_string(lesson['lesson_link'])
+                    try:
+                        item = module_store().get_item(usage_key)
+                        newlink = str(get_parent_unit(item).location)
+                        print(item)
+                        updatedlesson[lesson['lesson_link']] = newlink
+                    except (ItemNotFoundError) as excep:
+                        log.info(
+                            '[keyterms_reindex] Cannot find block %s in modulestore for course'
+                            ' %s.\nException: %s',
+                            lesson['lesson_link'], str(course_id), str(excep)
+                        )
+                else:
+                    updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
+
+            # send updated data
+            return requests.post(url_key_terms_api_reindex, json=json.dumps(updatedlesson))
+        elif response.status_code == 204:
+            log.info(
+                '[key-terms-api endpoint] No keyterms found when reindexing %s',
+                str(course_id)
+            )
+        else:
+            raise ConnectionError(
+                f"Could not connect to the key-terms api. HTTP status code {response.status_code}"
+            )
+    except (ConnectionError, Timeout) as excep:
+        log.info(
+            '[key-terms-api endpoint] Exception raise for key term reindex.\nException: %s',
+            str(excep)
+        )
+        raise SearchIndexingError(
+            'Error(s) present during indexing',
+            _('Error indexing key terms')
+        ) from excep
+
+    return False
 
 
 def strip_html_content_to_text(html_content):
@@ -156,6 +232,9 @@ class SearchIndexerBase(metaclass=ABCMeta):
         # it is used to collect all indexes and index them using bulk API,
         # instead of per item index API call.
         items_index = []
+
+        if settings.FEATURES['ENABLE_KEY_TERMS_GLOSSARY']:
+            keyterms_reindex(structure_key)
 
         def get_item_location(item):
             """

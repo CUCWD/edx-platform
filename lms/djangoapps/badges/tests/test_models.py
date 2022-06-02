@@ -22,7 +22,11 @@ from lms.djangoapps.badges.models import (
     CourseCompleteImageConfiguration,
     validate_badge_image
 )
-from lms.djangoapps.badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
+from lms.djangoapps.badges.tests.factories import (
+    BadgeAssertionFactory,
+    BadgeClassFactory,
+    RandomBadgeClassFactory
+)
 from lms.djangoapps.certificates.tests.test_models import TEST_DATA_ROOT, TEST_DATA_DIR
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
@@ -41,7 +45,7 @@ class BadgeImageConfigurationTest(TestCase):
     Test the validation features of BadgeImageConfiguration.
     """
 
-    def tearDown(self):  # lint-amnesty, pylint: disable=super-method-not-called
+    def tearDown(self):  # lint-amnesty, pylint: disable=super-method-not-called,missing-function-docstring,invalid-name
         tmp_path = Path(TEST_DATA_ROOT / 'course_complete_badges')
         Path.rmtree_p(tmp_path)
 
@@ -50,15 +54,20 @@ class BadgeImageConfigurationTest(TestCase):
         Verify that creating two configurations as default is not permitted.
         """
         CourseCompleteImageConfiguration(mode='test', icon=get_image('good'), default=True).save()
-        pytest.raises(ValidationError, CourseCompleteImageConfiguration(mode='test2', icon=get_image('good'),
-                                                                        default=True).full_clean)
+        pytest.raises(
+            ValidationError,
+            CourseCompleteImageConfiguration(
+                mode='test2', icon=get_image('good'), default=True).full_clean
+        )
 
     def test_runs_validator(self):
         """
         Verify that the image validator is triggered when cleaning the model.
         """
-        pytest.raises(ValidationError, CourseCompleteImageConfiguration(mode='test2', icon=get_image('unbalanced'))
-                      .full_clean)
+        pytest.raises(
+            ValidationError,
+            CourseCompleteImageConfiguration(mode='test2', icon=get_image('unbalanced')).full_clean
+        )
 
 
 class DummyBackend:
@@ -74,7 +83,7 @@ class BadgeClassTest(ModuleStoreTestCase):
     Test BadgeClass functionality
     """
 
-    def setUp(self):
+    def setUp(self):  # lint-amnesty, pylint: disable=missing-function-docstring,invalid-name
         super().setUp()
         self.addCleanup(self.cleanup_uploads)
 
@@ -139,9 +148,9 @@ class BadgeClassTest(ModuleStoreTestCase):
         course_key = CourseFactory.create(metadata={'issue_badges': False}).location.course_key
         with pytest.raises(CourseBadgesDisabledError):
             BadgeClass.get_badge_class(
-                slug='test_slug', issuing_component='test_component', description='Attempted override',
-                criteria='test', display_name='Testola', image_file_handle=get_image('good'),
-                course_id=course_key,
+                slug='test_slug', issuing_component='test_component',
+                description='Attempted override', criteria='test', display_name='Testola',
+                image_file_handle=get_image('good'), course_id=course_key,
             )
 
     def test_get_badge_class_create(self):
@@ -182,7 +191,8 @@ class BadgeClassTest(ModuleStoreTestCase):
         """
         Verify handing a broken image to get_badge_class raises a validation error upon creation.
         """
-        # TODO Test should be updated, this doc doesn't makes sense, the object eventually gets created
+        # TODO Test should be updated, this doc doesn't makes sense, the object eventually
+        # gets created
         self.assertRaises(
             ValidationError,
             BadgeClass.get_badge_class,
@@ -193,11 +203,17 @@ class BadgeClassTest(ModuleStoreTestCase):
 
     def test_get_badge_class_data_validate(self):
         """
-        Verify handing incomplete data for required fields when making a badge class raises an Integrity error.
+        Verify handing incomplete data for required fields when making a badge class raises an
+        Integrity or Validation error.
         """
         image = get_image('good')
-        pytest.raises(IntegrityError, BadgeClass.get_badge_class, slug='new_slug', issuing_component='new_component',
-                      image_file_handle=image)
+        pytest.raises(
+            (IntegrityError, ValidationError),
+            BadgeClass.get_badge_class,
+            slug='new_slug',
+            issuing_component='new_component',
+            image_file_handle=image
+        )
 
     def test_get_for_user(self):
         """
@@ -217,7 +233,8 @@ class BadgeClassTest(ModuleStoreTestCase):
     @patch('lms.djangoapps.badges.backends.badgr.BadgrBackend.award')
     def test_award(self, mock_award):
         """
-        Verify that the award command calls the award function on the backend with the right parameters.
+        Verify that the award command calls the award function on the backend with the right
+        parameters.
         """
         user = UserFactory.create()
         badge_class = BadgeClassFactory.create()
@@ -229,8 +246,15 @@ class BadgeClassTest(ModuleStoreTestCase):
         """
         Verify that the image validator is triggered when cleaning the model.
         """
-        pytest.raises(ValidationError, BadgeClass(slug='test', issuing_component='test2', criteria='test3',
-                                                  description='test4', image=get_image('unbalanced')).full_clean)
+        pytest.raises(
+            ValidationError,
+            BadgeClass(
+                slug='test',
+                issuing_component='test2',
+                criteria='test3',
+                description='test4',
+                image=get_image('unbalanced')).full_clean
+        )
 
 
 class BadgeAssertionTest(ModuleStoreTestCase):
@@ -250,7 +274,9 @@ class BadgeAssertionTest(ModuleStoreTestCase):
         course_key = course.location.course_key
         course_badges = [RandomBadgeClassFactory(course_id=course_key) for _i in range(3)]
         course_assertions = [
-            BadgeAssertionFactory.create(user=user, badge_class=badge_class).id for badge_class in course_badges
+            BadgeAssertionFactory.create(
+                user=user, badge_class=badge_class
+            ).id for badge_class in course_badges
         ]
         assertions.extend(course_assertions)
         assertions.sort()
