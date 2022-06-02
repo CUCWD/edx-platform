@@ -1077,9 +1077,17 @@ yarl==1.7.0
 # setuptools
 
 # EducateWorkforce specific packages. This was manually added because `make upgrade` was causing a lot of packages to update. This limits the Python package changes for the release.
--e git+https://github.com/CUCWD/bigcommerce-api-python.git@bigcommerce-0.22.2-maple.1#egg=bigcommerce==0.22.2
+# -e git+https://github.com/CUCWD/bigcommerce-api-python.git@bigcommerce-0.22.2-maple.3#egg=bigcommerce==0.22.2
     # via -r ./requirements/edx/private.txt
--e git+https://github.com/CUCWD/edx-organizations.git@6.10.0-cucwd-maple.1#egg=edx-organizations==6.10.0-cucwd-maple.1
+# -e git+https://github.com/CUCWD/custom-form-app.git@0.1-maple.3-cucwd#egg=custom-form-app==0.1
     # via -r ./requirements/edx/private.txt
--e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.1#egg=social-auth-backend-bigcommerce==0.1.0-maple.1
+# -e git+https://github.com/CUCWD/figures@0.4.dev17-maple.3#egg=Figures==0.4.dev17
+    # via -r ./requirements/edx/private.txt
+# -e git+https://github.com/CUCWD/edx-organizations.git@6.10.0-maple.3-cucwd#egg=edx-organizations==6.10.0
+    # via -r ./requirements/edx/private.txt
+# -e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.3#egg=social-auth-backend-bigcommerce==0.1.0
+    # via -r ./requirements/edx/private.txt
+# -e git+https://github.com/CUCWD/xblock-keyterms.git@release/0.1-maple.3-cucwd#egg=keyterms-xblock==0.1
+    # via -r ./requirements/edx/private.txt
+# -e git+https://github.com/CUCWD/xblock-qualtrics-survey.git@release/v.2.1.0-maple.3-cucwd#egg=xblock_qualtrics_survey==2.1.0
     # via -r ./requirements/edx/private.txt
