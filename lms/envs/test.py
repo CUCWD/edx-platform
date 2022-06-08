@@ -601,6 +601,10 @@ RESET_PASSWORD_API_RATELIMIT = '2/m'
 
 CORS_ORIGIN_WHITELIST = ['https://sandbox.edx.org']
 
+#################### Network configuration ####################
+# Tests are not behind any proxies
+CLOSEST_CLIENT_IP_FROM_HEADERS = []
+
 #################### OpenBadges Settings #######################
 
 # FEATURES['ENABLE_OPENBADGES'] = True

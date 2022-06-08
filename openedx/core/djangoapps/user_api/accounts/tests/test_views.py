@@ -194,7 +194,7 @@ class TestOwnUsernameAPI(CacheIsolationTestCase, UserAPITestCase):
         Test that a client (logged in) can get her own username.
         """
         self.client.login(username=self.user.username, password=TEST_PASSWORD)
-        self._verify_get_own_username(17)
+        self._verify_get_own_username(18)
 
     def test_get_username_inactive(self):
         """
@@ -204,7 +204,7 @@ class TestOwnUsernameAPI(CacheIsolationTestCase, UserAPITestCase):
         self.client.login(username=self.user.username, password=TEST_PASSWORD)
         self.user.is_active = False
         self.user.save()
-        self._verify_get_own_username(17)
+        self._verify_get_own_username(18)
 
     def test_get_username_not_logged_in(self):
         """
@@ -213,7 +213,7 @@ class TestOwnUsernameAPI(CacheIsolationTestCase, UserAPITestCase):
         """
 
         # verify that the endpoint is inaccessible when not logged in
-        self._verify_get_own_username(13, expected_status=401)
+        self._verify_get_own_username(14, expected_status=401)
 
 
 @ddt.ddt
@@ -467,7 +467,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         """
         self.different_client.login(username=self.different_user.username, password=TEST_PASSWORD)
         self.create_mock_profile(self.user)
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(28):
             response = self.send_get(self.different_client)
         self._verify_full_shareable_account_response(response, account_privacy=ALL_USERS_VISIBILITY)
 
@@ -482,7 +482,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         """
         self.different_client.login(username=self.different_user.username, password=TEST_PASSWORD)
         self.create_mock_profile(self.user)
-        with self.assertNumQueries(27):
+        with self.assertNumQueries(28):
             response = self.send_get(self.different_client)
         self._verify_private_account_response(response)
 
@@ -630,7 +630,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
             assert data['accomplishments_shared'] is False
 
         self.client.login(username=self.user.username, password=TEST_PASSWORD)
-        verify_get_own_information(25)
+        verify_get_own_information(26)
 
         # Now make sure that the user can get the same information, even if not active
         self.user.is_active = False
@@ -650,7 +650,7 @@ class TestAccountsAPI(CacheIsolationTestCase, UserAPITestCase):
         legacy_profile.save()
 
         self.client.login(username=self.user.username, password=TEST_PASSWORD)
-        with self.assertNumQueries(25):
+        with self.assertNumQueries(26):
             response = self.send_get(self.client)
         for empty_field in ("level_of_education", "gender", "country", "state", "bio",):
             assert response.data[empty_field] is None
