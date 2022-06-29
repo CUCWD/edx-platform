@@ -2269,7 +2269,7 @@ base_vendor_js = [
     'common/js/vendor/iframeResizer.js',
 
     # Load Owl Carousel
-    'common/js/vendor/owl.carousel.js',
+    'js/vendor/OwlCarousel2/owl.carousel.js',
 
     # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
@@ -2402,8 +2402,8 @@ PIPELINE['STYLESHEETS'] = {
         'source_filenames': [
             'css/vendor/font-awesome.css',
             'css/vendor/jquery.qtip.min.css',
-            'common/css/vendor/owl.carousel.css',
-            'common/css/vendor/owl.theme.default.css',
+            'css/vendor/OwlCarousel2/owl.carousel.css',
+            'css/vendor/OwlCarousel2/owl.theme.default.css',
         ],
         'output_filename': 'css/lms-style-vendor.css',
     },

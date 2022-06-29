@@ -60,7 +60,6 @@ NPM_INSTALLED_LIBRARIES = [
     'jquery/dist/jquery.js',
     'moment-timezone/builds/moment-timezone-with-data.js',
     'moment/min/moment-with-locales.js',
-    'owl.carousel/dist/',
     'picturefill/dist/picturefill.js',
     'requirejs/require.js',
     'underscore.string/dist/underscore.string.js',
