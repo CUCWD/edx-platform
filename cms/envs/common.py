@@ -1181,8 +1181,8 @@ PIPELINE['STYLESHEETS'] = {
             'css/vendor/jquery.qtip.min.css',
             'js/vendor/markitup/skins/simple/style.css',
             'js/vendor/markitup/sets/wiki/style.css',
-            'common/css/vendor/owl.carousel.css',
-            'common/css/vendor/owl.theme.default.css',
+            'css/vendor/OwlCarousel2/owl.carousel.css',
+            'css/vendor/OwlCarousel2/owl.theme.default.css',
         ],
         'output_filename': 'css/cms-style-vendor.css',
     },
@@ -1244,7 +1244,7 @@ base_vendor_js = [
     'js/vendor/URI.min.js',
 
     # Load Owl Carousel
-    'common/js/vendor/owl.carousel.js',
+    'js/vendor/OwlCarousel2/owl.carousel.js',
 
     # Used for Glossary
     'common/js/vendor/jquery.easytabs.js',
