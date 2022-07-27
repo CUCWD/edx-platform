@@ -56,7 +56,6 @@ from common.djangoapps.util import views as util_views
 
 RESET_COURSE_DEADLINES_NAME = 'reset_course_deadlines'
 RENDER_XBLOCK_NAME = 'render_xblock'
-COURSE_BADGES_PROGRESS = 'badges_progress'
 COURSE_DATES_NAME = 'dates'
 COURSE_PROGRESS_NAME = 'progress'
 
@@ -217,39 +216,8 @@ if settings.FEATURES.get('ENABLE_MOBILE_REST_API'):
     ]
 
 if settings.FEATURES.get('ENABLE_OPENBADGES'):
-    # badges api
     urlpatterns += [
-        path('api/badges/v1/', include(('lms.djangoapps.badges.api.urls', 'badges_api'), namespace='badges_api')),
-    ]
-
-    # badges progress page
-    urlpatterns += [
-        re_path(
-            fr'^courses/{settings.COURSE_ID_PATTERN}/badges/',
-            courseware_views.badges_progress,
-            name=COURSE_BADGES_PROGRESS,
-        ),
-    ]
-
-if settings.FEATURES.get('ENABLE_BIGCOMMERCE'):
-    urlpatterns += [
-        # Callback Endpoints
-        re_path(
-            r'^bigcommerce/callbacks/',
-            include(
-                ('lms.djangoapps.bigcommerce_app.callbacks.urls', 'lms.djangoapps.bigcommerce_app'), namespace='bigcommerce_app_callbacks'
-            )
-        ),
-    ]
-    urlpatterns += [
-        # Single-Click App Endpoints
-        re_path(
-            r'^bigcommerce/single-click/',
-            include(
-                ('lms.djangoapps.bigcommerce_app.single_click.urls', 'lms.djangoapps.bigcommerce_app'),
-                namespace='bigcommerce_app_single_click'
-            )
-        ),
+        path('api/badges/v1/', include(('lms.djangoapps.badges.api.urls', 'badges'), namespace='badges_api')),
     ]
 
 urlpatterns += [
@@ -537,15 +505,6 @@ urlpatterns += [
         ),
         courseware_views.dates,
         name=COURSE_DATES_NAME,
-    ),
-
-    # glossary page
-    re_path(
-        r'^courses/{}/glossary'.format(
-            settings.COURSE_ID_PATTERN,
-        ),
-        courseware_views.glossary,
-        name='glossary',
     ),
 
     # Takes optional student_id for instructor use--shows profile as that student sees it.

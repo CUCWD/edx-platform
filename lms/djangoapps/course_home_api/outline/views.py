@@ -24,7 +24,6 @@ from rest_framework.response import Response
 from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.student.models import CourseEnrollment
 from common.djangoapps.util.views import expose_header
-from lms.djangoapps.badges.handlers import award_section_badges
 from lms.djangoapps.course_goals.api import (
     add_course_goal,
     add_course_goal_deprecated,
@@ -240,10 +239,6 @@ class OutlineTabView(RetrieveAPIView):
         is_staff = bool(has_access(request.user, 'staff', course_key))
         show_enrolled = is_enrolled or is_staff
         if show_enrolled:
-
-            # Award badges to course chapters if they haven't already been done.
-            award_section_badges(course_key_string, request)
-
             course_blocks = get_course_outline_block_tree(request, course_key_string, request.user)
             date_blocks = get_course_date_blocks(course, request.user, request, num_assignments=1)
             dates_widget['course_date_blocks'] = [block for block in date_blocks if not isinstance(block, TodaysDate)]

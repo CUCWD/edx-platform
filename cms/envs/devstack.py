@@ -229,7 +229,8 @@ MODULESTORE = convert_module_store_setting_if_needed(MODULESTORE)
 # Dummy secret key for dev
 SECRET_KEY = '85920908f28904ed733fe576320db18cabd7b6cd'
 
-################# Import private.py for additional overrides #################
+###############################################################################
+# See if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
     from .private import *  # pylint: disable=import-error,wildcard-import
 
@@ -264,9 +265,3 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 #################### Network configuration ####################
 # Devstack is directly exposed to the caller
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
-
-
-CACHES[QUALTRICS_API_TOKEN_CACHE] = {
-    'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-    'LOCATION': 'qualtrics_backends_api_tokens'
-}

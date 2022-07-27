@@ -1,11 +1,9 @@
 """
 Events which have to do with a user doing something with more than one course, such
-as enrolling in a certain number, completing a certain number, or completing a specific set
-of courses.
+as enrolling in a certain number, completing a certain number, or completing a specific set of courses.
 """
 
 
-from lms.djangoapps.badges.events.course_complete import evidence_url
 from lms.djangoapps.badges.models import BadgeClass, CourseEventBadgesConfiguration
 from lms.djangoapps.badges.utils import requires_badges_enabled
 
@@ -53,9 +51,9 @@ def completion_check(user):
     completed courses. This badge will not work if certificate generation isn't
     enabled and run.
     """
-    from lms.djangoapps.certificates.data import CertificateStatuses  # pylint: disable=import-outside-toplevel
+    from lms.djangoapps.certificates.data import CertificateStatuses
     config = CourseEventBadgesConfiguration.current().completed_settings
-    certificates = user.generatedcertificate_set.filter(status__in=CertificateStatuses.PASSED_STATUSES).count()  # pylint: disable=line-too-long
+    certificates = user.generatedcertificate_set.filter(status__in=CertificateStatuses.PASSED_STATUSES).count()
     award_badge(config, certificates, user)
 
 
@@ -64,7 +62,7 @@ def course_group_check(user, course_key):
     """
     Awards a badge if a user has completed every course in a defined set.
     """
-    from lms.djangoapps.certificates.data import CertificateStatuses  # pylint: disable=import-outside-toplevel
+    from lms.djangoapps.certificates.data import CertificateStatuses
     config = CourseEventBadgesConfiguration.current().course_group_settings
     awards = []
     for slug, keys in config.items():
@@ -74,23 +72,11 @@ def course_group_check(user, course_key):
                 course_id__in=keys,
             )
             if len(certs) == len(keys):
-                # course_complete Assertions are not working correctly
-                # yet with Badgr.io, while course group is working.
-                # so we use course groups with a single course,
-                # in which case we can provide an evidence URL
-                # to the HTML cert for the one course
-                if len(keys) == 1:
-                    evidence = evidence_url(user.id, course_key)
-                    awards.append((slug, evidence))
-                else:
-                    awards.append((slug,))
+                awards.append(slug)
 
-    for award in awards:
+    for slug in awards:
         badge_class = BadgeClass.get_badge_class(
-            slug=award[0], issuing_component='openedx__course', create=False,
+            slug=slug, issuing_component='openedx__course', create=False,
         )
         if badge_class and not badge_class.get_for_user(user):
-            try:
-                badge_class.award(user, evidence_url=award[1])
-            except IndexError:
-                badge_class.award(user)
+            badge_class.award(user)

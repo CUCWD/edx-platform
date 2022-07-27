@@ -5,8 +5,6 @@ Common utilities for the course experience, including course outline.
 from django.utils import timezone
 from opaque_keys.edx.keys import CourseKey
 
-from lms.djangoapps.badges.models import BlockEventBadgesConfiguration
-from lms.djangoapps.courseware.tabs import get_course_tab_list
 from lms.djangoapps.course_api.blocks.api import get_blocks
 from lms.djangoapps.course_blocks.api import get_course_blocks
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
@@ -48,12 +46,11 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
 
     def recurse_mark_scored(block):
         """
-        Mark this block as 'scored' if any of its descendents are 'scored'
-        (that is, 'has_score' and 'weight' > 0).
+        Mark this block as 'scored' if any of its descendents are 'scored' (that is, 'has_score' and 'weight' > 0).
         """
         is_scored = block.get('has_score', False) and block.get('weight', 1) > 0
-        # Use a list comprehension to force the recursion over all children, rather than just
-        # stopping at the first child that is scored.
+        # Use a list comprehension to force the recursion over all children, rather than just stopping
+        # at the first child that is scored.
         children_scored = any(recurse_mark_scored(child) for child in block.get('children', []))
         if is_scored or children_scored:
             block['scored'] = True
@@ -64,8 +61,7 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
 
     def recurse_num_graded_problems(block):
         """
-        Marks each block with the number of graded and scored leaf blocks below it as
-        'num_graded_problems'
+        Marks each block with the number of graded and scored leaf blocks below it as 'num_graded_problems'
         """
         is_scored = block.get('has_score') and block.get('weight', 1) > 0
         is_graded = block.get('graded')
@@ -73,57 +69,24 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
         is_graded_problem = is_scored and is_graded and is_countable
 
         num_graded_problems = 1 if is_graded_problem else 0
-        num_graded_problems += \
-            sum(recurse_num_graded_problems(child) for child in block.get('children', []))
+        num_graded_problems += sum(recurse_num_graded_problems(child) for child in block.get('children', []))
 
         block['num_graded_problems'] = num_graded_problems
         return num_graded_problems
 
     def recurse_mark_auth_denial(block):
         """
-        Mark this block as 'scored' if any of its descendents are 'scored'
-        (that is, 'has_score' and 'weight' > 0).
+        Mark this block as 'scored' if any of its descendents are 'scored' (that is, 'has_score' and 'weight' > 0).
         """
-        own_denial_reason = \
-            {block['authorization_denial_reason']} \
-            if 'authorization_denial_reason' in block else set()
-        # Use a list comprehension to force the recursion over all children, rather than
-        # just stopping at the first child that is scored.
+        own_denial_reason = {block['authorization_denial_reason']} if 'authorization_denial_reason' in block else set()
+        # Use a list comprehension to force the recursion over all children, rather than just stopping
+        # at the first child that is scored.
         child_denial_reasons = own_denial_reason.union(
             *(recurse_mark_auth_denial(child) for child in block.get('children', []))
         )
         if child_denial_reasons:
             block['all_denial_reasons'] = child_denial_reasons
         return child_denial_reasons
-
-    def recurse_mark_badge_progress(block):
-        """
-        Mark this block as 'badge_progress: true' if badge assertions have been awarded.
-        """
-        is_course_block = (block.get('type', False) == 'course')
-        is_chapter_block = (block.get('type', False) == 'chapter')
-
-        # Loop through all the chapter blocks.
-        if is_course_block:
-            for child in block.get('children', []):
-                recurse_mark_badge_progress(child)
-
-        # Check to see if a chapter block has BlockEventBadgesConfiguration enabled when block
-        # is complete.
-        if is_chapter_block and block.get('complete', False):
-
-            for block_event_badge_config in BlockEventBadgesConfiguration.config_for_block_event(
-                course_id=course_key, event_type='chapter_complete'
-            ):
-                # Indicate the a module has completed badge progress if configured and badges tab
-                # is enabled for the course.
-                if block.get('block_id', False) == block_event_badge_config.usage_key.block_id and \
-                        block_event_badge_config.badge_class and course_badge_tab_exists:
-                    block['badge_progress'] = True
-                    return True
-
-        block['badge_progress'] = False
-        return False
 
     course_key = CourseKey.from_string(course_id)
     course_usage_key = modulestore().make_course_usage_key(course_key)
@@ -157,38 +120,12 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
     )
 
     course_outline_root_block = all_blocks['blocks'].get(all_blocks['root'], None)
-
-    # Identify if the `Badges` tab is enabled.
-    course_badge_tab_exists = False
-    for tab in get_course_tab_list(user, CourseOverview.objects.get(id=str(course_key))):
-        if tab.tab_id == "badges_progress":
-            course_badge_tab_exists = True
-
     if course_outline_root_block:
         populate_children(course_outline_root_block, all_blocks['blocks'])
         recurse_mark_scored(course_outline_root_block)
         recurse_num_graded_problems(course_outline_root_block)
         recurse_mark_auth_denial(course_outline_root_block)
-        recurse_mark_badge_progress(course_outline_root_block)
-
     return course_outline_root_block
-
-
-def set_badge_progress_for_blocks(block):
-    """
-    Traverse through the course blocks and tag badge progress.
-
-    """
-    if not block.get('complete'):
-        return None
-    if not block.get('children'):
-        return block
-
-    for child in block['children']:
-        complete_block = set_badge_progress_for_blocks(child)
-        if complete_block:
-            return complete_block
-    return block
 
 
 def get_resume_block(block):
@@ -258,8 +195,7 @@ def dates_banner_should_display(course_key, user):
             if (subsection_due_date and subsection_due_date < timezone.now() and
                     not is_block_structure_complete_for_assignments(block_data, subsection_key)):
                 # Display the banner if the due date for an incomplete graded subsection has passed
-                return True, \
-                    block_data.get_xblock_field(subsection_key, 'contains_gated_content', False)
+                return True, block_data.get_xblock_field(subsection_key, 'contains_gated_content', False)
 
     # Don't display the banner if there were no missed deadlines
     return False, False
@@ -269,22 +205,20 @@ def is_block_structure_complete_for_assignments(block_data, block_key):
     """
     Considers a block complete only if all scored & graded leaf blocks are complete.
 
-    This is different from the normal `complete` flag because children of the block that are
-    informative (like readings or videos) do not count. We only care about actual homework content.
+    This is different from the normal `complete` flag because children of the block that are informative (like
+    readings or videos) do not count. We only care about actual homework content.
     """
     children = block_data.get_children(block_key)
     if children:
-        return all(is_block_structure_complete_for_assignments(block_data, child_key)
-                   for child_key in children)
+        return all(is_block_structure_complete_for_assignments(block_data, child_key) for child_key in children)
 
     category = block_data.get_xblock_field(block_key, 'category')
     if category in ('course', 'chapter', 'sequential', 'vertical'):
-        # If there are no children for these "hierarchy" block types, just bail. This could be
-        # because the content isn't available yet (start date in future) or we're too late and the
-        # block has hide_after_due set. Or maybe a different transformer cut off content for
-        # whatever reason. Regardless of the cause - if the user can't see this content and we
-        # continue, we might accidentally say this block is complete because it isn't scored
-        # (which most hierarchy blocks wouldn't be).
+        # If there are no children for these "hierarchy" block types, just bail. This could be because the
+        # content isn't available yet (start date in future) or we're too late and the block has hide_after_due
+        # set. Or maybe a different transformer cut off content for whatever reason. Regardless of the cause - if the
+        # user can't see this content and we continue, we might accidentally say this block is complete because it
+        # isn't scored (which most hierarchy blocks wouldn't be).
         return False
 
     complete = block_data.get_xblock_field(block_key, 'complete', False)

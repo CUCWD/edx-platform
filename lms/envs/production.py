@@ -20,7 +20,6 @@ import codecs
 import copy
 import datetime
 import os
-from os.path import abspath, dirname, join
 
 import yaml
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -1058,8 +1057,3 @@ CHROME_DISABLE_SUBFRAME_DIALOG_SUPPRESSION_TOKEN = ENV_TOKENS.get(
 
 ############## DRF overrides ##############
 REST_FRAMEWORK.update(ENV_TOKENS.get('REST_FRAMEWORK', {}))
-
-################# Import private.py only if running production #################
-if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
-   os.environ["DJANGO_SETTINGS_MODULE"] == 'lms.envs.production':
-    from .private import *  # pylint: disable=import-error,wildcard-import

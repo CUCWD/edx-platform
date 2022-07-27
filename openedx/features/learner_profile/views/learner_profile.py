@@ -13,7 +13,6 @@ from django_countries import countries
 
 from lms.djangoapps.badges.utils import badges_enabled
 from common.djangoapps.edxmako.shortcuts import marketing_link
-from common.djangoapps.student.models import User
 from openedx.core.djangoapps.credentials.utils import get_credentials_records_url
 from openedx.core.djangoapps.programs.models import ProgramsApiConfig
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
@@ -21,8 +20,8 @@ from openedx.core.djangoapps.user_api.accounts.api import get_account_settings
 from openedx.core.djangoapps.user_api.errors import UserNotAuthorized, UserNotFound
 from openedx.core.djangoapps.user_api.preferences.api import get_user_preferences
 from openedx.features.learner_profile.toggles import should_redirect_to_profile_microfrontend
-from openedx.features.learner_profile.views.learner_achievements \
-    import LearnerAchievementsFragmentView
+from openedx.features.learner_profile.views.learner_achievements import LearnerAchievementsFragmentView
+from common.djangoapps.student.models import User
 
 
 @login_required
@@ -88,33 +87,26 @@ def learner_profile_context(request, profile_username, user_is_staff):
         'platform_name': configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME),
         'data': {
             'profile_user_id': profile_user.id,
-            'default_public_account_fields':
-                settings.ACCOUNT_VISIBILITY_CONFIGURATION['public_fields'],
+            'default_public_account_fields': settings.ACCOUNT_VISIBILITY_CONFIGURATION['public_fields'],
             'default_visibility': settings.ACCOUNT_VISIBILITY_CONFIGURATION['default_visibility'],
             'accounts_api_url': reverse("accounts_api", kwargs={'username': profile_username}),
-            'preferences_api_url':
-                reverse('preferences_api', kwargs={'username': profile_username}),
+            'preferences_api_url': reverse('preferences_api', kwargs={'username': profile_username}),
             'preferences_data': preferences_data,
             'account_settings_data': account_settings_data,
-            'profile_image_upload_url':
-                reverse('profile_image_upload', kwargs={'username': profile_username}),
-            'profile_image_remove_url':
-                reverse('profile_image_remove', kwargs={'username': profile_username}),
+            'profile_image_upload_url': reverse('profile_image_upload', kwargs={'username': profile_username}),
+            'profile_image_remove_url': reverse('profile_image_remove', kwargs={'username': profile_username}),
             'profile_image_max_bytes': settings.PROFILE_IMAGE_MAX_BYTES,
             'profile_image_min_bytes': settings.PROFILE_IMAGE_MIN_BYTES,
             'account_settings_page_url': reverse('account_settings'),
-            'has_preferences_access':
-                (logged_in_user.username == profile_username or user_is_staff),
+            'has_preferences_access': (logged_in_user.username == profile_username or user_is_staff),
             'own_profile': own_profile,
             'country_options': list(countries),
             'find_courses_url': marketing_link('COURSES'),
             'language_options': settings.ALL_LANGUAGES,
-            'badges_badgr_logo': staticfiles_storage.url('badges/images/badgr-logo.svg'),
-            'badges_openbadges_icon':
-                staticfiles_storage.url('badges/images/ico-mozillaopenbadges.png'),
-            'badges_backend_public_url': settings.BADGR_PUBLIC_URL,
-            'platform_name':
-                configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME),
+            'badges_logo': staticfiles_storage.url('certificates/images/backpack-logo.png'),
+            'badges_icon': staticfiles_storage.url('certificates/images/ico-mozillaopenbadges.png'),
+            'backpack_ui_img': staticfiles_storage.url('certificates/images/backpack-ui.png'),
+            'platform_name': configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME),
             'social_platforms': settings.SOCIAL_PLATFORMS,
         },
         'show_program_listing': ProgramsApiConfig.is_enabled(),
@@ -122,7 +114,6 @@ def learner_profile_context(request, profile_username, user_is_staff):
         'disable_courseware_js': True,
         'nav_hidden': True,
         'records_url': get_credentials_records_url(),
-        'uses_bootstrap': True
     }
 
     if own_profile or user_is_staff:
@@ -134,7 +125,6 @@ def learner_profile_context(request, profile_username, user_is_staff):
         context['achievements_fragment'] = achievements_fragment
 
     if badges_enabled():
-        context['data']['badges_api_url'] = \
-            reverse("badges_api:badges-user-assertions", kwargs={'username': profile_username})
+        context['data']['badges_api_url'] = reverse("badges_api:user_assertions", kwargs={'username': profile_username})
 
     return context

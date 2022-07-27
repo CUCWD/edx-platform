@@ -16,9 +16,3 @@ class BadgeBackend(metaclass=ABCMeta):
         """
         Create a badge assertion for the user using this backend.
         """
-
-    @abstractmethod
-    def get_issuer(self, badge_assertion):
-        """
-        Create a badge assertion for the user using this backend.
-        """

@@ -86,7 +86,7 @@ class BadgrBackendTestCase(ModuleStoreTestCase, EventTrackingTestCase):
         """
         Make sure the handler generates the correct URLs for different API tasks.
         """
-        assert self.handler._issuer_base_url == 'https://example.com/v2/issuers/test-issuer'
+        assert self.handler._base_url == 'https://example.com/v2/issuers/test-issuer'
         # lint-amnesty, pylint: disable=no-member
         assert self.handler._badge_create_url == 'https://example.com/v2/issuers/test-issuer/badgeclasses'
         # lint-amnesty, pylint: disable=no-member

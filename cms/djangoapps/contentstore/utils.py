@@ -169,25 +169,6 @@ def get_course_authoring_url(course_locator):
     )
 
 
-def get_key_terms_dashboard_url(course_locator):
-    """
-    Gets key terms dashboard microfrontend URL for Key Terms Dashboard view.
-    """
-    key_terms_dashboard_url = None
-    enabled_key_terms = SiteConfiguration.get_value_for_org(
-        course_locator.org,
-        "ENABLE_KEY_TERMS_GLOSSARY",
-        settings.FEATURES.get('ENABLE_KEY_TERMS_GLOSSARY')
-    )
-
-    if enabled_key_terms:
-        mfe_base_url = get_course_authoring_url(course_locator)
-        if mfe_base_url:
-            key_terms_dashboard_url = f'{mfe_base_url}/course/{course_locator}/key-terms-dashboard'
-
-    return key_terms_dashboard_url
-
-
 def get_pages_and_resources_url(course_locator):
     """
     Gets course authoring microfrontend URL for Pages and Resources view.

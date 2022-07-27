@@ -12,7 +12,6 @@
                  AccountSettingsFieldViews, AccountSettingsView, StringUtils, HtmlUtils) {
         return function(
             fieldsData,
-            disableLinkedAccountsTab,
             disableOrderHistoryTab,
             ordersHistoryData,
             authData,
@@ -357,32 +356,29 @@
             countryDropdownField = getUserField(userFields, 'country');
             timeZoneDropdownField.listenToCountryView(countryDropdownField);
 
-            accountsSectionData = []
-            if ( !disableLinkedAccountsTab ) {
-                accountsSectionData = [
-                    {
-                        title: gettext('Linked Accounts'),
-                        subtitle: StringUtils.interpolate(
-                            gettext('You can link your social media accounts to simplify signing in to {platform_name}.'),
-                            {platform_name: platformName}
-                        ),
-                        fields: _.map(authData.providers, function(provider) {
-                            return {
-                                view: new AccountSettingsFieldViews.AuthFieldView({
-                                    title: provider.name,
-                                    valueAttribute: 'auth-' + provider.id,
-                                    helpMessage: '',
-                                    connected: provider.connected,
-                                    connectUrl: provider.connect_url,
-                                    acceptsLogins: provider.accepts_logins,
-                                    disconnectUrl: provider.disconnect_url,
-                                    platformName: platformName
-                                })
-                            };
-                        })
-                    }
-                ];
-            }
+            accountsSectionData = [
+                {
+                    title: gettext('Linked Accounts'),
+                    subtitle: StringUtils.interpolate(
+                        gettext('You can link your social media accounts to simplify signing in to {platform_name}.'),
+                        {platform_name: platformName}
+                    ),
+                    fields: _.map(authData.providers, function(provider) {
+                        return {
+                            view: new AccountSettingsFieldViews.AuthFieldView({
+                                title: provider.name,
+                                valueAttribute: 'auth-' + provider.id,
+                                helpMessage: '',
+                                connected: provider.connected,
+                                connectUrl: provider.connect_url,
+                                acceptsLogins: provider.accepts_logins,
+                                disconnectUrl: provider.disconnect_url,
+                                platformName: platformName
+                            })
+                        };
+                    })
+                }
+            ];
 
             ordersHistoryData.unshift(
                 {
@@ -393,34 +389,31 @@
                 }
             );
 
-            ordersSectionData = []
-            if ( !disableOrderHistoryTab ) {
-                ordersSectionData = [
-                    {
-                        title: gettext('My Orders'),
-                        subtitle: StringUtils.interpolate(
-                            gettext('This page contains information about orders that you have placed with {platform_name}.'),  // eslint-disable-line max-len
-                            {platform_name: platformName}
-                        ),
-                        fields: _.map(ordersHistoryData, function(order) {
-                            orderNumber = order.number;
-                            if (orderNumber === 'ORDER NUMBER') {
-                                orderNumber = 'orderId';
-                            }
-                            return {
-                                view: new AccountSettingsFieldViews.OrderHistoryFieldView({
-                                    totalPrice: order.price,
-                                    orderId: order.number,
-                                    orderDate: order.order_date,
-                                    receiptUrl: order.receipt_url,
-                                    valueAttribute: 'order-' + orderNumber,
-                                    lines: order.lines
-                                })
-                            };
-                        })
-                    }
-                ];
-            }
+            ordersSectionData = [
+                {
+                    title: gettext('My Orders'),
+                    subtitle: StringUtils.interpolate(
+                        gettext('This page contains information about orders that you have placed with {platform_name}.'),  // eslint-disable-line max-len
+                        {platform_name: platformName}
+                    ),
+                    fields: _.map(ordersHistoryData, function(order) {
+                        orderNumber = order.number;
+                        if (orderNumber === 'ORDER NUMBER') {
+                            orderNumber = 'orderId';
+                        }
+                        return {
+                            view: new AccountSettingsFieldViews.OrderHistoryFieldView({
+                                totalPrice: order.price,
+                                orderId: order.number,
+                                orderDate: order.order_date,
+                                receiptUrl: order.receipt_url,
+                                valueAttribute: 'order-' + orderNumber,
+                                lines: order.lines
+                            })
+                        };
+                    })
+                }
+            ];
 
             accountSettingsView = new AccountSettingsView({
                 model: userAccountModel,
@@ -432,7 +425,6 @@
                     ordersTabSections: ordersSectionData
                 },
                 userPreferencesModel: userPreferencesModel,
-                disableLinkedAccountsTab: disableLinkedAccountsTab,
                 disableOrderHistoryTab: disableOrderHistoryTab,
                 betaLanguage: betaLanguage
             });

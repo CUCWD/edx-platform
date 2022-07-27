@@ -182,10 +182,9 @@
                 find_courses_url: options.find_courses_url,
                 ownProfile: options.own_profile,
                 badgeMeta: {
-                    badges_badgr_logo: options.badges_badgr_logo,
-                    badges_openbadges_icon: options.badges_openbadges_icon,
-                    badges_backend_public_url: options.badges_backend_public_url,
-                    platform_name: options.platform_name
+                    badges_logo: options.badges_logo,
+                    backpack_ui_img: options.backpack_ui_img,
+                    badges_icon: options.badges_icon
                 }
             });
 

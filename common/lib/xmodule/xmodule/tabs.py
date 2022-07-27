@@ -405,7 +405,6 @@ class CourseTabList(List):
             discussion_tab,
             CourseTab.load('wiki'),
             CourseTab.load('progress'),
-            CourseTab.load('glossary'),
         ])
 
     @staticmethod

@@ -578,11 +578,6 @@ def course_info(request, course_id):
         if SelfPacedConfiguration.current().enable_course_home_improvements:
             context['resume_course_url'] = get_last_accessed_courseware(course, request, user)
 
-        # Redirect to Resume Course url if site configuration flag is enabled.
-        if context['resume_course_url'] and configuration_helpers.get_value(
-                'ENABLE_REDIRECT_TO_RESUME_COURSE_ON_COURSE_INFO', False):
-            return redirect(context['resume_course_url'])
-
         if not check_course_open_for_learner(user, course):
             # Disable student view button if user is staff and
             # course is not yet visible to students.
@@ -1056,83 +1051,6 @@ def program_marketing(request, program_uuid):
 @login_required
 @ensure_csrf_cookie
 @ensure_valid_course_key
-def badges_progress(request, course_id):
-    """
-    Display the course's dates.html, or 404 if there is no such course.
-    Assumes the course_id is in a valid format.
-    """
-    from lms.urls import COURSE_DATES_NAME
-
-    course_key = CourseKey.from_string(course_id)
-    if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
-        microfrontend_url = get_learning_mfe_home_url(course_key=course_key, view_name=COURSE_DATES_NAME)
-        raise Redirect(microfrontend_url)
-
-    # Enable NR tracing for this view based on course
-    monitoring_utils.set_custom_attribute('course_id', str(course_key))
-    monitoring_utils.set_custom_attribute('user_id', request.user.id)
-    monitoring_utils.set_custom_attribute('is_staff', request.user.is_staff)
-
-    course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=False)
-
-    masquerade = None
-    can_masquerade = request.user.has_perm(MASQUERADE_AS_STUDENT, course)
-    if can_masquerade:
-        masquerade, masquerade_user = setup_masquerade(
-            request,
-            course.id,
-            can_masquerade,
-            reset_masquerade_data=True,
-        )
-        request.user = masquerade_user
-
-    user_is_enrolled = CourseEnrollment.is_enrolled(request.user, course_key)
-    user_is_staff = bool(has_access(request.user, 'staff', course_key))
-
-    # Render the full content to enrolled users, as well as to course and global staff.
-    # Unenrolled users who are not course or global staff are redirected to the Outline Tab.
-    if not user_is_enrolled and not user_is_staff:
-        raise CourseAccessRedirect(reverse('openedx.course_experience.course_home', args=[course_id]))
-
-    # course_date_blocks = get_course_date_blocks(course, request.user, request,
-    #                                             include_access=True, include_past_dates=True)
-
-    learner_is_full_access = not ContentTypeGatingConfig.enabled_for_enrollment(request.user, course_key)
-
-    # User locale settings
-    user_timezone_locale = user_timezone_locale_prefs(request)
-    user_timezone = user_timezone_locale['user_timezone']
-    user_language = user_timezone_locale['user_language']
-
-    # missed_deadlines, missed_gated_content = dates_banner_should_display(course_key, request.user)
-
-    context = {
-        'course': course,
-        # 'course_date_blocks': course_date_blocks,
-        # 'verified_upgrade_link': verified_upgrade_deadline_link(request.user, course=course),
-        'learner_is_full_access': learner_is_full_access,
-        'user_timezone': user_timezone,
-        'user_language': user_language,
-        'supports_preview_menu': True,
-        'can_masquerade': can_masquerade,
-        'masquerade': masquerade,
-        'on_badges_progress_tab': True,
-        'content_type_gating_enabled': ContentTypeGatingConfig.enabled_for_enrollment(
-            user=request.user,
-            course_key=course_key,
-        ),
-        # 'missed_deadlines': missed_deadlines,
-        # 'missed_gated_content': missed_gated_content,
-        # 'reset_deadlines_url': reverse(RESET_COURSE_DEADLINES_NAME),
-        'has_ended': course.has_ended(),
-    }
-
-    return render_to_response('courseware/badges-progress.html', context)
-
-
-@login_required
-@ensure_csrf_cookie
-@ensure_valid_course_key
 def dates(request, course_id):
     """
     Display the course's dates.html, or 404 if there is no such course.
@@ -1205,76 +1123,6 @@ def dates(request, course_id):
     }
 
     return render_to_response('courseware/dates.html', context)
-
-
-@login_required
-@ensure_csrf_cookie
-@ensure_valid_course_key
-def glossary(request, course_id):
-    """
-    Display the course's glossary.html, or 404 if there is no such course.
-    Assumes the course_id is in a valid format.
-    """
-    from lms.urls import COURSE_DATES_NAME, RESET_COURSE_DEADLINES_NAME
-
-    course_key = CourseKey.from_string(course_id)
-    if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
-        raise Redirect(get_learning_mfe_home_url(
-            course_key=course_key, view_name=COURSE_DATES_NAME
-        ))
-
-    # Enable NR tracing for this view based on course
-    monitoring_utils.set_custom_attribute('course_id', str(course_key))
-    monitoring_utils.set_custom_attribute('user_id', request.user.id)
-    monitoring_utils.set_custom_attribute('is_staff', request.user.is_staff)
-
-    course = get_course_with_access(request.user, 'load', course_key, check_if_enrolled=False)
-
-    masquerade = None
-    can_masquerade = request.user.has_perm(MASQUERADE_AS_STUDENT, course)
-    if can_masquerade:
-        masquerade, masquerade_user = setup_masquerade(
-            request,
-            course.id,
-            can_masquerade,
-            reset_masquerade_data=True,
-        )
-        request.user = masquerade_user
-
-    user_is_enrolled = CourseEnrollment.is_enrolled(request.user, course_key)
-    user_is_staff = bool(has_access(request.user, 'staff', course_key))
-
-    # Render the full content to enrolled users, as well as to course and global staff.
-    # Unenrolled users who are not course or global staff are redirected to the Outline Tab.
-    if not user_is_enrolled and not user_is_staff:
-        raise CourseAccessRedirect(reverse('openedx.course_experience.course_home', args=[course_id]))
-
-    learner_is_full_access = not ContentTypeGatingConfig.enabled_for_enrollment(request.user, course_key)
-
-    # User locale settings
-    user_timezone_locale = user_timezone_locale_prefs(request)
-    user_timezone = user_timezone_locale['user_timezone']
-    user_language = user_timezone_locale['user_language']
-
-    context = {
-        'course': course,
-        'verified_upgrade_link': verified_upgrade_deadline_link(request.user, course=course),
-        'learner_is_full_access': learner_is_full_access,
-        'user_timezone': user_timezone,
-        'user_language': user_language,
-        'supports_preview_menu': True,
-        'can_masquerade': can_masquerade,
-        'masquerade': masquerade,
-        'on_dates_tab': True,
-        'content_type_gating_enabled': ContentTypeGatingConfig.enabled_for_enrollment(
-            user=request.user,
-            course_key=course_key,
-        ),
-        'reset_deadlines_url': reverse(RESET_COURSE_DEADLINES_NAME),
-        'has_ended': course.has_ended(),
-    }
-
-    return render_to_response('courseware/glossary.html', context)
 
 
 @transaction.non_atomic_requests

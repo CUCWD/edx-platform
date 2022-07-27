@@ -727,31 +727,6 @@ class CourseFields:  # lint-amnesty, pylint: disable=missing-class-docstring
         scope=Scope.settings
     )
 
-    instructor_dashboard_resources = Dict(
-        # Translators: This field is the container for course-specific instructor dashboard resource configuration values
-        display_name=_("Instructor Dashboard Resources"),
-        # Translators: These overrides allow for an alternative configuration of the instructor dashboard resource configuration web view
-        help=_(
-            "Enter course-specific overrides for the Instructor Dashboard Resources template parameters here (JSON format)"),
-        default={
-            "HANDOUTS": {
-                "instructor": [
-                    {
-                        "resource-name": "",
-                        "resource-url": ""
-                    },
-                ],
-                "student": [
-                    {
-                        "resource-name": "",
-                        "resource-url": ""
-                    },
-                ]
-            }
-        },
-        scope=Scope.settings,
-    )
-
     invitation_only = Boolean(
         display_name=_("Invitation Only"),
         help=_("Whether to restrict enrollment to invitation by the course staff."),
@@ -1005,29 +980,6 @@ class CourseFields:  # lint-amnesty, pylint: disable=missing-class-docstring
             "instructors": []
         },
         scope=Scope.settings
-    )
-    qualtrics_institution = String(
-        display_name=_("Qualtrics: Course Institution"),
-        help=_(
-            "Enter institution, this is used on qualtrics surveys throughout course."
-        ),
-        scope=Scope.settings,
-        default=""
-    )
-    qualtrics_instructors = List(
-        display_name=_("Qualtrics: Course Instructor"),
-        help=_(
-            'Enter the details for Course Instructor to be used in qualtrics surveys.'
-            'Examples: ["John Smith", "Sally Smith"]'
-        ),
-        scope=Scope.settings,
-        default=[]
-    )
-    qualtrics_term = String(
-        display_name=_("Qualtrics: Course Term"),
-        help=_("Enter the details for Course Term to be used in qualtrics surveys"),
-        scope=Scope.settings,
-        default="perpetual"
     )
     allow_unsupported_xblocks = Boolean(
         display_name=_("Add Unsupported Problems and Tools"),
@@ -1477,22 +1429,6 @@ class CourseBlock(
             if blackout["start"] <= now <= blackout["end"]:
                 return False
         return True
-
-    @property
-    def instructor_dashboard_resources_instructor(self):
-        """
-        Return list of topic instructor resources defined in course policy.
-        """
-        resources = self.instructor_dashboard_resources
-        return [r["instructor"] for r in resources.values()][0]
-
-    @property
-    def instructor_dashboard_resources_student(self):
-        """
-        Return list of topic student resources defined in course policy.
-        """
-        resources = self.instructor_dashboard_resources
-        return [r["student"] for r in resources.values()][0]
 
     @property
     def number(self):

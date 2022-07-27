@@ -13,8 +13,7 @@ import mimetypes
 import requests
 from cryptography.fernet import Fernet
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured, ValidationError
-from django.core.validators import URLValidator
+from django.core.exceptions import ImproperlyConfigured
 from eventtracking import tracker
 from lazy import lazy  # lint-amnesty, pylint: disable=no-name-in-module
 from requests.packages.urllib3.exceptions import HTTPError  # lint-amnesty, pylint: disable=import-error
@@ -23,7 +22,6 @@ from edx_django_utils.cache import TieredCache
 
 from lms.djangoapps.badges.backends.base import BadgeBackend
 from lms.djangoapps.badges.models import BadgeAssertion
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 MAX_SLUG_LENGTH = 255
 LOGGER = logging.getLogger(__name__)
@@ -50,21 +48,18 @@ class BadgrBackend(BadgeBackend):
             raise ImproperlyConfigured(error_msg)
 
     @lazy
-    def _issuer_base_url(self):
+    def _base_url(self):
         """
         Base URL for API requests that contain the issuer slug.
         """
-        issuer_slug = configuration_helpers.get_value(
-            "BADGR_ISSUER_SLUG", settings.BADGR_ISSUER_SLUG
-        )
-        return f"{settings.BADGR_BASE_URL}/v2/issuers/{issuer_slug}"
+        return f"{settings.BADGR_BASE_URL}/v2/issuers/{settings.BADGR_ISSUER_SLUG}"
 
     @lazy
     def _badge_create_url(self):
         """
         URL for generating a new Badge specification
         """
-        return f"{self._issuer_base_url}/badgeclasses"
+        return f"{self._base_url}/badgeclasses"
 
     def _badge_url(self, slug):
         """
@@ -100,8 +95,8 @@ class BadgrBackend(BadgeBackend):
             response.raise_for_status()
         except HTTPError:
             LOGGER.error(
-                "Encountered an error when contacting the Badgr-Server. Request sent to %r with "
-                "headers %r.\nand data values %r\n"
+                "Encountered an error when contacting the Badgr-Server. Request sent to %r with headers %r.\n"
+                "and data values %r\n"
                 "Response status was %s.\n%s",
                 response.request.url, response.request.headers,
                 data,
@@ -114,9 +109,8 @@ class BadgrBackend(BadgeBackend):
         Create the badge class on Badgr.
         """
         image = badge_class.image
-        # We don't want to bother validating the file any further than making sure we can detect its
-        # MIME type, for HTTP. The Badgr-Server should tell us if there's anything in particular
-        # wrong with it.
+        # We don't want to bother validating the file any further than making sure we can detect its MIME type,
+        # for HTTP. The Badgr-Server should tell us if there's anything in particular wrong with it.
         content_type, __ = mimetypes.guess_type(image.name)
         if not content_type:
             raise ValueError(
@@ -125,20 +119,9 @@ class BadgrBackend(BadgeBackend):
             )
         with open(image.path, 'rb') as image_file:
             files = {'image': (image.name, image_file, content_type)}
-
-            # Send appropriate criteria.
-            try:  # TODO: eventually we should pass both
-                validator = URLValidator()
-                validator(badge_class.criteria)
-                criteria_type_key = 'criteriaUrl'
-                criteria_type = criteria_type_key
-            except ValidationError:
-                criteria_type_key = 'criteriaNarrative'
-                criteria_type = criteria_type_key
-
             data = {
                 'name': badge_class.display_name,
-                criteria_type: badge_class.criteria,
+                'criteriaUrl': badge_class.criteria,
                 'description': badge_class.description,
             }
             result = requests.post(
@@ -154,11 +137,8 @@ class BadgrBackend(BadgeBackend):
             except Exception as excep:  # pylint: disable=broad-except
                 LOGGER.error(
                     'Error on saving Badgr Server Slug of badge_class slug '
-                    '"%s" with response json "%s" : %s',
-                    badge_class.slug,
-                    result.json(),
-                    excep
-                )
+                    '"{0}" with response json "{1}" : {2}'.format(
+                        badge_class.slug, result.json(), excep))
 
     def _send_assertion_created_event(self, user, assertion):
         """
@@ -189,16 +169,13 @@ class BadgrBackend(BadgeBackend):
                 "identity": user.email,
                 "type": "email"
             },
+            "evidence": [
+                {
+                    "url": evidence_url
+                }
+            ],
             "notify": settings.BADGR_ENABLE_NOTIFICATIONS,
         }
-
-        if evidence_url:
-            data.update({
-                "evidence": [{
-                    "url": evidence_url
-                }],
-            })
-
         response = requests.post(
             self._assertion_url(badge_class.badgr_server_slug),
             headers=self._get_headers(),
@@ -219,13 +196,10 @@ class BadgrBackend(BadgeBackend):
 
         except Exception as exc:  # pylint: disable=broad-except
             LOGGER.error(
-                'Error saving BadgeAssertion for user: "%s" '
-                'with response from server: %s;'
-                'Encountered exception: %s',
-                user.email,
-                response.text,
-                exc
-            )
+                'Error saving BadgeAssertion for user: "{0}" '
+                'with response from server: {1};'
+                'Encountered exception: {2}'.format(
+                    user.email, response.text, exc))
 
     @staticmethod
     def _fernet_setup():
@@ -269,7 +243,7 @@ class BadgrBackend(BadgeBackend):
                 'refresh_token': refresh_token
             }
 
-        oauth_url = f"{settings.BADGR_BASE_URL}/o/token"
+        oauth_url = "{}/o/token".format(settings.BADGR_BASE_URL)
 
         response = requests.post(
             oauth_url, data=data, timeout=settings.BADGR_TIMEOUT
@@ -328,7 +302,7 @@ class BadgrBackend(BadgeBackend):
         Headers to send along with the request-- used for authentication.
         """
         access_token = self._get_access_token()
-        return {'Authorization': f'Bearer {access_token}'}
+        return {'Authorization': 'Bearer {}'.format(access_token)}
 
     def _ensure_badge_created(self, badge_class):
         """
@@ -337,42 +311,14 @@ class BadgrBackend(BadgeBackend):
         slug = badge_class.badgr_server_slug
         if slug in BadgrBackend.badges:
             return
-        response = requests.get(
-            self._badge_url(slug),
-            headers=self._get_headers(),
-            timeout=settings.BADGR_TIMEOUT
-        )
+        response = requests.get(self._badge_url(slug), headers=self._get_headers(), timeout=settings.BADGR_TIMEOUT)
         if response.status_code != 200:
             self._create_badge(badge_class)
         BadgrBackend.badges.append(slug)
 
     def award(self, badge_class, user, evidence_url=None):
         """
-        Make sure the badge class has been created on the backend, and then award the badge class
-        to the user.
+        Make sure the badge class has been created on the backend, and then award the badge class to the user.
         """
         self._ensure_badge_created(badge_class)
         return self._create_assertion(badge_class, user, evidence_url)
-
-    def get_issuer(self, badge_assertion):
-        """
-        Get a single Issuer. No need to pass in the entity_id since this is defined in settings.
-        """
-        if not badge_assertion.data.get('issuer'):
-            return None
-
-        params = {
-            'entity_id': badge_assertion.data['issuer']
-        }
-        response = requests.get(
-            self._issuer_base_url, headers=self._get_headers(), params=params,
-            timeout=settings.BADGR_TIMEOUT
-        )
-        self._log_if_raised(response, params)
-
-        if response.ok:
-            for issuer in response.json()['result']:
-                if issuer.get("entityId", "") == badge_assertion.data['issuer']:
-                    return issuer
-
-            return None

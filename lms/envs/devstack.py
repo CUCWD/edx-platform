@@ -404,7 +404,8 @@ if FEATURES.get('ENABLE_ENTERPRISE_INTEGRATION'):
 DCS_SESSION_COOKIE_SAMESITE = 'Lax'
 DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
-################# Import private.py for additional overrides #################
+#####################################################################
+# See if the developer has any local overrides.
 if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
     from .private import *  # pylint: disable=import-error,wildcard-import
 
@@ -445,8 +446,3 @@ WEBPACK_LOADER['DEFAULT']['TIMEOUT'] = 5
 #################### Network configuration ####################
 # Devstack is directly exposed to the caller
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
-
-CACHES[QUALTRICS_API_TOKEN_CACHE] = {
-    'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-    'LOCATION': 'qualtrics_backends_api_tokens'
-}

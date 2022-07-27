@@ -9,7 +9,6 @@ MYSQL:
     - CornerstoneGlobalConfiguration.key
     - CourseCompleteImageConfiguration.default
     - DegreedEnterpriseCustomerConfiguration.key
-    - EmailProviderConfig.key
     - ExperimentData.key
     - ExperimentKeyValue.key
     - GeneratedCertificate.key

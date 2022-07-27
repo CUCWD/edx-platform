@@ -17,13 +17,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from organizations.models import Organization
 from social_core.backends.base import BaseAuth
-from social_core.backends.email import EmailAuth
 from social_core.backends.oauth import OAuthAuth
 from social_core.backends.saml import SAMLAuth
 from social_core.exceptions import SocialAuthBaseException
 from social_core.utils import module_member
-
-from lms.djangoapps.bigcommerce_app.utils import access_token, BigCommerceAPI, internal_server_error
 
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.theming.helpers import get_current_request
@@ -51,7 +48,6 @@ def _load_backend_classes(base_class=BaseAuth):
         if issubclass(auth_class, base_class):
             yield auth_class
 _PSA_BACKENDS = {backend_class.name: backend_class for backend_class in _load_backend_classes()}
-_PSA_EMAIL_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(EmailAuth)]
 _PSA_OAUTH2_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(OAuthAuth)]
 _PSA_SAML_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(SAMLAuth)]
 _LTI_BACKENDS = [backend_class.name for backend_class in _load_backend_classes(LTIAuthBackend)]
@@ -347,93 +343,6 @@ class ProviderConfig(ConfigurationModel):
         Determines if the provider is able to be used with the current site.
         """
         return self.enabled and self.site_id == Site.objects.get_current(get_current_request()).id
-
-
-class EmailProviderConfig(ProviderConfig):
-    """
-    Configuration Entry for an Email based provider.
-
-    .. no_pii:
-    """
-    # We are keying the provider config by backend_name here as suggested in the python social
-    # auth documentation. In order to reuse a backend for a second provider, a subclass can be
-    # created with seperate name.
-    # example:
-    # class SecondEmailProvider(EmailAuth):
-    #   name = "second-email-provider"
-    KEY_FIELDS = ('backend_name',)
-    prefix = 'email'
-    backend_name = models.CharField(
-        max_length=50, blank=False, db_index=True,
-        help_text=(
-            u"Which python-social-auth Email provider backend to use. "
-            "The list of backend choices is determined by the THIRD_PARTY_AUTH_BACKENDS setting."
-            # To be precise, it's set by AUTHENTICATION_BACKENDS
-            # which production.py sets from THIRD_PARTY_AUTH_BACKENDS
-        )
-    )
-    key = models.TextField(blank=True, verbose_name=u"Client ID")
-    secret = models.TextField(
-        blank=True,
-        verbose_name=u"Client Secret",
-        help_text=(
-            u'For increased security, you can avoid storing this in your database by leaving '
-            ' this field blank and setting '
-            'SOCIAL_AUTH_OAUTH_SECRETS = {"(backend name)": "secret", ...} '
-            'in your instance\'s Django settings (or lms.auth.json)'
-        )
-    )
-    other_settings = models.TextField(blank=True, help_text=u"Optional JSON object with advanced settings, if any.")
-
-    class Meta(object):
-        app_label = "third_party_auth"
-        verbose_name = u"Provider Configuration (Email)"
-        verbose_name_plural = verbose_name
-
-    def clean(self):
-        """ Standardize and validate fields """
-        super().clean()
-        self.other_settings = clean_json(self.other_settings, dict)
-
-    def get_setting(self, name):
-        """ Get the value of a setting, or raise KeyError """
-        if name == "KEY":
-            return self.key
-        if name == "SECRET":
-            if self.secret:
-                return self.secret
-            # To allow instances to avoid storing secrets in the DB, the secret can also be set via Django:
-            return getattr(settings, 'SOCIAL_AUTH_OAUTH_SECRETS', {}).get(self.backend_name, '')
-        if name == "ACCESS_TOKEN":
-            return access_token()
-        # if name == "BIGCOMMERCE_CUSTOMER_METADATA":
-        #     import pdb;pdb.set_trace()
-        #     return BigCommerceAPI.bigcommerce_customer_metadata()
-        if self.other_settings:
-            other_settings = json.loads(self.other_settings)
-            assert isinstance(other_settings, dict), "other_settings should be a JSON object (dictionary)"
-            return other_settings[name]
-        raise KeyError
-
-    def bigcommerce_retrieve_and_store_customer(self, payload):
-        """ Get the decoded payload user_data """
-        try:
-            return BigCommerceAPI.bigcommerce_customer_save(payload)
-        except Exception as excep:  # pylint: disable=broad-except
-            log.error(
-                u"Error decoding Customer payload token and storing in database."
-            )
-            return internal_server_error(excep)
-
-    def bigcommerce_save_store_customer_platform_user(self, payload):
-        """ Store the mapping of BigCommerce uid and platform user. """
-        try:
-            return BigCommerceAPI.bigcommerce_store_customer_platform_user_save(payload)
-        except Exception as excep:  # pylint: disable=broad-except
-            log.error(
-                u"Error decoding Customer payload token and storing in database."
-            )
-            return internal_server_error(excep)
 
 
 class OAuth2ProviderConfig(ProviderConfig):

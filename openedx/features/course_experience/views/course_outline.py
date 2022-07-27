@@ -55,7 +55,6 @@ class CourseOutlineFragmentView(EdxFragmentView):
 
         resume_block = get_resume_block(course_block_tree) if user_is_enrolled else None
 
-        print(course_block_tree)
         if not resume_block:
             self.mark_first_unit_to_resume(course_block_tree)
 
@@ -71,8 +70,6 @@ class CourseOutlineFragmentView(EdxFragmentView):
             'course': course_overview,
             'due_date_display_format': course.due_date_display_format,
             'blocks': course_block_tree,
-            'user': request.user,
-            'course_id': course_id,
             'enable_links': user_is_enrolled or course.course_visibility == COURSE_VISIBILITY_PUBLIC,
             'course_key': course_key,
             'gated_content': gated_content,

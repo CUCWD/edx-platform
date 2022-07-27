@@ -11,12 +11,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
-from lms.djangoapps.badges.models import (
-    BadgeAssertion,
-    BadgeClass,
-    CourseCompleteImageConfiguration
-)
-
+from lms.djangoapps.badges.models import BadgeAssertion, BadgeClass, CourseCompleteImageConfiguration
 from lms.djangoapps.badges.utils import requires_badges_enabled, site_prefix
 from xmodule.modulestore.django import modulestore
 
@@ -29,8 +24,8 @@ LOGGER = logging.getLogger(__name__)
 
 def course_slug(course_key, mode):
     """
-    Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility with
-    the original badge type, awarded on course completion.
+    Legacy: Not to be used as a model for constructing badge slugs. Included for compatibility with the original badge
+    type, awarded on course completion.
 
     Slug ought to be deterministic and limited in size so it's not too big for Badgr.
 
@@ -43,8 +38,7 @@ def course_slug(course_key, mode):
     base_slug = slugify(str(course_key) + f'_{mode}_')[:248]
 
     # slugify() now removes leading and trailing dashes and underscores.
-    # Reference: Django 3.2 Release Notes
-    # https://docs.djangoproject.com/en/3.2/releases/3.2/#miscellaneous
+    # Reference: Django 3.2 Release Notes https://docs.djangoproject.com/en/3.2/releases/3.2/#miscellaneous
     # TODO: Remove this condition and make this return as default when platform is upgraded to 3.2
     if django.VERSION >= (3, 2):
         return f'{base_slug}_{digest}'
@@ -57,7 +51,7 @@ def badge_description(course, mode):
     Returns a description for the earned badge.
     """
     if course.end:
-        return _('Completed the course "{course_name}" ({course_mode}, {start_date} - {end_date})').format(  # lint-amnesty, pylint: disable=line-too-long
+        return _('Completed the course "{course_name}" ({course_mode}, {start_date} - {end_date})').format(
             start_date=course.start.date(),
             end_date=course.end.date(),
             course_name=course.display_name,
@@ -72,17 +66,15 @@ def badge_description(course, mode):
 
 def evidence_url(user_id, course_key):
     """
-    Generates a URL to the user's Certificate HTML view, along with a GET variable that will signal
-    the evidence visit event.
+    Generates a URL to the user's Certificate HTML view, along with a GET variable that will signal the evidence visit
+    event.
     """
     course_id = str(course_key)
     # avoid circular import problems
-    from lms.djangoapps.certificates.models import GeneratedCertificate  # lint-amnesty, pylint: disable=import-outside-toplevel
-    cert = GeneratedCertificate.eligible_certificates.get(
-        user__id=int(user_id), course_id=course_id
-    )
-    return site_prefix(course_key.org) + reverse(
-        'certificates:render_cert_by_uuid', kwargs={'certificate_uuid': cert.verify_uuid}) + '?evidence_visit=1'  # lint-amnesty, pylint: disable=line-too-long
+    from lms.djangoapps.certificates.models import GeneratedCertificate
+    cert = GeneratedCertificate.eligible_certificates.get(user__id=int(user_id), course_id=course_id)
+    return site_prefix() + reverse(
+        'certificates:render_cert_by_uuid', kwargs={'certificate_uuid': cert.verify_uuid}) + '?evidence_visit=1'
 
 
 def criteria(course_key):
@@ -90,7 +82,7 @@ def criteria(course_key):
     Constructs the 'criteria' URL from the course about page.
     """
     about_path = reverse('about_course', kwargs={'course_id': str(course_key)})
-    return f'{site_prefix(course_key.org)}{about_path}'
+    return f'{site_prefix()}{about_path}'
 
 
 def get_completion_badge(course_id, user):
@@ -98,7 +90,7 @@ def get_completion_badge(course_id, user):
     Given a course key and a user, find the user's enrollment mode
     and get the Course Completion badge.
     """
-    from common.djangoapps.student.models import CourseEnrollment  # lint-amnesty, pylint: disable=import-outside-toplevel
+    from common.djangoapps.student.models import CourseEnrollment
     badge_classes = CourseEnrollment.objects.filter(
         user=user, course_id=course_id
     ).order_by('-is_active')
@@ -110,7 +102,7 @@ def get_completion_badge(course_id, user):
         return None
     return BadgeClass.get_badge_class(
         slug=course_slug(course_id, mode),
-        issuing_component='openedx__course',
+        issuing_component='',
         criteria=criteria(course_id),
         description=badge_description(course, mode),
         course_id=course_id,
@@ -123,8 +115,8 @@ def get_completion_badge(course_id, user):
 @requires_badges_enabled
 def course_badge_check(user, course_key):
     """
-    Takes a GeneratedCertificate instance, and checks to see if a badge exists for this course,
-    creating it if not, should conditions be right.
+    Takes a GeneratedCertificate instance, and checks to see if a badge exists for this course, creating
+    it if not, should conditions be right.
     """
     if not modulestore().get_course(course_key).issue_badges:
         LOGGER.info("Course is not configured to issue badges.")

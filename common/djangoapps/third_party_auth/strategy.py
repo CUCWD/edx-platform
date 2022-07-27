@@ -3,11 +3,11 @@ A custom Strategy for python-social-auth that allows us to fetch configuration f
 ConfigurationModels rather than django.settings
 """
 
-from social_core.backends.email import EmailAuth
+
 from social_core.backends.oauth import OAuthAuth
 from social_django.strategy import DjangoStrategy
 
-from .models import EmailProviderConfig, OAuth2ProviderConfig
+from .models import OAuth2ProviderConfig
 from .pipeline import AUTH_ENTRY_CUSTOM
 from .pipeline import get as get_pipeline_from_request
 from .provider import Registry
@@ -23,22 +23,12 @@ class ConfigurationModelStrategy(DjangoStrategy):
         Load the setting from a ConfigurationModel if possible, or fall back to the normal
         Django settings lookup.
 
-        EmailAuth subclasses will call this method for every setting they want to look up.
         OAuthAuth subclasses will call this method for every setting they want to look up.
         SAMLAuthBackend subclasses will call this method only after first checking if the
             setting 'name' is configured via SAMLProviderConfig.
         LTIAuthBackend subclasses will call this method only after first checking if the
             setting 'name' is configured via LTIProviderConfig.
         """
-        if isinstance(backend, EmailAuth):
-            provider_config = EmailProviderConfig.current(backend.name)
-            if not provider_config.enabled_for_current_site:
-                raise Exception("Can't fetch setting of a disabled backend/provider.")
-            try:
-                return provider_config.get_setting(name)
-            except KeyError:
-                pass
-
         if isinstance(backend, OAuthAuth):
             provider_config = OAuth2ProviderConfig.current(backend.name)
             if not provider_config.enabled_for_current_site:
@@ -68,35 +58,3 @@ class ConfigurationModelStrategy(DjangoStrategy):
         # At this point, we know 'name' is not set in a [OAuth2|LTI|SAML]ProviderConfig row.
         # It's probably a global Django setting like 'FIELDS_STORED_IN_SESSION':
         return super().setting(name, default, backend)
-
-    def bigcommerce_retrieve_and_store_customer(self, payload=None, backend=None):
-        """
-        Load the payload user_data decoded values from a ConfigurationModel if possible, or fall back to the normal
-        Django settings lookup.
-
-        EmailAuth subclasses will call this method for every setting they want to look up.
-        """
-        if isinstance(backend, EmailAuth):
-            provider_config = EmailProviderConfig.current(backend.name)
-            if not provider_config.enabled_for_current_site:
-                raise Exception("Can't decode payload of a disabled backend/provider.")
-            try:
-                return provider_config.bigcommerce_retrieve_and_store_customer(payload)
-            except KeyError:
-                pass
-
-    def bigcommerce_save_store_customer_platform_user(self, payload=None, backend=None):
-        """
-        Load the payload user_data decoded values from a ConfigurationModel if possible, or fall back to the normal
-        Django settings lookup.
-
-        EmailAuth subclasses will call this method for every setting they want to look up.
-        """
-        if isinstance(backend, EmailAuth):
-            provider_config = EmailProviderConfig.current(backend.name)
-            if not provider_config.enabled_for_current_site:
-                raise Exception("Can't decode payload of a disabled backend/provider.")
-            try:
-                return provider_config.bigcommerce_save_store_customer_platform_user(payload)
-            except KeyError:
-                pass
