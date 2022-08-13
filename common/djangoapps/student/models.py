@@ -428,8 +428,8 @@ class UserProfile(models.Model):
         ('f', ugettext_noop('Female')),
         ('nbtg', ugettext_noop('Non-binary / third gender')),
         # Translators: 'Other' refers to the student's gender
-        ('prefer-not-to-say', ugettext_noop('Prefer not to say')),
-        ('o', ugettext_noop('Other')) # TODO - Need to change this option to a freetext input
+        # ('o', gettext_noop('Self-describe/other')) # TODO - Need to change this option to a freetext input
+        ('prefer-not-to-say', ugettext_noop('Prefer not to say'))
     )
     gender = models.CharField(
         blank=True, null=True, max_length=25, db_index=True, choices=GENDER_CHOICES
@@ -440,17 +440,15 @@ class UserProfile(models.Model):
     # ('p_se', 'Doctorate in science or engineering'),
     # ('p_oth', 'Doctorate in another field'),
     LEVEL_OF_EDUCATION_CHOICES = (
+        ('some-hs', ugettext_noop("Some high school")),
+        ('hs', ugettext_noop("High School or GED")),   
+        ('some-college', ugettext_noop("Some college")),
+        ('a', ugettext_noop("2-year degree")),
+        ('b', ugettext_noop("4-year degree")),
+        ('m', ugettext_noop("Master's")),
         ('p', ugettext_noop('Doctorate')),
-        ('m', ugettext_noop("Master's or professional degree")),
-        ('b', ugettext_noop("Bachelor's degree")),
-        ('a', ugettext_noop("Associate degree")),
-        ('hs', ugettext_noop("Secondary/high school")),
-        ('jhs', ugettext_noop("Junior secondary/junior high/middle school")),
-        ('el', ugettext_noop("Elementary/primary school")),
-        # Translators: 'None' refers to the student's level of education
-        ('none', ugettext_noop("No formal education")),
-        # Translators: 'Other' refers to the student's level of education
-        ('other', ugettext_noop("Other education"))
+        ('jd-md', ugettext_noop("Professional degree (J.D., M.D.)")),
+        ('prefer-not-to-say', ugettext_noop("Prefer not to say")),
     )
 
     level_of_education = models.CharField(
