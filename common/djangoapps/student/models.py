@@ -419,16 +419,20 @@ class UserProfile(models.Model):
 
     # Optional demographic data we started capturing from Fall 2012
     this_year = datetime.now(UTC).year
-    VALID_YEARS = range(this_year, this_year - 120, -1)
+    starting_year = 1923
+    VALID_YEARS = list(range(this_year, this_year - 120, -1))
+    VALID_YEARS = list(range(starting_year, this_year+1))
     year_of_birth = models.IntegerField(blank=True, null=True, db_index=True)
     GENDER_CHOICES = (
         ('m', ugettext_noop('Male')),
         ('f', ugettext_noop('Female')),
+        ('nbtg', ugettext_noop('Non-binary / third gender')),
         # Translators: 'Other' refers to the student's gender
-        ('o', ugettext_noop('Other/Prefer Not to Say'))
+        ('prefer-not-to-say', ugettext_noop('Prefer not to say')),
+        ('o', ugettext_noop('Other')) # TODO - Need to change this option to a freetext input
     )
     gender = models.CharField(
-        blank=True, null=True, max_length=6, db_index=True, choices=GENDER_CHOICES
+        blank=True, null=True, max_length=25, db_index=True, choices=GENDER_CHOICES
     )
 
     # [03/21/2013] removed these, but leaving comment since there'll still be
@@ -448,10 +452,12 @@ class UserProfile(models.Model):
         # Translators: 'Other' refers to the student's level of education
         ('other', ugettext_noop("Other education"))
     )
+
     level_of_education = models.CharField(
-        blank=True, null=True, max_length=6, db_index=True,
+        blank=True, null=True, max_length=25, db_index=True,
         choices=LEVEL_OF_EDUCATION_CHOICES
     )
+
     mailing_address = models.TextField(blank=True, null=True)
     city = models.TextField(blank=True, null=True)
     country = CountryField(blank=True, null=True)
