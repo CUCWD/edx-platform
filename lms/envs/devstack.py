@@ -288,3 +288,8 @@ if FEATURES['ENABLE_OPENBADGES'] is True:
         'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
         'LOCATION': 'badges_backends_api_tokens'
     }
+
+CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+    'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+    'LOCATION': 'qualtrics_backends_api_tokens'
+}
