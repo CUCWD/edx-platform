@@ -231,7 +231,6 @@ class RegistrationFormFactory(object):
             custom_form_field_names = [field_name for field_name, field in custom_form.fields.items()]
             valid_fields.extend(custom_form_field_names)
 
-        import pdb;pdb.set_trace()
         field_order = configuration_helpers.get_value('REGISTRATION_FIELD_ORDER')
         if not field_order:
             field_order = settings.REGISTRATION_FIELD_ORDER or valid_fields
