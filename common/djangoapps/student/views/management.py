@@ -625,6 +625,26 @@ def create_account_with_params(request, params):
             ]}
         )
 
+    # update this to reflect third-party authentication changes for `required`
+    # fields to `optional`.
+    if is_third_party_auth_enabled and pipeline.running(request):
+        running_pipeline = pipeline.get(request)
+        third_party_provider = provider.Registry.get_from_pipeline(running_pipeline)
+
+        if third_party_provider.skip_registration_form:
+
+            # make `year_of_birth` optional field.
+            for provider_field_name, provider_field_value in third_party_provider.get_setting("REGISTRATION_EXTRA_FIELDS").items():
+                # check to see if provider field exists in LMS environment. Only make updates if 
+                # environment shows `required` field.
+                if params[provider_field_name] == '' and provider_field_name in extra_fields:
+                    # set this to `None` to avoid issue with AccountCreationForm.clean_year_of_birth() value error.
+                    params.update({ provider_field_name: None })
+
+                    # Update field to be optional if required for third-party only.
+                    if extra_fields[provider_field_name] == 'required':
+                        extra_fields.update({ provider_field_name: provider_field_value }) 
+
     # if doing signup for an external authorization, then get email, password, name from the eamap
     # don't use the ones from the form, since the user could have hacked those
     # unless originally we didn't get a valid email or name from the external auth

@@ -85,13 +85,17 @@ class Customer(models.Model):
     bc_group_id = models.IntegerField(blank=True, null=True)
     bc_first_name = models.TextField(blank=True)
     bc_last_name = models.TextField(blank=True)
+    bc_postal_code = models.TextField(blank=True)
+    bc_country_code = models.TextField(blank=True)
 
     def __str__(self):
-        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}\nFull Name: {full_name}".format(
+        return u"Id: {id}\nEmail: {email}\nGroup: {group_id}\nFull Name: {full_name}\nZipcode: {postal_code}\nCountry Code: {country_code}".format(
             id=self.bc_id,
             email=self.bc_email,
             group_id=self.bc_group_id,
-            full_name="{first} {last}".format(first=self.bc_first_name, last=self.bc_last_name)
+            full_name="{first} {last}".format(first=self.bc_first_name, last=self.bc_last_name),
+            postal_code=self.bc_postal_code,
+            country_code=self.bc_country_code
         )
 
     class Meta(object):

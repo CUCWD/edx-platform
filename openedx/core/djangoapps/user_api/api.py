@@ -8,6 +8,7 @@ from django.utils.translation import ugettext as _
 from django_countries import countries
 
 import accounts
+import logging
 import third_party_auth
 from edxmako.shortcuts import marketing_link
 from openedx.core.djangolib.markup import HTML, Text
@@ -20,7 +21,7 @@ from student.models import UserProfile
 from util.password_policy_validators import (
     password_complexity, password_instructions, password_max_length, password_min_length
 )
-
+LOGGER = logging.getLogger(__name__)
 
 def get_password_reset_form():
     """Return a description of the password reset form.
@@ -192,6 +193,7 @@ class RegistrationFormFactory(object):
         "specialty",
     ]
 
+    CUSTOM_FORM_FIELDS = []
     def _is_field_visible(self, field_name):
         """Check whether a field is visible based on Django settings. """
         return self._extra_fields_setting.get(field_name) in ["required", "optional"]
@@ -260,14 +262,15 @@ class RegistrationFormFactory(object):
             HttpResponse
         """
         form_desc = FormDescription("post", reverse("user_api_registration"))
-        self._apply_third_party_auth_overrides(request, form_desc)
 
         # Custom form fields can be added via the form set in settings.REGISTRATION_EXTENSION_FORM
         custom_form = get_registration_extension_form()
         if custom_form:
-            custom_form_field_names = [field_name for field_name, field in custom_form.fields.items()]
-        else:
-            custom_form_field_names = []
+            self.CUSTOM_FORM_FIELDS = [field_name for field_name, field in custom_form.fields.items()]
+        
+        # apply third-party auth provider overrides.
+        # need to make sure this is done before adding third-party fields.
+        self._apply_third_party_auth_overrides(request, form_desc)
 
         # Go through the fields in the fields order and add them if they are required or visible
         for field_name in self.field_order:
@@ -278,7 +281,7 @@ class RegistrationFormFactory(object):
                     form_desc,
                     required=self._is_field_required(field_name)
                 )
-            elif field_name in custom_form_field_names:
+            elif field_name in self.CUSTOM_FORM_FIELDS:
                 for custom_field_name, field in custom_form.fields.items():
                     if field_name == custom_field_name:
                         restrictions = {}
@@ -1007,11 +1010,24 @@ class RegistrationFormFactory(object):
                         ) or current_provider.sync_learner_profile_data
                     )
 
-                    for field_name in self.DEFAULT_FIELDS + self.EXTRA_FIELDS:
+                    for field_name in self.DEFAULT_FIELDS + self.EXTRA_FIELDS + self.CUSTOM_FORM_FIELDS:
                         if field_name in field_overrides:
                             form_desc.override_field_properties(
                                 field_name, default=field_overrides[field_name]
                             )
+                            LOGGER.warning("tpa fields {} - override ({})".format(field_name, field_overrides[field_name]))
+
+                            # handle this field specifically since the third-party service
+                            # may not pass it and this field is required.
+                            if (field_name in current_provider.get_setting("REGISTRATION_EXTRA_FIELDS") and \
+                                current_provider.skip_registration_form):
+
+                                # override the field values from the provider.
+                                form_desc.override_field_properties(
+                                    field_name,
+                                    default=field_overrides[field_name],
+                                    required=(True if current_provider.get_setting("REGISTRATION_EXTRA_FIELDS").get(field_name) == 'required' else False)
+                                )
 
                             if (field_name not in ['terms_of_service', 'honor_code']
                                     and field_overrides[field_name]

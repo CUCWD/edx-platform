@@ -196,6 +196,8 @@ class BigCommerceAPI():
                     new_customer.bc_group_id = bc_customer.customer_group_id
                     new_customer.bc_first_name = bc_customer.first_name
                     new_customer.bc_last_name = bc_customer.last_name
+                    new_customer.bc_postal_code = bc_customer.addresses()[0]['zip']
+                    new_customer.bc_country_code = bc_customer.addresses()[0]['country_iso2']
                     new_customer.save()
                 except Exception as e:
                     LOGGER.error(
@@ -236,7 +238,9 @@ class BigCommerceAPI():
                     'email': new_customer.bc_email,
                     'group_id': new_customer.bc_group_id,
                     'first_name': new_customer.bc_first_name,
-                    'last_name': new_customer.bc_last_name
+                    'last_name': new_customer.bc_last_name,
+                    'postal_code': new_customer.bc_postal_code,
+                    'country_code': new_customer.bc_country_code
                 }
 
             except Exception as e:
