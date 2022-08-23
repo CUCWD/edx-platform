@@ -72,10 +72,14 @@ class Customer(models.Model):
     bc_group_id = models.IntegerField(blank=True, null=True)
     bc_first_name = models.TextField(blank=True)
     bc_last_name = models.TextField(blank=True)
+    bc_postal_code = models.TextField(blank=True)
+    bc_country_code = models.TextField(blank=True)
 
     def __str__(self):
         return f"Id: {self.bc_id}\nEmail: {self.bc_email}\nGroup: {self.bc_group_id}\n" \
-            "Full Name: {self.bc_first_name} {self.bc_last_name}"
+            "Full Name: {self.bc_first_name} {self.bc_last_name}\n" \
+            "Postal Code: {self.bc_postal_code}\n" \
+            "Country Code: {self.bc.country_code}"
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
