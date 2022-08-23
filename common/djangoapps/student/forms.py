@@ -314,7 +314,7 @@ class AccountCreationForm(forms.Form):
         """
         try:
             year_str = self.cleaned_data["year_of_birth"]
-            return int(year_str) if year_str is not None else None
+            return int(year_str) if year_str is not None and len(year_str) > 0 else None
         except ValueError:
             return None
 
