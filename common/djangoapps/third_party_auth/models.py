@@ -407,7 +407,6 @@ class EmailProviderConfig(ProviderConfig):
         if name == "ACCESS_TOKEN":
             return access_token()
         # if name == "BIGCOMMERCE_CUSTOMER_METADATA":
-        #     import pdb;pdb.set_trace()
         #     return BigCommerceAPI.bigcommerce_customer_metadata()
         if self.other_settings:
             other_settings = json.loads(self.other_settings)

@@ -122,7 +122,7 @@ REAL_IP_KEY = 'openedx.core.djangoapps.util.ratelimit.real_ip'
 
 
 @transaction.non_atomic_requests
-def create_account_with_params(request, params):
+def create_account_with_params(request, params):  # pylint: disable=too-many-statements
     """
     Given a request and a dict of parameters (which may or may not have come
     from the request), create an account for the requesting user, including
@@ -203,6 +203,35 @@ def create_account_with_params(request, params):
         registration_fields.get('terms_of_service') != 'hidden' or
         registration_fields.get('honor_code') != 'hidden'
     )
+
+    # update this to reflect third-party authentication changes for `required`
+    # fields to `optional`.
+    if is_third_party_auth_enabled and pipeline.running(request):
+        running_pipeline = pipeline.get(request)
+        third_party_provider = provider.Registry.get_from_pipeline(running_pipeline)
+
+        # Check to see if BigCommerce backend is the current_provider.
+        is_bigcommerce_provider_backend = (
+            third_party_provider.backend_class.__base__.__name__ == 'BigCommerceCustomerBaseAuth'
+        )
+
+        # only do this for `BigCommerceCustomerBaseAuth` backends that have
+        # `Skip registration form` enabled.
+        if (is_bigcommerce_provider_backend and third_party_provider.skip_registration_form):
+
+            # make `year_of_birth` optional field.
+            for provider_field_name, provider_field_value in \
+                    third_party_provider.get_setting("REGISTRATION_EXTRA_FIELDS").items():
+                # check to see if provider field exists in LMS environment. Only make updates if
+                # environment shows `required` field.
+                if (params[provider_field_name] == '' and provider_field_name in extra_fields):
+                    # set this to `None` to avoid issue with
+                    # AccountCreationForm.clean_year_of_birth() value error.
+                    params.update({provider_field_name: None})
+
+                    # Update field to be optional if required for third-party only.
+                    if extra_fields[provider_field_name] == 'required':
+                        extra_fields.update({provider_field_name: provider_field_value})
 
     form = AccountCreationForm(
         data=params,
