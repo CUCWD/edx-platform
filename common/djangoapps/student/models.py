@@ -536,7 +536,7 @@ class UserProfile(models.Model):
         ('nbtg', gettext_noop('Non-binary / third gender')),
         # Translators: 'Other' refers to the student's gender
         ('prefer-not-to-say', gettext_noop('Prefer not to say')),
-        ('o', gettext_noop('Other')) # TODO - Need to change this option to a freetext input
+        ('o', gettext_noop('Other'))
     )
     gender = models.CharField(
         blank=True, null=True, max_length=25, db_index=True, choices=GENDER_CHOICES
