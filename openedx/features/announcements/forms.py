@@ -14,7 +14,8 @@ class AnnouncementForm(forms.ModelForm):
     """
     content = forms.CharField(widget=forms.Textarea, label='', required=False)
     active = forms.BooleanField(initial=True, required=False)
+    promote_to_banner = forms.BooleanField(initial=False, required=False)
 
     class Meta:
         model = Announcement
-        fields = ['content', 'active']
+        fields = ['content', 'active', 'promote_to_banner']
