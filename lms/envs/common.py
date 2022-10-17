@@ -3170,7 +3170,6 @@ INSTALLED_APPS = [
 
     # Features
     'openedx.features.calendar_sync',
-    'openedx.features.course_badges',
     'openedx.features.course_bookmarks',
     'openedx.features.course_experience',
     'openedx.features.course_search',
