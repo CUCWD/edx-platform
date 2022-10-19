@@ -2258,9 +2258,9 @@ base_vendor_js = [
     'common/js/vendor/backbone.js',
 
     # Used for Glossary
-    'common/js/vendor/jquery.easytabs.js',
-    'common/js/vendor/jquery.hashchange.js',
-    'common/js/vendor/jquery.scrollTo.js',
+    'js/vendor/jquery.easytabs.js',
+    'js/vendor/jquery.hashchange.js',
+    'js/vendor/jquery.scrollTo.js',
 ]
 
 main_vendor_js = base_vendor_js + [
