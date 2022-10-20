@@ -53,7 +53,8 @@ class TestGlobalAnnouncements(TestCase):
         """Ensures that the default settings effectively disables the feature"""
         response = self.client.get('/dashboard')
         self.assertNotContains(response, 'AnnouncementsView')
-        self.assertNotContains(response, '<div id="announcements"')
+        self.assertNotContains(response, '<div id="announcements-banner"')
+        self.assertNotContains(response, '<div id="announcements-sidebar"')
 
     def test_feature_flag_enabled(self):
         """Ensures that enabling the flag, enables the feature"""
