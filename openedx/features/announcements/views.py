@@ -18,13 +18,18 @@ class AnnouncementsJSONView(ListView):
     object_list = Announcement.objects.filter(active=True)
     paginate_by = settings.FEATURES.get('ANNOUNCEMENTS_PER_PAGE', 5)
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):  # pylint: disable=unused-argument
         """
         Return active announcements as json
         """
         context = self.get_context_data()
 
-        announcements = [{"content": announcement.content} for announcement in context['object_list']]
+        announcements = [
+            {
+                "content": announcement.content,
+                "promote_to_banner": announcement.promote_to_banner
+            } for announcement in context['object_list']
+        ]
         result = {
             "announcements": announcements,
             "next": context['page_obj'].has_next(),
