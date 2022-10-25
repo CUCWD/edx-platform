@@ -69,6 +69,7 @@
       "lms/djangoapps/teams/",
       "lms/djangoapps/tests/",
       "lms/djangoapps/verify_student/",
+      "lms/djangoapps/mfe_config_api/",
       "lms/envs/",
       "lms/lib/",
       "lms/tests.py"
