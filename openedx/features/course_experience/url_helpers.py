@@ -178,7 +178,9 @@ def make_learning_mfe_courseware_url(
     `course_key`, `sequence_key`, and `unit_key` can be either OpaqueKeys or
     strings. They're only ever used to concatenate a URL string.
     """
-    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))
+    learning_microfrontend_url = configuration_helpers.get_value(
+        'LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', '')
+    )
     mfe_link = f'{learning_microfrontend_url}/course/{course_key}'
 
     if sequence_key:
@@ -203,7 +205,9 @@ def get_learning_mfe_home_url(
     `course_key` can be either an OpaqueKey or a string.
     `view_name` is an optional string.
     """
-    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))
+    learning_microfrontend_url = configuration_helpers.get_value(
+        'LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', '')
+    )
     mfe_link = f'{learning_microfrontend_url}/course/{course_key}'
 
     if view_name:
@@ -216,7 +220,9 @@ def is_request_from_learning_mfe(request: HttpRequest):
     """
     Returns whether the given request was made by the frontend-app-learning MFE.
     """
-    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))
+    learning_microfrontend_url = configuration_helpers.get_value(
+        'LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', '')
+    )
 
     if not learning_microfrontend_url:
         return False
