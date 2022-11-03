@@ -27,7 +27,7 @@ class MFEConfigView(APIView):
     Provides an API endpoint to get the MFE_CONFIG from site configuration.
     """
 
-    # @method_decorator(cache_page(settings.MFE_CONFIG_API_CACHE_TIMEOUT))
+    @method_decorator(cache_page(settings.MFE_CONFIG_API_CACHE_TIMEOUT))
     def get(self, request):
         """
         GET /api/v1/mfe_config
