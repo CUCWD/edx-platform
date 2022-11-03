@@ -21,6 +21,7 @@ from openedx.core.djangoapps.site_configuration.models import (
 
 log = logging.getLogger(__name__)
 
+
 class MFEConfigView(APIView):
     """
     Provides an API endpoint to get the MFE_CONFIG from site configuration.
@@ -62,13 +63,13 @@ class MFEConfigView(APIView):
             "request.META %s", request.META
         )
         if request.META.get('HTTP_REFERER'):
-            referer = re.sub('^https?:\/\/', '', request.META.get('HTTP_REFERER')).split('/')[0]
+            referer = re.sub('^https?:\/\/', '', request.META.get('HTTP_REFERER')).split('/')[0]  # nopep8
 
-            for site_config in SiteConfiguration.objects.all():            
+            for site_config in SiteConfiguration.objects.all():
                 mfe_config = site_config.site_values.get("MFE_CONFIG", {})
                 if mfe_config.get("BASE_URL"):
-                    mfe_config_base_url = re.sub('^https?:\/\/', '', mfe_config.get("BASE_URL")).split('/')[0]
-                
+                    mfe_config_base_url = re.sub('^https?:\/\/', '', mfe_config.get("BASE_URL")).split('/')[0]  # nopep8
+
                     if mfe_config_base_url == referer:
                         log.info(
                             "Found the site configuration that matches the MFE base domain."
@@ -82,13 +83,12 @@ class MFEConfigView(APIView):
                         if request.query_params.get('mfe'):
                             mfe = str(request.query_params.get('mfe')).upper()
 
-                            
                             mfe_config.update(configuration.get_value(
                                 f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {})))
 
                         # Exit out of the loop once you find first correct
                         # MFE_CONFIG in Site Configuration.
-                        break;
+                        break
         else:
             mfe_config = configuration_helpers.get_value('MFE_CONFIG', getattr(settings, 'MFE_CONFIG', {}))
 
