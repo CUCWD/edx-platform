@@ -2,14 +2,13 @@
 MFE API Views for useful information related to mfes.
 """
 
-import json
 import logging
 import re
 
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator  # pylint: disable=unused-import
+from django.views.decorators.cache import cache_page  # pylint: disable=unused-import
 from rest_framework import status
 from rest_framework.views import APIView
 
@@ -21,12 +20,13 @@ from openedx.core.djangoapps.site_configuration.models import (
 
 log = logging.getLogger(__name__)
 
+
 class MFEConfigView(APIView):
     """
     Provides an API endpoint to get the MFE_CONFIG from site configuration.
     """
 
-    # @method_decorator(cache_page(settings.MFE_CONFIG_API_CACHE_TIMEOUT))
+    @method_decorator(cache_page(settings.MFE_CONFIG_API_CACHE_TIMEOUT))
     def get(self, request):
         """
         GET /api/v1/mfe_config
@@ -62,13 +62,13 @@ class MFEConfigView(APIView):
             "request.META %s", request.META
         )
         if request.META.get('HTTP_REFERER'):
-            referer = re.sub('^https?:\/\/', '', request.META.get('HTTP_REFERER')).split('/')[0]
+            referer = re.sub('^https?:\/\/', '', request.META.get('HTTP_REFERER')).split('/')[0]  # nopep8, pylint: disable=anomalous-backslash-in-string
 
-            for site_config in SiteConfiguration.objects.all():            
+            for site_config in SiteConfiguration.objects.all():
                 mfe_config = site_config.site_values.get("MFE_CONFIG", {})
                 if mfe_config.get("BASE_URL"):
-                    mfe_config_base_url = re.sub('^https?:\/\/', '', mfe_config.get("BASE_URL")).split('/')[0]
-                
+                    mfe_config_base_url = re.sub('^https?:\/\/', '', mfe_config.get("BASE_URL")).split('/')[0]  # nopep8, pylint: disable=anomalous-backslash-in-string
+
                     if mfe_config_base_url == referer:
                         log.info(
                             "Found the site configuration that matches the MFE base domain."
@@ -77,18 +77,19 @@ class MFEConfigView(APIView):
                         configuration = getattr(site_config.site, "configuration", None)
 
                         mfe_config = configuration.get_value(
-                            f'MFE_CONFIG', getattr(settings, f'MFE_CONFIG', {}))
+                            'MFE_CONFIG', getattr(settings, 'MFE_CONFIG', {})
+                        )
 
                         if request.query_params.get('mfe'):
                             mfe = str(request.query_params.get('mfe')).upper()
 
-                            
                             mfe_config.update(configuration.get_value(
-                                f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {})))
+                                f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {}))
+                            )
 
                         # Exit out of the loop once you find first correct
                         # MFE_CONFIG in Site Configuration.
-                        break;
+                        break
         else:
             mfe_config = configuration_helpers.get_value('MFE_CONFIG', getattr(settings, 'MFE_CONFIG', {}))
 
