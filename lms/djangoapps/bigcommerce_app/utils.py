@@ -247,12 +247,12 @@ class BigCommerceAPI():
 
                 # Check to see if the BigCommerce Customer has an address.
                 # Typically the Zipcode and Country Code are required fields on the BigCommerce
-                # store, however, they can be not-required and EducateWorkforce needs those fields to 
+                # store, however, they can be not-required and EducateWorkforce needs those fields to
                 # complete its own first-party user registration.
                 try:
                     postal_code = bc_customer.addresses()[0]['zip']
                     country_code = bc_customer.addresses()[0]['country_iso2']
-                except Exception as excep:
+                except Exception as excep:  # pylint: disable=broad-except
                     LOGGER.info(
                         "BigCommerce Customer <%s> doesn't have an address. – %s\n",
                         bc_customer.email,
@@ -263,7 +263,7 @@ class BigCommerceAPI():
                     # field fail if required.
                     postal_code = ''
                     country_code = ''
-                
+
                 # Save the BigCommerce Customer for the platform
                 try:
                     # Check to see if a BigCommerce Customer address exist and if not don't set

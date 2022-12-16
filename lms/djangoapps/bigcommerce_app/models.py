@@ -20,7 +20,10 @@ class Store(models.Model):
     scope = models.TextField()
 
     def __str__(self):
-        return f"\n[BigCommerce Store] – Hash: {self.store_hash}\nScope: {self.scope}\nAccess Token: {self.access_token}"
+        return (
+            f"\n[BigCommerce Store]\n"
+            f"Hash: {self.store_hash}\nScope: {self.scope}\nAccess Token: {self.access_token}"
+        )
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
@@ -53,7 +56,10 @@ class StoreAdminUser(models.Model):
     is_admin = models.BooleanField(blank=False, default=False)
 
     def __str__(self):
-        return f"\n[BigCommerce Store Admin User]: {self.store}\nAdmin User: {self.bc_admin_user}\nIs Admin: {self.is_admin}"
+        return (
+            f"\n[BigCommerce Store Admin User]\n"
+            f"Store: {self.store}\nAdmin User: {self.bc_admin_user}\nIs Admin: {self.is_admin}"
+        )
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
