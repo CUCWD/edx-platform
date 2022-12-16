@@ -346,6 +346,10 @@ class ProviderConfig(ConfigurationModel):
         """
         Determines if the provider is able to be used with the current site.
         """
+        log.info(
+            u"ProviderConfig.enabled_for_current_site crum.get_current_request() = %s",
+            get_current_request()
+        )
         return self.enabled and self.site_id == Site.objects.get_current(get_current_request()).id
 
 

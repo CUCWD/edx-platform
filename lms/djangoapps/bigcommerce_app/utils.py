@@ -245,8 +245,30 @@ class BigCommerceAPI():
 
                 bc_customer = cls.bcapi_customer_metadata(user_data['customer']['email'])
 
+                # Check to see if the BigCommerce Customer has an address.
+                # Typically the Zipcode and Country Code are required fields on the BigCommerce
+                # store, however, they can be not-required and EducateWorkforce needs those fields to
+                # complete its own first-party user registration.
+                try:
+                    postal_code = bc_customer.addresses()[0]['zip']
+                    country_code = bc_customer.addresses()[0]['country_iso2']
+                except Exception as excep:  # pylint: disable=broad-except
+                    LOGGER.info(
+                        "BigCommerce Customer <%s> doesn't have an address. – %s\n",
+                        bc_customer.email,
+                        excep
+                    )
+
+                    # Explicity set these values to empty string to make the registration
+                    # field fail if required.
+                    postal_code = ''
+                    country_code = ''
+
                 # Save the BigCommerce Customer for the platform
                 try:
+                    # Check to see if a BigCommerce Customer address exist and if not don't set
+                    # a default and this will allow the user to enter this field on the registration
+                    # page.
                     new_customer, __ = Customer.objects.get_or_create(
                         bc_id=bc_customer.id,
                         bc_email=bc_customer.email
@@ -254,12 +276,16 @@ class BigCommerceAPI():
                     new_customer.bc_group_id = bc_customer.customer_group_id
                     new_customer.bc_first_name = bc_customer.first_name
                     new_customer.bc_last_name = bc_customer.last_name
-                    new_customer.bc_postal_code = bc_customer.addresses()[0]['zip']
-                    new_customer.bc_country_code = bc_customer.addresses()[0]['country_iso2']
+                    new_customer.bc_postal_code = postal_code
+                    new_customer.bc_country_code = country_code
                     new_customer.save()
+
+                    LOGGER.info(
+                        f"Successfully created/updated existing BigCommerce customer – {new_customer}"
+                    )
                 except Exception as excep:  # pylint: disable=broad-except
                     LOGGER.error(
-                        "Could save BigCommerce Customer %s\n%s",
+                        "Could not save BigCommerce Customer %s\n%s",
                         bc_customer.email,
                         excep
                     )
@@ -276,7 +302,7 @@ class BigCommerceAPI():
                         new_store_customer.save()
                     except Exception as excep:  # pylint: disable=broad-except
                         LOGGER.error(
-                            "Could save BigCommerce StoreCustomer %s – %s\n%s",
+                            "Could not save BigCommerce StoreCustomer %s – %s\n%s",
                             store_hash(),
                             bc_customer.email,
                             excep
