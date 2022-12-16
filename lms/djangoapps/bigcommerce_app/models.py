@@ -20,7 +20,7 @@ class Store(models.Model):
     scope = models.TextField()
 
     def __str__(self):
-        return f"Hash: {self.store_hash}\nScope: {self.scope}\nAccess Token: {self.access_token}"
+        return f"\n[BigCommerce Store] – Hash: {self.store_hash}\nScope: {self.scope}\nAccess Token: {self.access_token}"
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
@@ -38,7 +38,7 @@ class AdminUser(models.Model):
     )
 
     def __str__(self):
-        return f"Id: {self.bc_id}\nEmail: {self.bc_email}"
+        return f"\n[BigCommerce Admin User] – Id: {self.bc_id}\nEmail: {self.bc_email}"
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
@@ -53,7 +53,7 @@ class StoreAdminUser(models.Model):
     is_admin = models.BooleanField(blank=False, default=False)
 
     def __str__(self):
-        return f"Store: {self.store}\nAdmin User: {self.bc_admin_user}\nIs Admin: {self.is_admin}"
+        return f"\n[BigCommerce Store Admin User]: {self.store}\nAdmin User: {self.bc_admin_user}\nIs Admin: {self.is_admin}"
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
@@ -76,10 +76,13 @@ class Customer(models.Model):
     bc_country_code = models.TextField(blank=True)
 
     def __str__(self):
-        return f"Id: {self.bc_id}\nEmail: {self.bc_email}\nGroup: {self.bc_group_id}\n" \
-            "Full Name: {self.bc_first_name} {self.bc_last_name}\n" \
-            "Postal Code: {self.bc_postal_code}\n" \
-            "Country Code: {self.bc.country_code}"
+        return (
+            f"\n[BigCommerce Customer]"
+            f"Id: {self.bc_id} \nEmail: {self.bc_email} \nGroup: {self.bc_group_id} \n"
+            f"Full Name: {self.bc_first_name} {self.bc_last_name} \n"
+            f"Postal Code: {self.bc_postal_code} \n"
+            f"Country Code: {self.bc_country_code}"
+        )
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
@@ -93,7 +96,7 @@ class StoreCustomer(models.Model):
     bc_customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"Store: {self.store}\nCustomer: {self.bc_customer}"
+        return f"\n[BigCommerce Store Customer] – {self.store}\nCustomer: {self.bc_customer}"
 
     class Meta(object):  # lint-amnesty, pylint: disable=missing-class-docstring
         app_label = "bigcommerce_app"
