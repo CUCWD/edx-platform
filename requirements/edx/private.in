@@ -11,6 +11,8 @@
 # XBlocks
 -e git+https://github.com/CUCWD/xblock-qualtrics-survey.git@release/v.2.1.0-maple.3-cucwd#egg=xblock_qualtrics_survey==2.1.0
 -e git+https://github.com/CUCWD/xblock-keyterms.git@0.1-maple.3-cucwd#egg=keyterms-xblock==0.1
+-e git+https://github.com/CUCWD/edx-ora2.git@3.7.2-maple.3-cucwd#egg=ora2==3.7.2
+
 
 # Custom Form App
 -e git+https://github.com/CUCWD/custom-form-app.git@0.1-maple.3-cucwd#egg=custom-form-app==0.1
