@@ -362,3 +362,11 @@ PROCTORING_USER_OBFUSCATION_KEY = 'test_key'
 #################### Network configuration ####################
 # Tests are not behind any proxies
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
+
+################################ FORMS ################################
+
+# Install custom reg form since this is a requirement to Qualtrics Survey XBlock.
+INSTALLED_APPS.append('custom_reg_form')
+
+# Set the location of the form extra info.
+REGISTRATION_EXTENSION_FORM = 'custom_reg_form.forms.ExtraInfoForm'
