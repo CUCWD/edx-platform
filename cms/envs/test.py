@@ -301,6 +301,14 @@ VIDEO_TRANSCRIPTS_SETTINGS = dict(
     DIRECTORY_PREFIX='video-transcripts/',
 )
 
+################################ FORMS ################################
+
+# Install custom reg form since this is a requirement to Qualtrics Survey XBlock.
+INSTALLED_APPS.append('custom_reg_form')
+
+# Set the location of the form extra info.
+REGISTRATION_EXTENSION_FORM = 'custom_reg_form.forms.ExtraInfoForm'
+
 ####################### Plugin Settings ##########################
 
 # pylint: disable=wrong-import-position, wrong-import-order
