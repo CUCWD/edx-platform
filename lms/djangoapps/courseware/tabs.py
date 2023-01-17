@@ -90,7 +90,7 @@ class GlossaryTab(EnrolledTab):
     title = gettext_noop('Glossary')
     priority = None
     view_name = "glossary"
-    is_default = True
+    is_default = False
     is_hideable = True
     is_movable = True
 
@@ -102,7 +102,16 @@ class GlossaryTab(EnrolledTab):
                 return get_learning_mfe_home_url(course_key=course.id, view_name=self.view_name)
 
         tab_dict['link_func'] = link_func
-        super().__init__(tab_dict)
+
+        # Default to hidden
+        super().__init__({"is_hidden": True, **tab_dict})
+
+    def to_json(self):
+        json_val = super().to_json()
+        # Persist that the tab is *not* hidden
+        if not self.is_hidden:
+            json_val.update({"is_hidden": False})
+        return json_val
 
     @classmethod
     def is_enabled(cls, course, user=None):
@@ -112,16 +121,10 @@ class GlossaryTab(EnrolledTab):
             course (CourseDescriptor): the course using the feature
             user (User): the user interacting with the course
         """
-        if not super(GlossaryTab, cls).is_enabled(course, user=user):
-            return False
-
         if not cls.is_feature_enabled():
             return False
 
-        if user and not user.is_authenticated:
-            return False
-
-        return True
+        return super(GlossaryTab, cls).is_enabled(course, user=user)
 
     @classmethod
     def is_feature_enabled(cls):
@@ -381,9 +384,9 @@ class BadgesTab(EnrolledTab):
         "Badges")  # We don't have the user in this context, so we don't want to translate it at this level.
     priority = None
     view_name = "badges_progress"
-    is_default = True
-    is_movable = True
+    is_default = False
     is_hideable = True
+    is_movable = True
 
     def __init__(self, tab_dict):
         def link_func(course, reverse_func):
@@ -393,23 +396,27 @@ class BadgesTab(EnrolledTab):
                 return get_learning_mfe_home_url(course_key=course.id, view_name='badges/progress')
 
         tab_dict['link_func'] = link_func
-        super().__init__(tab_dict)
+
+        # Default to hidden
+        super().__init__({"is_hidden": True, **tab_dict})
+
+    def to_json(self):
+        json_val = super().to_json()
+        # Persist that the tab is *not* hidden
+        if not self.is_hidden:
+            json_val.update({"is_hidden": False})
+        return json_val
 
     @classmethod
     def is_enabled(cls, course, user=None):
-        """Returns true if the badges feature is enabled in the course.
+        """
+        Returns true if the `Issue Open Badges` is enabled and the specified user is enrolled or has staff access.
 
         Args:
             course (CourseDescriptor): the course using the feature
             user (User): the user interacting with the course
         """
-        if not super(BadgesTab, cls).is_enabled(course, user=user):
-            return False
-
         if not cls.is_feature_enabled():
-            return False
-
-        if user and not user.is_authenticated:
             return False
 
         # Retrieve the Advanced Settings Issue Open Badges (`issue_badges`) field from the CourseFields instance.
@@ -419,6 +426,11 @@ class BadgesTab(EnrolledTab):
             course_fields = get_course_by_id(course.id)
             return course_fields.issue_badges
 
+        # We don't want to show the `CMS > Pages > Badges` whenever we're staff member
+        # So we don't call the base class `EnrolledTab.is_enabled` as show below.
+        # Returning this would always show it to the staff member and we only want
+        # to do that whenever the `CMS > Advanced Settings > Issue Open Badges` is true.
+        # super(BadgesTab, cls).is_enabled(course, user=user)
         return False
 
     @classmethod
