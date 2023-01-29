@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import $ from 'jquery';
-import '../css/tos-modal.css'
 
 // Due to an issue with importing modal from paragon, 
 // a modal has been made from scratch instead of importing a new one
@@ -31,6 +30,7 @@ class ModalView extends Component {
     this.setState({ tos_isChecked: !isChecked });
   }
 
+
   isCheckboxClicked() {
     return !this.state.tos_isChecked;
   }
@@ -42,7 +42,6 @@ class ModalView extends Component {
           tos_html: data.tos_html,
           has_user_agreed_to_latest_tos: data.has_user_agreed_to_latest_tos
         });
-        console.log("ayo", this.state.has_user_agreed_to_latest_tos)
       });
   }
 
@@ -51,11 +50,31 @@ class ModalView extends Component {
     this.setState({ show: true });
   }
 
+
   hideModal() {
+
+    var CSRFT = 'csrftoken';
+
+    var csrftoken = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, CSRFT.length + 1) === (CSRFT + '=')) {
+                csrftoken = decodeURIComponent(cookie.substring(CSRFT.length + 1));
+                break;
+            }
+        }
+    }
 
     fetch('/termsofservice/v1/current_tos/', {
       method: 'POST',
       mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrftoken
+      },
       body: JSON.stringify({
         has_user_agreed: true
       })
@@ -75,7 +94,7 @@ class ModalView extends Component {
         <main>
           <Modal show={this.state.show} handleClose={this.hideModal} >
             <h2 className="mt-3 text-center">Terms of Service Agreement</h2>
-            <p className="text-center">EducateWorkforce has updated its terms of service. Please read the following terms of acknowledge to continue use of the platform.</p>
+            <p className="text-center">EducateWorkforce has updated its terms of service. Please read the following terms and agree in order to continue use of the platform.</p>
 
             <div className="modal-body border border-dark rounded m-3">
               <div className="scrollable_tos_style"  dangerouslySetInnerHTML={{ __html: (this.state.tos_html) }}></div>
