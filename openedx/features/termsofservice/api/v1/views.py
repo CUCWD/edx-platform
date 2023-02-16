@@ -32,8 +32,9 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
                 if default_tos is None:
                     result = {
                         "tos_html": latest_tos_html,
+                        "tos_exists_for_site": False,
                         "has_user_agreed_to_latest_tos": has_user_agreed_to_latest_tos,
-                        "error": "There is no Default Terms of Service assigned to the platform"
+                        "error": f"Need to setup a Terms of Service Acknowledgment for {cur_site_name}"
                     }
                     return JsonResponse(result)
                 else:
@@ -51,7 +52,7 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
             except TermsOfServiceAcknowledgement.DoesNotExist:
                 cur_user_curf_id = None
 
-            if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
+            if not settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
                 # Check if the user agreed curf id matches the latest curf id
                 has_user_agreed_to_latest_tos = cur_site_curf_id == cur_user_curf_id
             else:
@@ -72,6 +73,7 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
             latest_tos_html = ''
 
         result = {
+            "tos_exists_for_site": True if latest_tos_html else False,
             "tos_html": latest_tos_html,
             "has_user_agreed_to_latest_tos": has_user_agreed_to_latest_tos
         }
