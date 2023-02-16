@@ -15,7 +15,8 @@ class ModalView extends Component {
     this.state = {
       show: true,
       tos_html: '',
-      has_user_agreed_to_latest_tos: true,
+      tos_exists_for_site: false,
+      has_user_agreed_to_latest_tos: false,
       tos_isChecked: false,
     };
     this.showModal = this.showModal.bind(this);
@@ -39,6 +40,7 @@ class ModalView extends Component {
     $.get('/termsofservice/v1/current_tos/')
       .then(data => {
         this.setState({
+          tos_exists_for_site: data.tos_exists_for_site,
           tos_html: data.tos_html,
           has_user_agreed_to_latest_tos: data.has_user_agreed_to_latest_tos
         });
@@ -86,7 +88,7 @@ class ModalView extends Component {
 
   render() {
 
-    if (this.state.has_user_agreed_to_latest_tos) {
+    if (!this.state.tos_exists_for_site || this.state.has_user_agreed_to_latest_tos) {
       return (<div></div>)
     }
     else {
