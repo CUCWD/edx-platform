@@ -53,8 +53,9 @@ class ModalView extends Component {
 
   hideModal() {
 
+    // Link to the code snippet that was referred to get the CSRF Token
+    // https://docs.djangoproject.com/en/3.2/ref/csrf/#ajax
     var CSRFT = 'csrftoken';
-
     var csrftoken = null;
     if (document.cookie && document.cookie !== '') {
         var cookies = document.cookie.split(';');
@@ -70,7 +71,7 @@ class ModalView extends Component {
 
     fetch('/termsofservice/v1/current_tos/', {
       method: 'POST',
-      mode: 'cors',
+      mode: 'same-origin',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRFToken': csrftoken

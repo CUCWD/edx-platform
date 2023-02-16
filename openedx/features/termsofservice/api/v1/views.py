@@ -1,5 +1,7 @@
 # lint-amnesty, pylint: disable=missing-module-docstring
 
+import json
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import HttpResponseRedirect, JsonResponse
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from django.conf import settings
@@ -9,10 +11,12 @@ from openedx.features.termsofservice.models import TermsOfServiceAcknowledgement
 from django.contrib.sites.models import Site
 
 
-def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-function-docstring
+@ensure_csrf_cookie
+def terms_of_service_api(request):
     latest_tos_html = ''
 
     site_name = configuration_helpers.get_value("SITE_NAME", settings.SITE_NAME)
+    cur_site_id = Site.objects.get(domain = site_name)
 
     if request.method == 'GET':
         # Return Terms of Service as JSON
@@ -20,10 +24,8 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
             latest_tos_html = ''
             has_user_agreed_to_latest_tos = False
             # Get the curf_id associated with the Site
-
             if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
-                cur_site_id = Site.objects.get(domain=site_name)
-                cur_site_curf_id = TermsOfServiceSites.objects.get(site_id=cur_site_id.id).curf_id
+                cur_site_curf_id = TermsOfServiceSites.objects.get(site_id = cur_site_id.id).curf_id
             else:
                 default_tos = TermsOfServiceAllSites.objects.all().first()
                 #if there is no default TOS assigned, return a JSON response with an error
@@ -77,11 +79,12 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
         return JsonResponse(result)
 
     if request.method == 'POST':
+        
+        if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
+            current_valid_curf_id = TermsOfServiceSites.objects.get(site_id = cur_site_id.id).curf_id
+        else:
+            current_valid_curf_id = TermsOfServiceAllSites.objects.all().first().curf_id
 
-        # Get the curf_id associated with the Site
-        cur_site_id = Site.objects.get(domain=site_name)
-
-        current_valid_curf_id = TermsOfServiceSites.objects.get(site_id=cur_site_id.id).curf_id
         try:
             user_TOS_ack = TermsOfServiceAcknowledgement.objects.get(user_id=request.user.id)
             user_TOS_ack.curf_id = current_valid_curf_id
