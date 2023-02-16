@@ -73,6 +73,11 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
         return JsonResponse(result)
 
     if request.method == 'POST':
+        
+        if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
+            current_valid_curf_id = TermsOfServiceSites.objects.get(site_id = cur_site_id.id).curf_id
+        else:
+            current_valid_curf_id = TermsOfServiceAllSites.objects.all().first().curf_id
 
         if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
             current_valid_curf_id = TermsOfServiceSites.objects.get(site_id=cur_site_id.id).curf_id
