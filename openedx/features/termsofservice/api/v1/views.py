@@ -12,11 +12,11 @@ from django.contrib.sites.models import Site
 
 
 @ensure_csrf_cookie
-def terms_of_service_api(request):
+def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-function-docstring
     latest_tos_html = ''
 
-    site_name = configuration_helpers.get_value("SITE_NAME", settings.SITE_NAME)
-    cur_site_id = Site.objects.get(domain = site_name)
+    cur_site_name = configuration_helpers.get_value("SITE_NAME", settings.SITE_NAME)
+    cur_site_id = Site.objects.get(domain = cur_site_name)
 
     if request.method == 'GET':
         # Return Terms of Service as JSON
