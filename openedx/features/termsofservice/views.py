@@ -18,6 +18,9 @@ def latest_terms_of_service():  # lint-amnesty, pylint: disable=missing-function
     else:
         try:
             cur_site_curf_id = TermsOfServiceAllSites.objects.all().first().curf_id
+        except TermsOfServiceAllSites.DoesNotExist:
+            tos_html = "Need to setup a Terms of Service Acknowledgment for " + site_name
+            logger.info('Need to setup a Terms of Service Acknowledgment for {site_name}')
 
             tos_html = TermsOfService.objects.get(curf_id=cur_site_curf_id).terms_of_service_text
         except AttributeError as error:
