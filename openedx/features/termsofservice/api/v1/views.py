@@ -1,7 +1,7 @@
 # lint-amnesty, pylint: disable=missing-module-docstring
 
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from django.conf import settings
 from django.shortcuts import redirect
@@ -91,4 +91,4 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
             user_TOS_ack = TermsOfServiceAcknowledgement(user_id=request.user.id, curf_id=current_valid_curf_id)
         user_TOS_ack.save()
 
-        return redirect(request.path_info)
+        return HttpResponse("Successfully Posted Terms of Service Update", status=200)
