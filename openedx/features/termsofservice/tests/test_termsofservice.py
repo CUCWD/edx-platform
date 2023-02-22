@@ -35,10 +35,7 @@ class TestGlobalTermsOfService(TestCase):
             curf_id="cf_id1"
         )
         # Fill in sample data for Site
-        site1 = Site.objects.create(
-            domain="example-tos.com",
-            name="Example TOS Site"
-        )
+        site1 = Site.objects.create(domain='edx.org', name='edx.org')
 
         # Fill in sample data for TermsOfServiceSites
         toss1 = TermsOfServiceSites.objects.create(

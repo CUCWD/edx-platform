@@ -71,6 +71,7 @@ class ModalView extends Component {
         }
     }
 
+    
     fetch('/termsofservice/v1/current_tos/', {
       method: 'POST',
       mode: 'same-origin',
