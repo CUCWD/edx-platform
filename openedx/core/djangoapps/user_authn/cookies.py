@@ -106,6 +106,7 @@ def standard_cookie_settings(request):
     # loop in the third-party auth flow, which calls `are_logged_in_cookies_set` to determine
     # whether it needs to set the cookie or continue to the next pipeline stage.
     cookie_settings['secure'] = request.is_secure()
+    cookie_settings['samesite'] = "None" if request.is_secure() else "Lax"
 
     return cookie_settings
 
