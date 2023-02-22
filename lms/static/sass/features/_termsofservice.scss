@@ -55,13 +55,14 @@
 }
 
 .tos-section-item > p {
-    margin-top: -18px !important;
+    margin-top: -18px;
     margin-left: 40px !important;
-    display:block !important;
+    display:block;
     // display: inline-block !important;
     // position: relative !important;
     /*top: -21px !important;*/
 }
+
 
 .tos-section-alpha {
     list-style: none !important;
@@ -79,7 +80,7 @@
 .tos-section-alpha > li::before {
     content: '(' counter(tos-section-alpha-counter, lower-alpha) ')';
     counter-increment: tos-section-alpha-counter;
-    // display:inline-block !important;
+    display:inline-block !important;
     display: table-cell;
     text-align: right;
 
@@ -91,15 +92,9 @@
 .tos-section-alpha > li p {
     margin-left: 40px !important;
     // display: inline-block !important;
-    margin-top: -18px !important;
+    margin-top: -18px;
 
     // position: relative !important;
     /*top: -21px !important;*/
 }
-
-
-
-
-
-
 

@@ -1,9 +1,5 @@
 <%page expression_filter="h"/>
-<%! 
-from django.utils.translation import ugettext as _ 
-from openedx.core.djangolib.markup import HTML, Text
-%>
-
+<%! from django.utils.translation import ugettext as _ %>
 <%inherit file="../main.html" />
 
 <%block name="pagetitle">${_("Terms of Service")}</%block>
@@ -28,10 +24,11 @@ from openedx.core.djangolib.markup import HTML, Text
         position: absolute !important;
     }
 
-    .tos-section-item > p {
+    .tos-section-item > p {       
         margin-left: 40px !important;
         display: inline-block !important;
         position: relative !important;
+        margin-top: 0px !important;
         /*top: -21px !important;*/
     }
 
@@ -53,11 +50,12 @@ from openedx.core.djangolib.markup import HTML, Text
 
     .tos-section-alpha > li p {
         margin-left: 40px !important;
-        display: inline-block !important;
+        /* display: inline-block !important; */
         position: relative !important;
         /*top: -21px !important;*/
+        margin-top: 0px !important;
     }
-
+}
 </style>
 
 <main id="main" role="main" class="clearfix width-100" aria-label="Content" tabindex="-1">
@@ -74,14 +72,7 @@ from openedx.core.djangolib.markup import HTML, Text
                                 <div class="fusion-column-wrapper" style="background-position:left top;background-repeat:no-repeat;-webkit-background-size:cover;-moz-background-size:cover;-o-background-size:cover;background-size:cover;" data-bg-url="">
                                     <div class="fusion-title title fusion-sep-none fusion-title-size-two fusion-border-below-title"
                                          style="margin-top:40px;margin-bottom:0px;">
-                                        <h2 style="text-align: center; margin-bottom: 15px !important;" data-inline-fontsize="true" data-inline-lineheight="true" data-fontsize="28" data-lineheight="42">
-                                            <span style="color: #236076; font-size: 27.007px; line-height: 40.511px;">${_("Terms and Conditions")}</span>
-                                        </h2>
-                                        
-                                        <div>
                                             ${tos_html}
-                                        </div>
-
                                         <div class="fusion-fullwidth fullwidth-box hundred-percent-fullwidth fusion-equal-height-columns"
                                              style="background-color: #dddddd;background-position: left top;background-repeat: no-repeat;padding-top:45px;padding-right:23%;padding-bottom:20px;padding-left:23%;border-top-width:0px;border-bottom-width:0px;border-color:#eae9e9;border-top-style:solid;border-bottom-style:solid; margin-top: 30px;">
                                             <div class="fusion-builder-row fusion-row ">
@@ -114,15 +105,3 @@ from openedx.core.djangolib.markup import HTML, Text
         </div>
     </div>  <!-- fusion-row -->
 </main>  <!-- #main -->
-
-<!--
-<main id="main" aria-label="Content" tabindex="-1">
-    <section class="container about">
-        <h1>
-            <%block name="pageheader">${page_header or _("Terms of Service")}</%block>
-        </h1>
-        <p>
-            <%block name="pagecontent">${page_content or _("This page left intentionally blank. Feel free to add your own content.")}</%block>
-        </p>
-    </section>
-</main>
