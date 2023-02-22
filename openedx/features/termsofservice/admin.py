@@ -16,8 +16,11 @@ class TermsOfServiceAcknowledgementAdmin(admin.ModelAdmin):
 class TermsOfServiceSitesAdmin(admin.ModelAdmin):
     list_display = ('site', 'curf')
 
+class TermsOfServiceAllSitesAdmin(admin.ModelAdmin):
+    list_display = ('curf',)
+
 
 admin.site.register(TermsOfService, TermsOfServiceAdmin)
 admin.site.register(TermsOfServiceAcknowledgement, TermsOfServiceAcknowledgementAdmin)
 admin.site.register(TermsOfServiceSites, TermsOfServiceSitesAdmin)
-admin.site.register(TermsOfServiceAllSites)
+admin.site.register(TermsOfServiceAllSites, TermsOfServiceAllSitesAdmin)
