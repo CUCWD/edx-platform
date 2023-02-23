@@ -59,6 +59,7 @@ from common.djangoapps.student.models import (
 )
 from common.djangoapps.util.milestones_helpers import get_pre_requisite_courses_not_completed
 from xmodule.modulestore.django import modulestore
+from openedx.features.termsofservice.api.v1 import views as tos_views
 
 log = logging.getLogger("edx.student")
 
@@ -792,7 +793,7 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
         'disable_courseware_js': True,
         'display_course_modes_on_dashboard': enable_verified_certificates and display_course_modes_on_dashboard,
         'display_sidebar_on_dashboard': display_sidebar_on_dashboard,
-        'display_sidebar_account_activation_message': not(user.is_active or hide_dashboard_courses_until_activated),
+        'display_sidebar_account_activation_message': not (user.is_active or hide_dashboard_courses_until_activated),
         'display_dashboard_courses': (user.is_active or not hide_dashboard_courses_until_activated),
         'empty_dashboard_message': empty_dashboard_message,
         'recovery_email_message': recovery_email_message,
@@ -802,6 +803,10 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
         'course_info': get_dashboard_course_info(user, course_enrollments),
         # TODO START: clean up as part of REVEM-199 (END)
     }
+
+    if settings.FEATURES.get('ENABLE_TERMSOFSERVICE'):
+        tos_modal = tos_views.terms_of_service_api(request)
+        context.update({'tos_modal': tos_modal})
 
     # Include enterprise learner portal metadata and messaging
     enterprise_learner_portal_context = get_enterprise_learner_portal_context(request)
