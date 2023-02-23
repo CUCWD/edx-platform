@@ -1,6 +1,8 @@
 """Tests of Branding API """
 
 
+import datetime
+
 from unittest import mock
 
 from django.conf import settings
@@ -87,9 +89,7 @@ class TestFooter(TestCase):
         actual_footer = get_footer(is_secure=True)
         business_url = 'https://business.edx.org/?utm_campaign=edX.org+Referral&utm_source=edX.org&utm_medium=Footer'
         expected_footer = {
-            'copyright': '\xa9 \xe9dX.  All rights reserved except where noted. '
-                         ' edX, Open edX and their respective logos are '
-                         'registered trademarks of edX Inc.',
+            'copyright': f'Copyright \xa9 Clemson University {datetime.date.today().year}. All Rights Reserved.',
             'navigation_links': [
                 {'url': 'https://edx.org/about-us', 'name': 'about', 'title': 'About'},
                 {'url': 'https://business.edx.org', 'name': 'enterprise', 'title': '\xe9dX for Business'},
