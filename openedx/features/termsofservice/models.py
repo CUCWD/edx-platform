@@ -48,11 +48,11 @@ class TermsOfServiceSites(models.Model):
 
 # TermsOfServiceAllSites - holds the default site - This model holds only one default object
 class TermsOfServiceAllSites(models.Model):
+    """
+        Model to assign all sites (platform) to a Terms of Service (Linked curf_id)
+    """
     class Meta:
         app_label = 'termsofservice'
         verbose_name = 'TermsOfServiceAllSite'
 
-    # id = models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)
     curf = models.OneToOneField(TermsOfService, to_field="curf_id", on_delete=models.CASCADE)
-    
-    # models.ForeignKey(TermsOfService, primary_key=True, to_field="curf_id", on_delete=models.CASCADE)
