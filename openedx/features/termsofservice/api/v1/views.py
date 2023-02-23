@@ -4,7 +4,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import HttpResponse, JsonResponse
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from django.conf import settings
-from django.shortcuts import redirect
 
 from openedx.features.termsofservice.models import TermsOfServiceSites, TermsOfService
 from openedx.features.termsofservice.models import TermsOfServiceAcknowledgement, TermsOfServiceAllSites
@@ -31,7 +30,6 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
                     user_id=request.user.id, curf_id=cur_site_curf_id).first()
 
                 # Check if the user agreed curf id matches the latest curf id
-
                 if cur_user_tos_ack is not None and cur_site_curf_id == cur_user_tos_ack.curf_id:
                     has_user_agreed_to_latest_tos = True
                 else:
@@ -61,7 +59,11 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
                 else:
                     latest_tos_html = TermsOfService.objects.get(curf_id=cur_site_curf_id).terms_of_service_text
 
-        except TermsOfServiceAcknowledgement.DoesNotExist:
+        except (
+            TermsOfServiceSites.DoesNotExist,
+            TermsOfServiceAllSites.DoesNotExist,
+            TermsOfServiceAcknowledgement.DoesNotExist
+        ):
             latest_tos_html = ''
 
         result = {
@@ -73,11 +75,6 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
         return JsonResponse(result)
 
     if request.method == 'POST':
-
-        if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
-            current_valid_curf_id = TermsOfServiceSites.objects.get(site_id=cur_site_id.id).curf_id
-        else:
-            current_valid_curf_id = TermsOfServiceAllSites.objects.all().first().curf_id
 
         if settings.FEATURES.get('ENABLE_TERMSOFSERVICE_PER_SUBSITE'):
             current_valid_curf_id = TermsOfServiceSites.objects.get(site_id=cur_site_id.id).curf_id
