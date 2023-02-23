@@ -36,6 +36,13 @@ class ModalView extends Component {
     return !this.state.tos_isChecked;
   }
 
+  // Prevent the default form from submitting and refreshing the page that it's included on.
+  // (e.g. The dashboard page won't refresh after the learner submits the form)
+  // https://stackoverflow.com/questions/28479239/setting-onsubmit-in-react-js
+  submitTOS (e) {
+    e.preventDefault();
+  }
+
   retrievePage() {
     $.get('/termsofservice/v1/current_tos/')
       .then(data => {
@@ -105,7 +112,7 @@ class ModalView extends Component {
             </div>
 
             <div className="modal-footer d-inline text-center">
-              <form>
+              <form onSubmit={this.submitTOS}>
                 <div className="form-check d-flex justify-content-center flex-nowrap">
                   <input className="form-check-input" type="checkbox" value="" onChange={this.checkboxClicked} id="agree-to-tos"></input>
                   <label className="form-check-label m-3" htmlFor="agree-to-tos">
