@@ -13,6 +13,7 @@ the marketing site and blog).
 
 """
 
+import datetime
 import logging
 
 import six
@@ -128,9 +129,12 @@ def _footer_copyright():
     return _(
         # Translators: 'edX' and 'Open edX' are trademarks of 'edX Inc.'.
         # Please do not translate any of these trademarks and company names.
-        "© {org_name}.  All rights reserved except where noted.  edX, Open edX "
-        "and their respective logos are registered trademarks of edX Inc."
-    ).format(org_name=configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME))
+        "Copyright © {copyright_name} {current_year}. "
+        "All Rights Reserved."
+    ).format(
+        copyright_name=configuration_helpers.get_value('COPYRIGHT_NAME', 'Clemson University'),
+        current_year=datetime.date.today().year
+    )
 
 
 def _footer_openedx_link():
