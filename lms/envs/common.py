@@ -985,6 +985,11 @@ FEATURES = {
     # .. toggle_warnings: For consistency in user-experience, keep the value in sync with the setting of the same name
     #   in the LMS and CMS.
     'MARK_LIBRARY_CONTENT_BLOCK_COMPLETE_ON_VIEW': False,
+    # Whether to display the account order history view.
+    'ENABLE_ACCOUNT_ORDER_HISTORY': True,
+
+    # Enables functionality for the key terms glossary within the courseware.
+    'ENABLE_KEY_TERMS_GLOSSARY': False,
 }
 
 # Specifies extra XBlock fields that should available when requested via the Course Blocks API
@@ -2249,6 +2254,7 @@ base_vendor_js = [
     'common/js/vendor/underscore.js',
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',

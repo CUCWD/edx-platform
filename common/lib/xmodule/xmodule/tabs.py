@@ -406,6 +406,7 @@ class CourseTabList(List):
             CourseTab.load('wiki'),
             CourseTab.load('progress'),
             CourseTab.load('dates'),
+            CourseTab.load('glossary'),
         ])
 
         # Cross reference existing slugs with slugs this method would add to not add duplicates.

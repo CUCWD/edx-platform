@@ -501,6 +501,9 @@ FEATURES = {
     # .. toggle_warnings: For consistency in user-experience, keep the value in sync with the setting of the same name
     #   in the LMS and CMS.
     'MARK_LIBRARY_CONTENT_BLOCK_COMPLETE_ON_VIEW': False,
+
+    # Enables functionality for the key terms glossary within the courseware.
+    'ENABLE_KEY_TERMS_GLOSSARY': False,
 }
 
 # .. toggle_name: ENABLE_COPPA_COMPLIANCE
@@ -1328,7 +1331,7 @@ base_vendor_js = [
 
     # Load Bootstrap and supporting libraries
     'common/js/vendor/popper.js',
-    'common/js/vendor/bootstrap.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Finally load RequireJS
     'common/js/vendor/require.js'
@@ -2643,3 +2646,8 @@ TEAMS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-runn
 TEXTBOOKS_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/textbooks.html"
 WIKI_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/course_wiki.html"
 CUSTOM_PAGES_HELP_URL = "https://edx.readthedocs.io/projects/open-edx-building-and-running-a-course/en/latest/course_assets/pages.html#adding-custom-pages"
+
+
+################# Key Terms and Glossary API #################
+KEY_TERMS_API_ROOT_URL = "http://localhost:18500"
+KEY_TERMS_API_REINDEX_URL = KEY_TERMS_API_ROOT_URL + '/api/v1/platform_course_reindex/'
