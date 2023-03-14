@@ -17,16 +17,16 @@ from eventtracking import tracker
 from search.search_engine_base import SearchEngine
 from requests.exceptions import ConnectionError, Timeout  # pylint: disable=redefined-builtin
 
+from opaque_keys.edx.keys import UsageKey
+from lms.lib.utils import get_parent_unit
 from cms.djangoapps.contentstore.course_group_config import GroupConfiguration
 from common.djangoapps.course_modes.models import CourseMode
-from lms.lib.utils import get_parent_unit
-from opaque_keys.edx.keys import UsageKey
 from openedx.core.lib.courses import course_image_url
-from xmodule.annotator_mixin import html_to_text
-from xmodule.library_tools import normalize_key_for_search
-from xmodule.modulestore import ModuleStoreEnum
-from xmodule.modulestore.django import modulestore as module_store
-from xmodule.modulestore.exceptions import ItemNotFoundError
+from xmodule.annotator_mixin import html_to_text  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.library_tools import normalize_key_for_search  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore import ModuleStoreEnum  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.django import modulestore as module_store  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.modulestore.exceptions import ItemNotFoundError  # lint-amnesty, pylint: disable=wrong-import-order
 
 # REINDEX_AGE is the default amount of time that we look back for changes
 # that might have happened. If we are provided with a time at which the

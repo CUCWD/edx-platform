@@ -11,6 +11,7 @@ import codecs
 import copy
 import os
 import warnings
+from os.path import abspath, dirname, join
 import yaml
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -18,7 +19,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
 from edx_django_utils.plugins import add_plugins
 from path import Path as path
-
 
 from openedx.core.djangoapps.plugins.constants import ProjectType, SettingsType
 

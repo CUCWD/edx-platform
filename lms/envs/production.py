@@ -20,6 +20,7 @@ import codecs
 import copy
 import datetime
 import os
+from os.path import abspath, dirname, join
 
 import yaml
 from corsheaders.defaults import default_headers as corsheaders_default_headers

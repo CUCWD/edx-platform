@@ -11,6 +11,9 @@ from xmodule.modulestore.tests.factories import CourseFactory
 
 from cms.djangoapps.contentstore.models import BackfillCourseTabsConfig
 
+# Total tabs count = 8
+# COURSE_OVERVIEW_TABS = {'courseware', 'info', 'textbooks', 'discussion', 'wiki', 'progress', 'glossary', 'dates'}
+
 
 @ddt.ddt
 class BackfillCourseTabsTest(ModuleStoreTestCase):
@@ -40,13 +43,13 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         course = CourseFactory()
         course.tabs = [tab for tab in course.tabs if tab.type != 'dates']
         self.update_course(course, ModuleStoreEnum.UserID.test)
-        assert len(course.tabs) == 6
+        assert len(course.tabs) == 7
         assert 'dates' not in {tab.type for tab in course.tabs}
 
         call_command('backfill_course_tabs')
 
         course = self.store.get_course(course.id)
-        assert len(course.tabs) == 7
+        assert len(course.tabs) == 8
         assert 'dates' in {tab.type for tab in course.tabs}
         mock_logger.info.assert_any_call(f'Updating tabs for {course.id}.')
         mock_logger.info.assert_any_call(f'Successfully updated tabs for {course.id}.')
@@ -75,7 +78,7 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         call_command('backfill_course_tabs')
 
         course = self.store.get_course(course.id)
-        assert len(course.tabs) == 7
+        assert len(course.tabs) == 8
         assert 'dates' in {tab.type for tab in course.tabs}
         assert 'progress' in {tab.type for tab in course.tabs}
         mock_logger.info.assert_any_call('4 courses read from modulestore. Processing 0 to 4.')
@@ -99,8 +102,8 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         course_2 = CourseFactory()
         course_2.tabs = [tab for tab in course_2.tabs if tab.type != 'progress']
         self.update_course(course_2, ModuleStoreEnum.UserID.test)
-        assert len(course_1.tabs) == 6
-        assert len(course_2.tabs) == 6
+        assert len(course_1.tabs) == 7
+        assert len(course_2.tabs) == 7
         assert 'dates' not in {tab.type for tab in course_1.tabs}
         assert 'progress' not in {tab.type for tab in course_2.tabs}
 
@@ -108,8 +111,8 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
 
         course_1 = self.store.get_course(course_1.id)
         course_2 = self.store.get_course(course_2.id)
-        assert len(course_1.tabs) == 7
-        assert len(course_2.tabs) == 7
+        assert len(course_1.tabs) == 8
+        assert len(course_2.tabs) == 8
         assert 'dates' in {tab.type for tab in course_1.tabs}
         assert 'progress' in {tab.type for tab in course_2.tabs}
         mock_logger.info.assert_any_call('2 courses read from modulestore. Processing 0 to 2.')
@@ -177,4 +180,4 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
 
         for i, course in enumerate(courses):
             course = self.store.get_course(course.id)
-            assert len(course.tabs) == (7 if expected_tabs_modified[i] else 2), f'Wrong tabs for course index {i}'
+            assert len(course.tabs) == (8 if expected_tabs_modified[i] else 2), f'Wrong tabs for course index {i}'

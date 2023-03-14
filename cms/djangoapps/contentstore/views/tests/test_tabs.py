@@ -85,7 +85,12 @@ class TabsPageTests(CourseTestCase):
         assert num_orig_tabs >= 5
 
         # Randomise the order of static tabs, leave the rest intact
-        course_tabs.sort(key=lambda tab: (100 + random.random()) if tab.type == 'static_tab' else tab.priority)
+        # If tab.priority is set to None, put the tab at the end of the list
+        course_tabs.sort(
+            key=lambda tab: (100 + random.random())
+            if tab.type == "static_tab"
+            else (float("inf") if tab.type == "glossary" else tab.priority)
+        )
 
         tabs_data = [
             {'tab_locator': str(self.course.id.make_usage_key("static_tab", tab.url_slug))}
@@ -192,7 +197,7 @@ class PrimitiveTabEdit(ModuleStoreTestCase):
         with self.assertRaises(ValueError):
             tabs.primitive_delete(course, 1)
         with self.assertRaises(IndexError):
-            tabs.primitive_delete(course, 7)
+            tabs.primitive_delete(course, 8)  # changed from 7 to 8 due to additional 'glossary' tab
 
         assert course.tabs[2] != {'type': 'dates', 'name': 'Dates'}
         tabs.primitive_delete(course, 2)
