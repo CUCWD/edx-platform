@@ -1,6 +1,7 @@
 """
 General view for the Course Home that contains metadata every page needs.
 """
+import logging
 
 from opaque_keys.edx.keys import CourseKey
 from rest_framework.generics import RetrieveAPIView
@@ -22,6 +23,7 @@ from lms.djangoapps.courseware.masquerade import setup_masquerade
 from lms.djangoapps.courseware.tabs import get_course_tab_list
 from lms.djangoapps.courseware.toggles import courseware_mfe_is_visible
 
+LOGGER = logging.getLogger(__name__)
 
 class CourseHomeMetadataView(RetrieveAPIView):
     """
