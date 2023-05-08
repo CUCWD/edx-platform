@@ -695,6 +695,9 @@ FEATURES = {
     # .. toggle_tickets: https://openedx.atlassian.net/browse/SOL-1325
     'ENABLE_OPENBADGES': False,
 
+    # Enable BigCommerce Integration
+    'ENABLE_BIGCOMMERCE': False,
+
     # .. toggle_name: FEATURES['ENABLE_LTI_PROVIDER']
     # .. toggle_implementation: DjangoSetting
     # .. toggle_default: False
@@ -985,6 +988,12 @@ FEATURES = {
     # .. toggle_warnings: For consistency in user-experience, keep the value in sync with the setting of the same name
     #   in the LMS and CMS.
     'MARK_LIBRARY_CONTENT_BLOCK_COMPLETE_ON_VIEW': False,
+
+    # Whether to display the account linked accounts view.
+    'ENABLE_ACCOUNT_LINKED_ACCOUNTS': True,
+
+    # Whether to display the account order history view.
+    'ENABLE_ACCOUNT_ORDER_HISTORY': True,
 }
 
 # Specifies extra XBlock fields that should available when requested via the Course Blocks API
@@ -3228,6 +3237,9 @@ INSTALLED_APPS = [
 
     # Blockstore
     'blockstore.apps.bundles',
+
+    # BigCommerce App
+    'lms.djangoapps.bigcommerce_app',
 ]
 
 ######################### CSRF #########################################
@@ -3600,6 +3612,32 @@ BADGR_TIMEOUT = 10
 # .. toggle_creation_date: 2021-07-29
 # .. toggle_warnings: Review FEATURES['ENABLE_OPENBADGES'] for further context.
 BADGR_ENABLE_NOTIFICATIONS = False
+
+#################### BigCommerce Settings #######################
+
+BIGCOMMERCE_APP_CLIENT_ID = None
+BIGCOMMERCE_APP_CLIENT_SECRET = None
+BIGCOMMERCE_APP_STORE_HASH = None
+BIGCOMMERCE_APP_STORE_URL = None
+
+#################### Qualtrics Settings #######################
+QUALTRICS_API_BASE_URL = None
+QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
+QUALTRICS_API_VERSION = "v3"
+QUALTRICS_API_TOKEN_EXPIRATION = 3599  # 1 hr
+QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
+
+# OAuth2 Authentication (Client Credentials)
+# https://api.qualtrics.com/instructions/docs/Instructions/oauth-authentication.md
+# Client credentials grant type doesn't use `refresh` token for access.
+QUALTRICS_API_CLIENT_ID = None
+QUALTRICS_API_CLIENT_SECRET = None
+
+# API Token Authentication
+# https://api.qualtrics.com/instructions/docs/Instructions/api-key-authentication.md
+# Recommend OAuth2 Authentication to limit scope of API calls.
+# This is automatically switch over to OAuth2 after API v1.
+QUALTRICS_API_TOKEN = None
 
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
