@@ -56,7 +56,6 @@ from openedx.core.djangoapps.theming.helpers import get_themes
 from openedx.core.djangoapps.user_authn.utils import is_safe_login_or_logout_redirect
 from xmodule.data import CertificatesDisplayBehaviors  # lint-amnesty, pylint: disable=wrong-import-order
 
-from openedx.features.termsofservice.models import TermsOfServiceAcknowledgement, TermsOfService
 
 # Enumeration of per-course verification statuses
 # we display on the student dashboard.
@@ -750,13 +749,6 @@ def do_create_account(form, custom_form=None):
         profile.save()
     except Exception:
         log.exception(f"UserProfile creation failed for user {user.id}.")
-        raise
-    
-    try:
-        tos_acknowledgement = TermsOfServiceAcknowledgement(user_id = user.id, terms_of_service_id = TermsOfService.objects.latest('date_modified').id)
-        tos_acknowledgement.save()
-    except Exception:
-        log.exception(f"Error creating User Terms of Service Agreement {user.id}.")
         raise
 
     return user, profile, registration

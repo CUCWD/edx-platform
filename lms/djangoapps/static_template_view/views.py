@@ -7,8 +7,6 @@
 
 
 import mimetypes
-import html
-
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotFound, HttpResponseServerError
 from django.shortcuts import redirect
@@ -60,9 +58,10 @@ def render(request, template):
         # This is necessary for the dialog presented with the TOS in /register
         if template == 'honor.html':
             context['allow_iframing'] = True
-    
-        latest_tos_html = tos_views.latest_terms_of_service()
-        context['tos_html'] = latest_tos_html
+
+        if settings.FEATURES.get('ENABLE_TERMSOFSERVICE'):
+            latest_tos_html = tos_views.latest_terms_of_service()
+            context['tos_html'] = latest_tos_html
 
         # Format Examples: static_template_about_header
         configuration_base = 'static_template_' + template.replace('.html', '').replace('-', '_')
