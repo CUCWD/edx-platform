@@ -1,9 +1,121 @@
 <%page expression_filter="h"/>
-<%! from django.utils.translation import ugettext as _ %>
+<%! 
+from django.utils.translation import ugettext as _ 
+from openedx.core.djangolib.markup import HTML, Text
+%>
+
 <%inherit file="../main.html" />
 
 <%block name="pagetitle">${_("Terms of Service")}</%block>
 
+<style type="text/css">
+
+    .tos-part {
+        margin-top: 15px !important;
+    }
+
+    .tos-section {
+        list-style: none !important;
+        padding: 0px !important;
+    }
+
+    .tos-section-item {
+        margin-bottom: 15px !important;
+    }
+
+    .tos-section-item > span {
+        font-weight: bold !important;
+        position: absolute !important;
+    }
+
+    .tos-section-item > p {
+        margin-left: 40px !important;
+        display: inline-block !important;
+        position: relative !important;
+        /*top: -21px !important;*/
+    }
+
+    .tos-section-alpha {
+        list-style: none !important;
+        counter-reset: tos-section-alpha-counter;
+    }
+
+    .tos-section-alpha > li::after {
+        min-width: 30px !important;
+    }
+
+    .tos-section-alpha > li::before {
+        content: '(' counter(tos-section-alpha-counter, lower-alpha) ')';
+        counter-increment: tos-section-alpha-counter;
+        position: absolute !important;
+        /*min-width: 20px !important;*/
+    }
+
+    .tos-section-alpha > li p {
+        margin-left: 40px !important;
+        display: inline-block !important;
+        position: relative !important;
+        /*top: -21px !important;*/
+    }
+
+</style>
+
+<main id="main" role="main" class="clearfix width-100" aria-label="Content" tabindex="-1">
+    <div class="fusion-row" style="max-width:100%;">
+        <div id="content" class="full-width">
+            <div id="post-24" class="post-24 page type-page status-publish hentry" style="padding-left:30px; padding-right:30px">
+
+                <div class="post-content">
+                    <div class="fusion-fullwidth fullwidth-box nonhundred-percent-fullwidth"
+                         style="background-color: white;background-position: left top;background-repeat: no-repeat;padding-top:20px;padding-right:30px;padding-bottom:20px;padding-left:30px;border-top-width:0px;border-bottom-width:0px;border-color:#eae9e9;border-top-style:solid;border-bottom-style:solid;">
+                        <div class="fusion-builder-row fusion-row ">
+
+                            <div class="fusion-layout-column fusion_builder_column fusion_builder_column_1_1  fusion-one-full fusion-column-first fusion-column-last 1_1" style="margin-top:0px;margin-bottom:20px;">
+                                <div class="fusion-column-wrapper" style="background-position:left top;background-repeat:no-repeat;-webkit-background-size:cover;-moz-background-size:cover;-o-background-size:cover;background-size:cover;" data-bg-url="">
+                                    <div class="fusion-title title fusion-sep-none fusion-title-size-two fusion-border-below-title"
+                                         style="margin-top:40px;margin-bottom:0px;">
+                                        <h2 style="text-align: center; margin-bottom: 15px !important;" data-inline-fontsize="true" data-inline-lineheight="true" data-fontsize="28" data-lineheight="42">
+                                            <span style="color: #236076; font-size: 27.007px; line-height: 40.511px;">${_("Terms and Conditions")}</span>
+                                        </h2>
+                                        
+                                        <div>
+                                            ${tos_html}
+                                        </div>
+
+                                        <div class="fusion-fullwidth fullwidth-box hundred-percent-fullwidth fusion-equal-height-columns"
+                                             style="background-color: #dddddd;background-position: left top;background-repeat: no-repeat;padding-top:45px;padding-right:23%;padding-bottom:20px;padding-left:23%;border-top-width:0px;border-bottom-width:0px;border-color:#eae9e9;border-top-style:solid;border-bottom-style:solid; margin-top: 30px;">
+                                            <div class="fusion-builder-row fusion-row ">
+                                                <div class="fusion-layout-column fusion_builder_column fusion_builder_column_1_1  fusion-one-full fusion-column-first fusion-column-last 1_1"
+                                                     style="margin-top:0px;margin-bottom:20px;">
+                                                    <div class="fusion-column-wrapper"
+                                                         style="background-color: rgb(58, 73, 88); border-left: 9px solid rgb(132, 193, 152); padding: 27px; background-position: left top; background-repeat: no-repeat; background-size: cover; /*min-height: 135px;*/ height: auto;"
+                                                         data-bg-url="">
+                                                        <p class="ca2ves-goals"
+                                                           style="font-size: 20px; line-height: 27px; color: #fff;">
+                                                            By clicking "Agree" I am representing that I have read the
+                                                            above Terms, and expressly acknowledge and agree to the
+                                                            above Terms.
+                                                        </p>
+                                                        <div class="fusion-clearfix"></div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="fusion-clearfix"></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  <!-- fusion-row -->
+</main>  <!-- #main -->
+
+<!--
 <main id="main" aria-label="Content" tabindex="-1">
     <section class="container about">
         <h1>

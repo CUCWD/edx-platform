@@ -117,6 +117,7 @@ module.exports = Merge.smart({
             WelcomeMessage: './openedx/features/course_experience/static/course_experience/js/WelcomeMessage.js',
 
             AnnouncementsView: './openedx/features/announcements/static/announcements/jsx/Announcements.jsx',
+            TOSModalView: './openedx/features/termsofservice/static/termsofservice/jsx/Modal.jsx',
             CookiePolicyBanner: './common/static/js/src/CookiePolicyBanner.jsx',
 
             // Common

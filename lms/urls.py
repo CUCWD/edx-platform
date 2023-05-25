@@ -53,6 +53,7 @@ from openedx.core.djangoapps.verified_track_content import views as verified_tra
 from openedx.features.enterprise_support.api import enterprise_enabled
 from common.djangoapps.student import views as student_views
 from common.djangoapps.util import views as util_views
+from openedx.features.termsofservice import views as tos_views
 
 RESET_COURSE_DEADLINES_NAME = 'reset_course_deadlines'
 RENDER_XBLOCK_NAME = 'render_xblock'
@@ -110,6 +111,8 @@ urlpatterns = [
 
     # Static template view endpoints like blog, faq, etc.
     path('', include('lms.djangoapps.static_template_view.urls')),
+
+    path('', include('openedx.features.termsofservice.urls')),
 
     path('heartbeat', include('openedx.core.djangoapps.heartbeat.urls')),
 
