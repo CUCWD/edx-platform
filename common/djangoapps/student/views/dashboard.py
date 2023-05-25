@@ -60,6 +60,7 @@ from common.djangoapps.student.models import (
 )
 from common.djangoapps.util.milestones_helpers import get_pre_requisite_courses_not_completed
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
+from openedx.features.termsofservice.api.v1 import views as tos_views
 
 log = logging.getLogger("edx.student")
 
@@ -758,6 +759,7 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
 
     show_account_activation_popup = request.COOKIES.get(settings.SHOW_ACTIVATE_CTA_POPUP_COOKIE_NAME, None)
 
+    tos_modal = tos_views.terms_of_service_api(request)
     context = {
         'urls': urls,
         'programs_data': programs_data,
@@ -810,6 +812,7 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
         # TODO START: clean up as part of REVEM-199 (START)
         'course_info': get_dashboard_course_info(user, course_enrollments),
         # TODO START: clean up as part of REVEM-199 (END)
+        'tos_modal':tos_modal
     }
 
     # Include enterprise learner portal metadata and messaging
