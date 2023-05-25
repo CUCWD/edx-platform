@@ -763,7 +763,6 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
 
     show_account_activation_popup = request.COOKIES.get(settings.SHOW_ACTIVATE_CTA_POPUP_COOKIE_NAME, None)
 
-    tos_modal = tos_views.terms_of_service_api(request)
     context = {
         'urls': urls,
         'programs_data': programs_data,
@@ -816,8 +815,11 @@ def student_dashboard(request):  # lint-amnesty, pylint: disable=too-many-statem
         # TODO START: clean up as part of REVEM-199 (START)
         'course_info': get_dashboard_course_info(user, course_enrollments),
         # TODO START: clean up as part of REVEM-199 (END)
-        'tos_modal':tos_modal
     }
+
+    if settings.FEATURES.get('ENABLE_TERMSOFSERVICE'):
+        tos_modal = tos_views.terms_of_service_api(request)
+        context.update({'tos_modal': tos_modal})
 
     # Include enterprise learner portal metadata and messaging
     enterprise_learner_portal_context = get_enterprise_learner_portal_context(request)
