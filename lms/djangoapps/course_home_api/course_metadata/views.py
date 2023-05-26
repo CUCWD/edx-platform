@@ -25,6 +25,7 @@ from lms.djangoapps.courseware.toggles import courseware_mfe_is_visible
 
 LOGGER = logging.getLogger(__name__)
 
+
 class CourseHomeMetadataView(RetrieveAPIView):
     """
     **Use Cases**

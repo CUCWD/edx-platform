@@ -17,19 +17,19 @@ The resulting JSON object has one entry for each module in the course:
 """
 
 
-import json
+# import json
 from datetime import datetime
 from pytz import UTC
 from textwrap import dedent
 
 from django.core.management.base import BaseCommand, CommandError
-from opaque_keys import InvalidKeyError
-from opaque_keys.edx.keys import CourseKey
-from xblock.fields import Scope
+# from opaque_keys import InvalidKeyError
+# from opaque_keys.edx.keys import CourseKey
+# from xblock.fields import Scope
 
 from xmodule.course_module import CourseBlock
 from xmodule.seq_module import SectionBlock
-from xblock_discussion import DiscussionXBlock
+# from xblock_discussion import DiscussionXBlock
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.inheritance import compute_inherited_metadata, own_metadata
 
@@ -64,16 +64,13 @@ class Command(BaseCommand):  # lint-amnesty, pylint: disable=missing-class-docst
         store = modulestore()
 
         # Get the course data
-
-        header = ["Course ID", "Course Name", "Course Category", "Course Category Name"]
-        csv_rows = []
-        csv_rows.insert(0, header)
-
         courses = store.get_courses()
         course_ids = [x.id for x in courses if x.location.run == 'TEMPLATE']
 
-        import pdb;pdb.set_trace()
         for course_id in course_ids:
+            header = ["Course ID", "Course Name", "Course Category", "Course Category Name"]
+            csv_rows = []
+            csv_rows.insert(0, header)
             # try:
             #     course_key = CourseKey.from_string(options['course_id'])
             # except InvalidKeyError:
@@ -87,23 +84,38 @@ class Command(BaseCommand):  # lint-amnesty, pylint: disable=missing-class-docst
             # Precompute inherited metadata at the course level, if needed:
 
             if options['inherited']:
-                compute_inherited_metadata(course)            
-            
-            dump_module(str(course_id), course.display_name, course, csv_rows, inherited=options['inherited'], defaults=options['inherited_defaults'])
-            
+                compute_inherited_metadata(course)
+
+            _dump_module(
+                str(course_id),
+                course.display_name,
+                course,
+                csv_rows,
+                inherited=options['inherited'],
+                defaults=options['inherited_defaults']
+            )
+
             # Convert course data to dictionary and dump it as JSON to stdout
-            # info = dump_module(course, csv_rows, inherited=options['inherited'], defaults=options['inherited_defaults'])
+            # info = _dump_module(
+            #     course,
+            #     csv_rows,
+            #     inherited=options['inherited'],
+            #     defaults=options['inherited_defaults']
+            # )
             # return json.dumps(info, indent=2, sort_keys=True, default=str)
 
-        # import pdb;pdb.set_trace()
-        # Perform the upload
-        start_date = datetime.now(UTC)
-        upload_csv_to_report_store(csv_rows, 'course_structure_all_courses_results', course_id, start_date, config_name='COURSE_STRUCTURE_DOWNLOAD')
+            # Perform the upload
+            start_date = datetime.now(UTC)
+            upload_csv_to_report_store(
+                csv_rows,
+                'course_structure_all_courses_results',
+                course_id,
+                start_date,
+                config_name='COURSE_STRUCTURE_DOWNLOAD'
+            )
 
-        pass
 
-
-def dump_module(course_id, course_name, module, csv_rows=None, destination=None, inherited=False, defaults=False):
+def _dump_module(course_id, course_name, module, csv_rows=None, destination=None, inherited=False, defaults=False):
     """
     Add the module and all its children to the destination dictionary in
     as a flat structure.
@@ -134,7 +146,7 @@ def dump_module(course_id, course_name, module, csv_rows=None, destination=None,
     if isinstance(module, CourseBlock):
         row.append('')
     else:
-        row.append(filtered_metadata['display_name'])    
+        row.append(filtered_metadata['display_name'])
 
     # if inherited:
     #     # When calculating inherited metadata, don't include existing
@@ -159,6 +171,6 @@ def dump_module(course_id, course_name, module, csv_rows=None, destination=None,
 
     for child in module.get_children():
         if isinstance(child, SectionBlock):
-            dump_module(course_id, course_name, child, csv_rows, destination, inherited, defaults)
+            _dump_module(course_id, course_name, child, csv_rows, destination, inherited, defaults)
 
     return destination
