@@ -1,11 +1,15 @@
 # lint-amnesty, pylint: disable=missing-module-docstring
-
-from .models import TermsOfService, TermsOfServiceAllSites, TermsOfServiceSites
+import logging
 from django.contrib.sites.models import Site
 from django.template.loader import render_to_string
 from django.conf import settings
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-import logging
+from .models import TermsOfService, TermsOfServiceAllSites, TermsOfServiceSites
+
+
+
+
+
 
 logger = logging.getLogger(__name__)
 
