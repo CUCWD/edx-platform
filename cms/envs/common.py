@@ -2450,7 +2450,7 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 #################### Qualtrics Settings #######################
 # QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
 QUALTRICS_API_VERSION = "v3"
-QUALTRICS_API_TOKEN_EXPIRATION = 3599 # 1 hr
+QUALTRICS_API_TOKEN_EXPIRATION = 3599  # 1 hr
 QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
 QUALTRICS_ORGANIZATION_API_CONFIGS = []
 
