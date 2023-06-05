@@ -128,7 +128,7 @@ from lms.djangoapps.experiments.utils import UPSELL_TRACKING_FLAG
             <div class="course-info">
               <span class="info-university">${course_overview.display_org_with_default} - </span>
               <span class="info-course-id">${course_overview.display_number_with_default} - </span>
-              <span class="info-course-run">${course_overview.location.run | h}</span>
+              <span class="info-course-run">${course_overview.location.run}</span>
               <%
                 enrollment_date = course_overview.self_paced and enrollment and enrollment.created
                 if course_overview.start_date_is_still_default:
@@ -201,7 +201,7 @@ from lms.djangoapps.experiments.utils import UPSELL_TRACKING_FLAG
                 % endif
                 % if course_overview.revision_number:
                   <span class="info-version-block-container">
-                    <span class="info-version-block">Version: ${course_overview.revision_number | h}</span>
+                    <span class="info-version-block">Version: ${course_overview.revision_number}</span>
                   </span>
                 % endif
             </div>
