@@ -18,6 +18,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userprofile',
             name='level_of_education',
-            field=models.CharField(blank=True, choices=[('p', 'Doctorate'), ('m', "Master's degree"), ('b', '4-year degree'), ('a', '2-year degree'), ('hs', 'High School or GED'), ('some-hs', 'Some high school'), ('some-college', 'Some college'), ('jd-md', 'Professional degree (J.D., M.D.)'), ('prefer-not-to-say', 'Prefer not to say')], db_index=True, max_length=25, null=True),
+            field=models.CharField(blank=True, choices=[('some-hs', 'Some high school'), ('hs', 'High School or GED'), ('some-college', 'Some college'), ('a', '2-year degree'), ('b', '4-year degree'), ('m', "Master's"), ('p', 'Doctorate'), ('jd-md', 'Professional degree (J.D., M.D.)'), ('prefer-not-to-say', 'Prefer not to say')], db_index=True, max_length=25, null=True),
+        ),
+        migrations.AddField(
+            model_name='courseenrollmentcelebration',
+            name='celebrate_weekly_goal',
+            field=models.BooleanField(default=False),
         ),
     ]
