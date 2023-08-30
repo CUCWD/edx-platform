@@ -12,6 +12,7 @@ function(Backbone, _, str, ModuleUtils) {
             id: null,
             display_name: null,
             estimated_time: null,
+            show_estimated_time: null,
             category: null,
             data: null,
             metadata: null,
