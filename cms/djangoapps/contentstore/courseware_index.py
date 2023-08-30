@@ -32,6 +32,10 @@ INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
 
+def get_estimated_time(cls, modulestore, structure_key):
+    import datetime
+    total_time = datetime.timedelta(0)
+    structure = cls._fetch_top_level(modulestore, structure_key)
 
 def strip_html_content_to_text(html_content):
     """ Gets only the textual part for html content - useful for building text to be searched """

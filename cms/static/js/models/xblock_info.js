@@ -11,6 +11,7 @@ function(Backbone, _, str, ModuleUtils) {
         defaults: {
             id: null,
             display_name: null,
+            estimated_time: null,
             category: null,
             data: null,
             metadata: null,

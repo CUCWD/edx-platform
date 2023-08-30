@@ -7,6 +7,7 @@ import time
 import warnings
 from collections import namedtuple
 from functools import partial
+import datetime
 
 import yaml
 
@@ -336,6 +337,12 @@ class XModuleFields:
         # it'd be nice to have a useful default but it screws up other things; so,
         # use display_name_with_default for those
         default=None
+    )
+    estimated_time = RelativeTime(
+        display_name=_("Estimated Time"),
+        help=_("The estimated time to complete this component. Formatted as HH:MM:SS. The maximum value is 23:59:59."),
+        scope=Scope.settings,
+        default=datetime.timedelta(seconds=60)
     )
 
 
