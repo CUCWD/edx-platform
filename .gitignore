@@ -146,3 +146,10 @@ dist
 
 # Locally generated PII reports
 pii_report
+
+### Tutor configuration
+lms/envs/tutor/
+lms/static/js/i18n/
+cms/envs/tutor/
+cms/static/js/i18n/
+results.txt
