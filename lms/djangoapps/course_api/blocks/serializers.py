@@ -198,6 +198,8 @@ class BlockSerializer(serializers.Serializer):  # pylint: disable=abstract-metho
                     del cleaned_data[field]
             data = cleaned_data
 
+        data['estimated_time'] = block_structure.get_xblock_field(block_key, 'estimated_time')
+
         return data
 
 
