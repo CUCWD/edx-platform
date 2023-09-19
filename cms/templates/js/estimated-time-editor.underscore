@@ -1,0 +1,22 @@
+<h3 class="modal-section-title"><%- gettext('Estimated Time Override') %></h3>
+<div class="modal-section-content has-actions">
+    <ul class="list-fields list-input">
+        <li class="field field-text field-start-time field-release-time">
+            <label for="start_time" class="label"><%- gettext('Estimated Time in HH:MM:SS') %></label>
+            <input type="text" id="start_time" name="start_time"
+              value=""
+              placeholder="HH:MM:SS" class="start-time release-time time input input-text" autocomplete="off" />
+        </li>
+    </ul>
+
+    <% if (xblockInfo.isSequential()) { %>
+      <ul class="list-actions">
+          <li class="action-item">
+              <a href="#" data-tooltip="<%- gettext('Clear Estimated Time') %>" class="clear-date action-button action-clear">
+                  <span class="icon fa fa-undo" aria-hidden="true"></span>
+                  <span class="sr"><%- gettext('Clear Estimated Time') %></span>
+              </a>
+          </li>
+      </ul>
+    <% } %>
+</div>
