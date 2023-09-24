@@ -515,22 +515,22 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         fieldName: 'start',
         templateName: 'estimated-time-editor',
         className: 'estimated-time-settings',
-        startingReleaseDate: null,
+        defaultEstimatedTime: null,
 
         afterRender: function() {
             BaseDateEditor.prototype.afterRender.call(this);
             // Store the starting date and time so that we can determine if the user
             // actually changed it when "Save" is pressed.
-            this.startingReleaseDate = this.getValue();
+            this.defaultEstimatedTime = this.getValue();
         },
 
         getValue: function() {
-            return DateUtils.getDate(this.$('#start_date'), this.$('#start_time'));
+            return DateUtils.getDate(this.$('#estimated_time'), this.$('#estimated_time'));
         },
 
         clearValue: function(event) {
             event.preventDefault();
-            this.$('#start_time, #start_date').val('');
+            this.$('#estimated_time').val('');
         },
 
         getRequestData: function() {
@@ -1249,7 +1249,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 editors: []
             };
             if (xblockInfo.isVertical()) {
-                editors = [StaffLockEditor, UnitAccessEditor, DiscussionEditor];
+                editors = [StaffLockEditor, EstimatedTimeEditor, UnitAccessEditor];
             } else {
                 tabs = [
                     {
