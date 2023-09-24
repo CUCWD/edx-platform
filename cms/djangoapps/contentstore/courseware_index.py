@@ -38,29 +38,41 @@ def get_estimated_time(cls, modulestore, structure_key):
     structure = cls._fetch_top_level(modulestore, structure_key)
 
     from xmodule.modulestore.django import modulestore
-    for module in structure.get_children():
+    for module in structure.get_children(): 
         module_time = datetime.timedelta(0)
+
+        if module.override_estimated_time == True: 
+            total_time += module.estimated_time
+            continue
 
         for lesson in module.get_children():
             lesson_time = datetime.timedelta(0)
 
+            if lesson.override_estimated_time == True: 
+                module_time += lesson.estimated_time
+                continue
+
             for unit in lesson.get_children():
                 unit_time = datetime.timedelta(0)
 
+                if unit.override_estimated_time == True: 
+                    lesson_time += unit.estimated_time
+                    continue
+
                 for xblock in unit.get_children():
-                    total_time += xblock.estimated_time
                     unit_time += xblock.estimated_time
-                    module_time += xblock.estimated_time
-                    lesson_time += xblock.estimated_time
                     modulestore().update_item(xblock, None)
 
                 unit.estimated_time = unit_time
+                lesson_time += unit_time
                 modulestore().update_item(unit, None)
 
             lesson.estimated_time = lesson_time
+            module_time += lesson_time
             modulestore().update_item(lesson, None)
 
         module.estimated_time = module_time
+        total_time += module_time
         modulestore().update_item(module, None) 
 
     structure.estimated_time = total_time

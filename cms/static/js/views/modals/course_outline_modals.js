@@ -358,6 +358,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 timeFormat: 'H:i',
                 forceRoundTime: false
             });
+            this.$('input.estimated-time').timepicker({
+                timeFormat: 'H:i:s',
+                forceRoundTime: false
+            });
             if (this.model.get(this.fieldName)) {
                 DateUtils.setDate(
                     this.$('input.date'), this.$('input.time'),
@@ -519,28 +523,33 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
         afterRender: function() {
             BaseDateEditor.prototype.afterRender.call(this);
-            // Store the starting date and time so that we can determine if the user
-            // actually changed it when "Save" is pressed.
-            this.defaultEstimatedTime = this.getValue();
+            this.defaultEstimatedTime = this.model.get('estimated_time');
+            this.startOverrideVal = this.model.get('override_estimated_time');
+            this.$('#estimated_time').val(new Date(this.defaultEstimatedTime * 60 * 1000).toISOString().substr(11, 8));
+            if (this.startOverrideVal) {
+                this.$('#estimated_time_override').prop('checked', true);
+            }
         },
 
         getValue: function() {
-            return this.$('#estimated_time');
+            return this.$('#estimated_time').val();
         },
 
         clearValue: function(event) {
             event.preventDefault();
-            this.$('#estimated_time').val('');
+            this.$('#estimated_time').val(this.defaultEstimatedTime);
         },
 
         getRequestData: function() {
             var newEstimatedTime = this.getValue();
-            if (JSON.stringify(newEstimatedTime) === JSON.stringify(this.newEstimatedTime)) {
+            if (JSON.stringify(newEstimatedTime) === JSON.stringify(this.defaultEstimatedTime) 
+                && startOverrideVal === this.$('#estimated_time_override').prop('checked')) {
                 return {};
             }
             return {
                 metadata: {
-                    estimated_time: newEstimatedTime
+                    estimated_time: newEstimatedTime,
+                    override_estimated_time: this.$('#estimated_time_override').prop('checked') ? true : false
                 }
             };
         }

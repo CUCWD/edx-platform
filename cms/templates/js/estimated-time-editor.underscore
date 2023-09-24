@@ -5,7 +5,12 @@
             <label for="estimated_time" class="label"><%- gettext('Estimated Time in HH:MM:SS') %></label>
             <input type="text" id="estimated_time" name="estimated_time"
               value=""
-              placeholder="HH:MM:SS" class="time input input-text"/>
+              placeholder="HH:MM:SS" class="estimated-time input input-text" autocomplete="off"/>
+        </li>
+        <li>
+            <label for="estimated_time_override" class="label"><%- gettext('Override Estimated Time') %></label>
+            <input type="checkbox" id="estimated_time_override" name="estimated_time_override"
+              value="1" class="estimated-time-override input input-checkbox" autocomplete="off"/>
         </li>
     </ul>
 
