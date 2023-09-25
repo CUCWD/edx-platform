@@ -4,6 +4,7 @@ that an individual has in the campus LMS platform and on edX.
 """
 
 
+import logging
 import random
 import string
 import uuid
@@ -18,6 +19,8 @@ from common.djangoapps.student.models import UserProfile
 from lms.djangoapps.lti_provider.models import LtiUser
 from openedx.core.djangoapps.safe_sessions.middleware import mark_user_change_as_expected
 
+log = logging.getLogger("edx.lti_provider")
+
 
 def authenticate_lti_user(request, lti_user_id, lti_consumer):
     """
@@ -28,6 +31,7 @@ def authenticate_lti_user(request, lti_user_id, lti_consumer):
     If the currently logged-in user does not match the user specified by the LTI
     launch, log out the old user and log in the LTI identity.
     """
+    log.info("authenticate_lti_user %s %s %s", request, lti_user_id, lti_consumer)
     try:
         lti_user = LtiUser.objects.get(
             lti_user_id=lti_user_id,
@@ -36,6 +40,10 @@ def authenticate_lti_user(request, lti_user_id, lti_consumer):
     except LtiUser.DoesNotExist:
         # This is the first time that the user has been here. Create an account.
         lti_user = create_lti_user(lti_user_id, lti_consumer)
+        log.info(
+            "authenticate_lti_user %s",
+            lti_user
+        )
 
     if not (request.user.is_authenticated and
             request.user == lti_user.edx_user):
@@ -92,6 +100,12 @@ def switch_user(request, lti_user, lti_consumer):
         lti_user_id=lti_user.lti_user_id,
         lti_consumer=lti_consumer
     )
+    log.info(
+        "switch_user lti_user %s, lti_consumer %s, edx-user %s",
+        lti_user,
+        lti_consumer,
+        edx_user
+    )
     if not edx_user:
         # This shouldn't happen, since we've created edX accounts for any LTI
         # users by this point, but just in case we can return a 403.
@@ -130,6 +144,12 @@ class LtiBackend:
         If such a user is not found, the method returns None (in line with the
         authentication backend specification).
         """
+        log.info(
+            "LtiBackend.authenticate username %s, lti_user_id %s, lti_consumer %s",
+            username,
+            lti_user_id,
+            lti_consumer
+        )
         try:
             edx_user = User.objects.get(username=username)
         except User.DoesNotExist:
