@@ -7,6 +7,7 @@ import logging
 
 from django.conf import settings
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey, UsageKey
@@ -38,6 +39,7 @@ OPTIONAL_PARAMETERS = [
 
 @csrf_exempt
 @add_p3p_header
+@xframe_options_exempt
 def lti_launch(request, course_id, usage_id):
     """
     Endpoint for all requests to embed edX content via the LTI protocol. This
