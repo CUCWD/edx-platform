@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.core.exceptions import PermissionDenied
+from django.db.utils import IntegrityError
 from django.test import TestCase
 from django.test.client import RequestFactory
 
@@ -112,7 +113,7 @@ class AuthenticateLtiUserTest(TestCase):
         lti_user.edx_user_id = self.edx_user_id
         with patch('lms.djangoapps.lti_provider.users.create_lti_user', return_value=lti_user) as create_user:
             users.authenticate_lti_user(self.request, self.lti_user_id, self.lti_consumer)
-            create_user.assert_called_with(self.lti_user_id, self.lti_consumer, "")
+            create_user.assert_called_with(self.lti_user_id, self.lti_consumer)
             switch_user.assert_called_with(self.request, lti_user, self.lti_consumer)
 
     def test_authentication_with_authenticated_user(self, create_user, switch_user):
@@ -145,7 +146,7 @@ class AuthenticateLtiUserTest(TestCase):
         request.user = self.old_user
 
         users.authenticate_lti_user(request, self.lti_user_id, self.lti_consumer)
-        create_user.assert_called_with(self.lti_user_id, self.lti_consumer, "")
+        create_user.assert_called_with(self.lti_user_id, self.lti_consumer)
 
         self.lti_consumer.auto_link_users_using_email = True
         self.lti_consumer.save()
@@ -194,6 +195,25 @@ class CreateLtiUserTest(TestCase):
         lti_user = users.create_lti_user('lti_user_id', self.lti_consumer, self.existing_user.email)
         assert lti_user.lti_consumer == self.lti_consumer
         assert lti_user.edx_user == self.existing_user
+
+    def test_only_one_lti_user_edx_user_for_each_lti_consumer(self):
+        users.create_lti_user('lti_user_id', self.lti_consumer, self.existing_user.email)
+
+        with pytest.raises(IntegrityError):
+            users.create_lti_user('lti_user_id', self.lti_consumer, self.existing_user.email)
+
+    def test_create_multiple_lti_users_for_edx_user_if_lti_consumer_varies(self):
+        lti_consumer_2 = LtiConsumer(
+            consumer_name="SecondConsumer",
+            consumer_key="SecondKey",
+            consumer_secret="SecondSecret",
+        )
+        lti_consumer_2.save()
+
+        lti_user_1 = users.create_lti_user('lti_user_id', self.lti_consumer, self.existing_user.email)
+        lti_user_2 = users.create_lti_user('lti_user_id', lti_consumer_2, self.existing_user.email)
+
+        assert lti_user_1.edx_user == lti_user_2.edx_user
 
 
 class LtiBackendTest(TestCase):
