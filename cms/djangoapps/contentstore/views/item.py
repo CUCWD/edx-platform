@@ -1203,9 +1203,15 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
             # a percent value out of 100, e.g. "58%" means "58/100".
             pct_sign=_('%'))
 
+    # Getting the estimated time in minutes, rounded up
+    estimated_time = int(xblock.estimated_time.seconds / 60) + (xblock.estimated_time.seconds % 60 > 0)
+
     xblock_info = {
         'id': str(xblock.location),
         'display_name': xblock.display_name_with_default,
+        'estimated_time': estimated_time,
+        'show_estimated_time': xblock.show_estimated_time,
+        'override_estimated_time': xblock.override_estimated_time,
         'category': xblock.category,
         'has_children': xblock.has_children
     }

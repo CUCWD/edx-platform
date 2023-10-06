@@ -22,7 +22,12 @@ class VideoFields:
         default="Video",
         scope=Scope.settings
     )
-
+    estimated_time = RelativeTime(
+        display_name=_("Estimated Time"),
+        help=_("The estimated time to complete this component. Formatted as HH:MM:SS. The maximum value is 23:59:59."),
+        scope=Scope.settings,
+        default=datetime.timedelta(seconds=240)
+    )
     saved_video_position = RelativeTime(
         help=_("Current position in the video."),
         scope=Scope.user_state,

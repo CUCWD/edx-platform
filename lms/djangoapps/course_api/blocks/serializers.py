@@ -47,6 +47,8 @@ SUPPORTED_FIELDS = [
     SupportedFieldType('display_name', default_value=''),
     SupportedFieldType('effort_activities'),
     SupportedFieldType('effort_time'),
+    SupportedFieldType('estimated_time', default_value=''),
+    SupportedFieldType('show_estimated_time', default_value=''),
     SupportedFieldType('graded'),
     SupportedFieldType('format'),
     SupportedFieldType('start'),
@@ -91,6 +93,8 @@ SUPPORTED_FIELDS = [
 # of content
 FIELDS_ALLOWED_IN_AUTH_DENIED_CONTENT = [
     "display_name",
+    "estimated_time"
+    "show_estimated_time"
     "block_id",
     "student_view_url",
     "student_view_multi_device",
@@ -193,6 +197,16 @@ class BlockSerializer(serializers.Serializer):  # pylint: disable=abstract-metho
                 if field not in FIELDS_ALLOWED_IN_AUTH_DENIED_CONTENT:
                     del cleaned_data[field]
             data = cleaned_data
+
+        from xmodule.modulestore.django import modulestore
+
+        try:
+            item = modulestore().get_item(block_key)
+            data['estimated_time'] = item.estimated_time
+            data['show_estimated_time'] = item.show_estimated_time
+        except:
+            data['estimated_time'] = '1:00'
+            data['show_estimated_time'] = True
 
         return data
 

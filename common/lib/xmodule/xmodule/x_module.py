@@ -6,6 +6,7 @@ import sys
 import time
 from collections import namedtuple
 from functools import partial
+import datetime
 
 import yaml
 
@@ -22,6 +23,7 @@ from xblock.fields import (
     Dict,
     Float,
     Integer,
+    Boolean,
     List,
     Reference,
     ReferenceList,
@@ -326,6 +328,24 @@ class XModuleFields:
         # it'd be nice to have a useful default but it screws up other things; so,
         # use display_name_with_default for those
         default=None
+    )
+    estimated_time = RelativeTime(
+        display_name=_("Estimated Time"),
+        help=_("The estimated time to complete this component. Formatted as HH:MM:SS. The maximum value is 23:59:59."),
+        scope=Scope.settings,
+        default=datetime.timedelta(seconds=60)
+    )
+    show_estimated_time = Boolean(
+        display_name=_("Estimated Time Toggle Display"),
+        help=_("Used to show estimated time for this component. Not showing the time is the default."),
+        scope=Scope.settings,
+        default=False
+    )
+    override_estimated_time = Boolean(
+        display_name=_("Estimated Time Override"),
+        help=_("Used to determine if estimated time has been overrided for this module by another one above."),
+        scope=Scope.settings,
+        default=False
     )
 
 

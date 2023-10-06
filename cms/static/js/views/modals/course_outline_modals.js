@@ -15,7 +15,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
     'use strict';
     var CourseOutlineXBlockModal, SettingsXBlockModal, PublishXBlockModal, HighlightsXBlockModal,
         AbstractEditor, BaseDateEditor,
-        ReleaseDateEditor, DueDateEditor, SelfPacedDueDateEditor, GradingEditor, PublishEditor, AbstractVisibilityEditor,
+        ReleaseDateEditor, EstimatedTimeEditor, DueDateEditor, SelfPacedDueDateEditor, GradingEditor, PublishEditor, AbstractVisibilityEditor,
         StaffLockEditor, UnitAccessEditor, ContentVisibilityEditor, TimedExaminationPreferenceEditor,
         AccessEditor, ShowCorrectnessEditor, HighlightsEditor, HighlightsEnableXBlockModal, HighlightsEnableEditor;
 
@@ -357,6 +357,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 timeFormat: 'H:i',
                 forceRoundTime: false
             });
+            this.$('input.estimated-time').timepicker({
+                timeFormat: 'H:i:s',
+                forceRoundTime: false
+            });
             if (this.model.get(this.fieldName)) {
                 DateUtils.setDate(
                     this.$('input.date'), this.$('input.time'),
@@ -505,6 +509,48 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             return {
                 metadata: {
                     start: newReleaseDate
+                }
+            };
+        }
+    });
+
+    EstimatedTimeEditor = AbstractEditor.extend({
+        fieldName: 'estimated_time',
+        templateName: 'estimated-time-editor',
+        className: 'estimated-time-settings',
+        defaultEstimatedTime: null,
+
+        afterRender: function() {
+            BaseDateEditor.prototype.afterRender.call(this);
+            this.defaultEstimatedTime = this.model.get('estimated_time');
+            this.startOverrideVal = this.model.get('override_estimated_time');
+            this.startVisibilityVal = this.model.get('show_estimated_time');
+            this.$('#estimated_time').val(new Date(this.defaultEstimatedTime * 60 * 1000).toISOString().substr(11, 8));
+            if (this.startOverrideVal) this.$('#estimated_time_override').prop('checked', true);
+            if (this.startVisibilityVal) this.$('#show_estimated_time').prop('checked', true);
+        },
+
+        getValue: function() {
+            return this.$('#estimated_time').val();
+        },
+
+        clearValue: function(event) {
+            event.preventDefault();
+            this.$('#estimated_time').val(this.defaultEstimatedTime);
+        },
+
+        getRequestData: function() {
+            var newEstimatedTime = this.getValue();
+            if (JSON.stringify(newEstimatedTime) === JSON.stringify(this.defaultEstimatedTime) 
+                && this.startOverrideVal === this.$('#estimated_time_override').prop('checked')
+                && this.startVisibilityVal === this.$('#show_estimated_time').prop('checked')) {
+                return {};
+            }
+            return {
+                metadata: {
+                    estimated_time: newEstimatedTime,
+                    override_estimated_time: this.$('#estimated_time_override').prop('checked') ? true : false,
+                    show_estimated_time: this.$('#show_estimated_time').prop('checked') ? true : false,
                 }
             };
         }
@@ -1155,7 +1201,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 editors: []
             };
             if (xblockInfo.isVertical()) {
-                editors = [StaffLockEditor, UnitAccessEditor];
+                editors = [StaffLockEditor, EstimatedTimeEditor, UnitAccessEditor];
             } else {
                 tabs = [
                     {
@@ -1170,10 +1216,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                     }
                 ];
                 if (xblockInfo.isChapter()) {
-                    tabs[0].editors = [ReleaseDateEditor];
+                    tabs[0].editors = [ReleaseDateEditor, EstimatedTimeEditor];
                     tabs[1].editors = [StaffLockEditor];
                 } else if (xblockInfo.isSequential()) {
-                    tabs[0].editors = [ReleaseDateEditor, GradingEditor, DueDateEditor];
+                    tabs[0].editors = [ReleaseDateEditor, EstimatedTimeEditor, GradingEditor, DueDateEditor];
                     tabs[1].editors = [ContentVisibilityEditor, ShowCorrectnessEditor];
                     if (course.get('self_paced') && course.get('is_custom_relative_dates_active')) {
                         tabs[0].editors.push(SelfPacedDueDateEditor);

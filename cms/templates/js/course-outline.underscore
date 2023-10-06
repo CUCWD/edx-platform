@@ -119,12 +119,12 @@ if (is_proctored_exam) {
                 <% if (xblockInfo.isVertical()) { %>
                     <span class="unit-title item-title">
                     <span class="wrapper-<%- xblockType %>-title wrapper-xblock-field incontext-editor is-editable" data-field="display_name" data-field-display-name="<%- gettext("Display Name") %>">
-                        <a class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value" href="<%- xblockInfo.get('studio_url') %>"><%- xblockInfo.get('display_name') %></a>
+                        <a class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value" href="<%- xblockInfo.get('studio_url') %>"><%- xblockInfo.get('display_name') %> </a>
                     </span>
                     </span>
                 <% } else { %>
                     <span class="wrapper-<%- xblockType %>-title wrapper-xblock-field incontext-editor is-editable" data-field="display_name" data-field-display-name="<%- gettext("Display Name") %>">
-                        <span class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value"><%- xblockInfo.get('display_name') %></span>
+                        <span class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value"><%- xblockInfo.get('display_name') %> </span>
                     </span>
                 <% } %>
             </h3>
@@ -181,6 +181,15 @@ if (is_proctored_exam) {
         </div>
     </div>
     <div class="<%- xblockType %>-status">
+        <% if (xblockInfo.get('estimated_time') !=null)  { %>
+                <%- gettext('Estimated Time To Complete:') %> 
+                <%- xblockInfo.get('estimated_time') %> 
+                <% if (xblockInfo.get('estimated_time')==1) %> <%- gettext('minute') %>
+                <% else %> <%- gettext('minutes') %>
+                <% if (xblockInfo.get('override_estimated_time') == true)  { %>
+                <%- gettext('(Overrided)') %> 
+                <% } %>
+        <% } %>
         <% if (!xblockInfo.isVertical()) { %>
             <% if (xblockInfo.get('explanatory_message') !=null) { %>
                 <div class="explanatory-message">
