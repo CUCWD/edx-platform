@@ -11,11 +11,13 @@ from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imp
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_noop
 from jsonfield import JSONField
 from lazy import lazy  # lint-amnesty, pylint: disable=no-name-in-module
 from model_utils.models import TimeStampedModel
 from opaque_keys import InvalidKeyError
-from opaque_keys.edx.django.models import CourseKeyField
+from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys.edx.keys import CourseKey
 
 from lms.djangoapps.badges.utils import deserialize_count_specs
@@ -55,7 +57,9 @@ class BadgeClass(models.Model):
     """
     slug = models.SlugField(max_length=255, validators=[validate_lowercase])
     badgr_server_slug = models.SlugField(max_length=255, default='', blank=True)
-    issuing_component = models.SlugField(max_length=50, default='', blank=True, validators=[validate_lowercase])
+    issuing_component = models.SlugField(
+        max_length=50, default='', blank=True, validators=[validate_lowercase]
+        )
     display_name = models.CharField(max_length=255)
     course_id = CourseKeyField(max_length=255, blank=True, default=None)
     description = models.TextField()
@@ -71,18 +75,20 @@ class BadgeClass(models.Model):
 
     @classmethod
     def get_badge_class(
-            cls, slug, issuing_component, display_name=None, description=None, criteria=None, image_file_handle=None,
-            mode='', course_id=None, create=True
+            cls, slug, issuing_component, display_name=None, description=None,
+            criteria=None, image_file_handle=None, mode='', course_id=None, create=True
     ):
-        # TODO method should be renamed to getorcreate instead
+        # Todo: method should be renamed to getorcreate instead
         """
-        Looks up a badge class by its slug, issuing component, and course_id and returns it should it exist.
-        If it does not exist, and create is True, creates it according to the arguments. Otherwise, returns None.
+        Looks up a badge class by its slug, issuing component, and course_id and returns it
+        should it exist. If it does not exist, and create is True, creates it according to
+        the arguments. Otherwise, returns None.
 
-        The expectation is that an XBlock or platform developer should not need to concern themselves with whether
-        or not a badge class has already been created, but should just feed all requirements to this function
-        and it will 'do the right thing'. It should be the exception, rather than the common case, that a badge class
-        would need to be looked up without also being created were it missing.
+        The expectation is that an XBlock or platform developer should not need to concern
+        themselves with whether or not a badge class has already been created, but should just
+        feed all requirements to this function and it will 'do the right thing'. It should be
+        the exception, rather than the common case, that a badge class would need to be looked
+        up without also being created were it missing.
         """
         slug = slug.lower()
         issuing_component = issuing_component.lower()
@@ -91,7 +97,9 @@ class BadgeClass(models.Model):
         if not course_id:
             course_id = CourseKeyField.Empty
         try:
-            return cls.objects.get(slug=slug, issuing_component=issuing_component, course_id=course_id)
+            return cls.objects.get(
+                slug=slug, issuing_component=issuing_component, course_id=course_id
+                )
         except cls.DoesNotExist:
             if not create:
                 return None
@@ -138,7 +146,7 @@ class BadgeClass(models.Model):
         self.issuing_component = self.issuing_component and self.issuing_component.lower()
         super().save(**kwargs)
 
-    class Meta:
+    class Meta:  # pylint: disable=missing-class-docstring
         app_label = "badges"
         unique_together = (('slug', 'issuing_component', 'course_id'),)
         verbose_name_plural = "Badge Classes"
@@ -173,12 +181,12 @@ class BadgeAssertion(TimeStampedModel):
             return cls.objects.filter(user=user, badge_class__course_id=course_id)
         return cls.objects.filter(user=user)
 
-    class Meta:
+    class Meta:  # pylint: disable=missing-class-docstring
         app_label = "badges"
 
 
 # Abstract model doesn't index this, so we have to.
-BadgeAssertion._meta.get_field('created').db_index = True
+BadgeAssertion._meta.get_field('created').db_index = True  # pylint: disable=protected-access
 
 
 class CourseCompleteImageConfiguration(models.Model):
@@ -202,8 +210,9 @@ class CourseCompleteImageConfiguration(models.Model):
     )
     default = models.BooleanField(
         help_text=_(
-            "Set this value to True if you want this image to be the default image for any course modes "
-            "that do not have a specified badge image. You can have only one default image."
+            "Set this value to True if you want this image to be the default image for any "
+            "course modes that do not have a specified badge image. You can have only one "
+            "default image."
         ),
         default=False,
     )
@@ -218,7 +227,8 @@ class CourseCompleteImageConfiguration(models.Model):
         """
         Make sure there's not more than one default.
         """
-        if self.default and CourseCompleteImageConfiguration.objects.filter(default=True).exclude(id=self.id):
+        if self.default and \
+            CourseCompleteImageConfiguration.objects.filter(default=True).exclude(id=self.id):
             raise ValidationError(_("There can be only one default image."))
 
     @classmethod
@@ -232,7 +242,7 @@ class CourseCompleteImageConfiguration(models.Model):
             # Fall back to default, if there is one.
             return cls.objects.get(default=True).icon
 
-    class Meta:
+    class Meta:  # pylint: disable=missing-class-docstring
         app_label = "badges"
 
 
@@ -246,26 +256,27 @@ class CourseEventBadgesConfiguration(ConfigurationModel):
     courses_completed = models.TextField(
         blank=True, default='',
         help_text=_(
-            "On each line, put the number of completed courses to award a badge for, a comma, and the slug of a "
-            "badge class you have created that has the issuing component 'openedx__course'. "
-            "For example: 3,enrolled_3_courses"
+            "On each line, put the number of completed courses to award a badge for, a comma, and"
+            "the slug of a badge class you have created that has the issuing component "
+            "'openedx__course'. For example: 3,enrolled_3_courses"
         )
     )
     courses_enrolled = models.TextField(
         blank=True, default='',
         help_text=_(
-            "On each line, put the number of enrolled courses to award a badge for, a comma, and the slug of a "
-            "badge class you have created that has the issuing component 'openedx__course'. "
-            "For example: 3,enrolled_3_courses"
+            "On each line, put the number of enrolled courses to award a badge for, a comma, and"
+            "the slug of a badge class you have created that has the issuing component"
+            "'openedx__course'. For example: 3,enrolled_3_courses"
         )
     )
     course_groups = models.TextField(
         blank=True, default='',
         help_text=_(
-            "Each line is a comma-separated list. The first item in each line is the slug of a badge class you "
-            "have created that has an issuing component of 'openedx__course'. The remaining items in each line are "
-            "the course keys the learner needs to complete to be awarded the badge. For example: "
-            "slug_for_compsci_courses_group_badge,course-v1:CompSci+Course+First,course-v1:CompsSci+Course+Second"
+            "Each line is a comma-separated list. The first item in each line is the slug of a"
+            "badge class you have created that has an issuing component of 'openedx__course'. The"
+            "remaining items in each line are the course keys the learner needs to complete to be"
+            "awarded the badge. For example: slug_for_compsci_courses_group_badge,"
+            "course-v1:CompSci+Course+First,course-v1:CompsSci+Course+Second"
         )
     )
 
@@ -293,14 +304,16 @@ class CourseEventBadgesConfiguration(ConfigurationModel):
         """
         Parses the course group settings. In example, the format is:
 
-        slug_for_compsci_courses_group_badge,course-v1:CompSci+Course+First,course-v1:CompsSci+Course+Second
+        slug_for_compsci_courses_group_badge,
+        course-v1:CompSci+Course+First,course-v1:CompsSci+Course+Second
         """
         specs = self.course_groups.strip()
         if not specs:
             return {}
         specs = [line.split(',', 1) for line in specs.splitlines()]
         return {
-            slug.strip().lower(): [CourseKey.from_string(key.strip()) for key in keys.strip().split(',')]
+            slug.strip().lower():
+            [CourseKey.from_string(key.strip()) for key in keys.strip().split(',')]
             for slug, keys in specs
         }
 
@@ -332,5 +345,41 @@ class CourseEventBadgesConfiguration(ConfigurationModel):
         if errors:
             raise ValidationError(errors)
 
-    class Meta:
+    class Meta:  # pylint: disable=missing-class-docstring
         app_label = "badges"
+
+
+class BlockEventBadgesConfiguration(models.Model):
+    """
+    Contains the assignment of BadgeClass to a specific block (chapter, sequential, etc).
+    """
+
+    course_id = CourseKeyField(max_length=255, db_index=True)
+
+    usage_key = UsageKeyField(
+        max_length=255, db_index=True, help_text=_('The course block identifier.')
+        )
+
+    badge_class = models.ForeignKey(BadgeClass, on_delete=models.CASCADE)
+
+    EVENT_TYPE_CHOICES = (
+        ('chapter_complete', ugettext_noop('Chapter Complete')),
+    )
+    event_type = models.CharField(
+        max_length=32, choices=EVENT_TYPE_CHOICES, default='chapter_complete', db_index=True
+    )
+
+    @classmethod
+    def badgeclass_for_block_event(cls, course_id, event_type):
+        """
+        Return all records matching course identifier and event type.
+        """
+        try:
+            return cls.objects.get(course_id=course_id, event_type=event_type).badge_class
+        except cls.DoesNotExist:
+            # Fall back to default, if there is one.
+            return None
+
+    class Meta(object):  # pylint: disable=missing-class-docstring
+        app_label = "badges"
+        unique_together = ('course_id', 'usage_key', 'event_type')
