@@ -654,3 +654,7 @@ if FEATURES.get('ENABLE_BIGCOMMERCE'):
     BIGCOMMERCE_APP_STORE_URL = "https://educateworkforce-development.mybigcommerce.com"
 
     INSTALLED_APPS.append('bigcommerce')
+
+#################### OpenBadges Settings #######################
+
+BADGR_API_TOKEN_CACHE = 'default'
