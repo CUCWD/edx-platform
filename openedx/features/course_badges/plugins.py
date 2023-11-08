@@ -2,24 +2,24 @@
 Platform plugins to support course bookmarks.
 """
 
-from badges.utils import badges_enabled
+from lms.djangoapps.badges.utils import badges_enabled
 from django.conf import settings
 from django.utils.translation import ugettext_noop
 
-from courseware.tabs import EnrolledTab
+from lms.djangoapps.courseware.tabs import EnrolledTab
 from lms.djangoapps.courseware.courses import get_course_by_id
 
 class CourseBadgesTab(EnrolledTab):
     """
     The course bookmarks tool.
     """
-    name = 'course_badges'
-    type = 'course_badges'
+    name = 'badges_progress'
+    type = 'badges_progress'
     # priority = None
     title = ugettext_noop('Badges')
     view_name = 'openedx.course_badges.progress'
     # tab_id = 'openedx.course_badges.progress'
-    is_default = True
+    is_dynamic = True
     is_movable = True
     is_hideable = True
 

@@ -57,6 +57,7 @@ from common.djangoapps.util import views as util_views
 RESET_COURSE_DEADLINES_NAME = 'reset_course_deadlines'
 RENDER_XBLOCK_NAME = 'render_xblock'
 RENDER_VIDEO_XBLOCK_NAME = 'render_public_video_xblock'
+COURSE_BADGES_PROGRESS = 'badges_progress'
 COURSE_DATES_NAME = 'dates'
 COURSE_PROGRESS_NAME = 'progress'
 
@@ -220,8 +221,18 @@ if settings.FEATURES.get('ENABLE_MOBILE_REST_API'):
     ]
 
 if settings.FEATURES.get('ENABLE_OPENBADGES'):
+    # badges api
     urlpatterns += [
-        path('api/badges/v1/', include(('lms.djangoapps.badges.api.urls', 'badges'), namespace='badges_api')),
+        path('api/badges/v1/', include(('lms.djangoapps.badges.api.urls', 'badges_api'), namespace='badges_api')),
+    ]
+
+    # badges progress page
+    urlpatterns += [
+        re_path(
+            fr'^courses/{settings.COURSE_ID_PATTERN}/badges/',
+            courseware_views.badges_progress,
+            name=COURSE_BADGES_PROGRESS,
+        ),
     ]
 
 if settings.FEATURES.get('ENABLE_BIGCOMMERCE'):
@@ -710,12 +721,6 @@ urlpatterns += [
             settings.COURSE_ID_PATTERN,
         ),
         include('openedx.features.course_search.urls'),
-    ),
-
-    # Course badges UI in LMS
-    re_path(
-        fr'^courses/{settings.COURSE_ID_PATTERN}/badges/',
-        include('openedx.features.course_badges.urls'),
     ),
 
     # Learner profile
