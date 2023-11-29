@@ -565,7 +565,7 @@ class CertificatesViewsTests(CommonCertificatesTestCase, CacheIsolationTestCase)
             ),
         )
         # Test item from badge info
-        self.assertContains(response, "Add to Mozilla Backpack")
+        self.assertContains(response, "Add to Badgr")
         # Test item from site configuration
         self.assertContains(response, "https://www.test-site.org/about-us")
         # Test course overrides
@@ -1758,8 +1758,8 @@ class CertificateEventTests(CommonCertificatesTestCase, EventTrackingTestCase):
                     'assertion_id': assertion.id,
                     'badge_generator': 'DummyBackend',
                     'badge_name': 'refundable course',
-                    'issuing_component': '',
-                    'badge_slug': 'course-v1testorgrun1refundable_course_honor_927f3ad',
+                    'issuing_component': 'openedx__course',
+                    'badge_slug': 'testorgrun1refundable_course_honor_432f164',
                     'assertion_json_url': 'https://www.example.com/assertion.json',
                     'assertion_image_url': 'https://www.example.com/image.png',
                     'user_id': self.user.id,
