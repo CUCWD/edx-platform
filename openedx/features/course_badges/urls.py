@@ -2,10 +2,10 @@
 Defines URLs for course badges.
 """
 
-from django.urls import path, re_path
+from django.urls import re_path  # path
 from django.views.generic.base import RedirectView
 
-from .views.course_badges_home import CourseBadgesHomeFragmentView, CourseBadgesHomeView
+# from .views.course_badges_home import CourseBadgesHomeFragmentView, CourseBadgesHomeView
 from .views.course_badges_progress import CourseBadgesProgressFragmentView, CourseBadgesProgressView
 
 urlpatterns = [
@@ -19,7 +19,8 @@ urlpatterns = [
         CourseBadgesProgressFragmentView.as_view(),
         name='openedx.course_badges.course_badges_progress_fragment_view',
     ),
-    # Todo: Should we want to actually have a home page for the Badges MFE we'll need to enable these urls.
+    # Todo: Should we want to actually have a home page for the Badges MFE we'll need to enable
+    # these urls.
     # re_path(
     #     r'^$',
     #     CourseBadgesHomeView.as_view(),

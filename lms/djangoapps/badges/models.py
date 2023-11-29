@@ -1,7 +1,7 @@
 """
 Database models for the badges app
 """
-import hashlib
+# import hashlib
 from importlib import import_module
 
 from config_models.models import ConfigurationModel
@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.template.defaultfilters import slugify
+# from django.template.defaultfilters import slugify
 # from django.utils.crypto import get_random_string
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ugettext_lazy as _
