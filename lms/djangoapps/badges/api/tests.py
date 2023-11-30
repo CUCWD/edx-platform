@@ -7,13 +7,14 @@ from ddt import data, ddt, unpack
 from django.conf import settings
 from django.test.utils import override_settings
 
+from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
+from xmodule.modulestore.tests.factories import CourseFactory
+
 from common.djangoapps.student.tests.factories import UserFactory
 from common.djangoapps.util.testing import UrlResetMixin
 from lms.djangoapps.badges.tests.factories import \
     BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
 from openedx.core.lib.api.test_utils import ApiTestCase
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
-from xmodule.modulestore.tests.factories import CourseFactory
 
 FEATURES_WITH_BADGES_ENABLED = settings.FEATURES.copy()
 FEATURES_WITH_BADGES_ENABLED['ENABLE_OPENBADGES'] = True

@@ -9,6 +9,8 @@ from config_models.admin import ConfigurationModelAdmin
 from django.contrib import admin, messages
 from django.utils.translation import ugettext_lazy as _
 
+from opaque_keys.edx.keys import CourseKey
+
 from lms.djangoapps.badges.exceptions import BlockEventBadgesConfigurationException
 from lms.djangoapps.badges.forms import BlockEventBadgesConfigurationForm
 from lms.djangoapps.badges.models import (
@@ -21,7 +23,6 @@ from lms.djangoapps.badges.models import (
 
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.features.course_experience.utils import get_course_outline_block_tree
-from opaque_keys.edx.keys import CourseKey
 
 logger = logging.getLogger(__name__)
 

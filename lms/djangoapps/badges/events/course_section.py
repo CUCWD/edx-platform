@@ -2,14 +2,14 @@
 Events which have to do with a user completing a section of content within a course.
 """
 
+from opaque_keys.edx.keys import CourseKey, UsageKey
+
 from lms.djangoapps.badges.models import (  # pylint: disable=unused-import
     BadgeClass,
     BlockEventBadgesConfiguration,
     CourseEventBadgesConfiguration
 )
 from lms.djangoapps.badges.utils import requires_badges_enabled  # pylint: disable=unused-import
-
-from opaque_keys.edx.keys import CourseKey, UsageKey
 
 
 @requires_badges_enabled

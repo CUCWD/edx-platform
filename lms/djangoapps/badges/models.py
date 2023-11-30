@@ -21,12 +21,12 @@ from opaque_keys import InvalidKeyError
 from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys.edx.keys import CourseKey
 
+import six
+
 from lms.djangoapps.badges.utils import deserialize_count_specs
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangolib.markup import HTML, Text
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
-
-import six
 
 
 def validate_badge_image(image):
