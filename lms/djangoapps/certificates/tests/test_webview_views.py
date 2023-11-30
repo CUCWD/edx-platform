@@ -1759,7 +1759,7 @@ class CertificateEventTests(CommonCertificatesTestCase, EventTrackingTestCase):
                     'badge_generator': 'DummyBackend',
                     'badge_name': 'refundable course',
                     'issuing_component': 'openedx__course',
-                    'badge_slug': 'testorgrun1refundable_course_honor_432f164',
+                    'badge_slug': 'course-v1testorgrun1refundable_course_honor_927f3ad',
                     'assertion_json_url': 'https://www.example.com/assertion.json',
                     'assertion_image_url': 'https://www.example.com/image.png',
                     'user_id': self.user.id,
