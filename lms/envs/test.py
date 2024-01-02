@@ -648,12 +648,27 @@ FEATURES.update({
 })
 
 if FEATURES.get('ENABLE_BIGCOMMERCE'):
+    BIGCOMMERCE_APP_ACCESS_TOKEN="rg2zptq3s9x1nzh8sttgy8zcjgd9gyu"
     BIGCOMMERCE_APP_CLIENT_ID = "6ms4rvrkhnv5m3h1o582mtqb7wzixyr"
     BIGCOMMERCE_APP_CLIENT_SECRET = "385d434a82fe40cd838ad5891bdbc1548209547112f1e81c4b16bc2842d1a329"
     BIGCOMMERCE_APP_STORE_HASH = "1nol3cto8"
     BIGCOMMERCE_APP_STORE_URL = "https://educateworkforce-development.mybigcommerce.com"
 
     INSTALLED_APPS.append('bigcommerce')
+
+    INSTALLED_APPS.append('social_auth_backend_bigcommerce')
+
+    ##### Third-party auth options
+    # Order of AUTHENTICATION_BACKENDS matters. See https://docs.djangoproject.com/en/2.2/topics/auth/customizing/#specifying-authentication-backends  # lint-amnesty, pylint: disable=line-too-long
+    ################################################
+    if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
+        tmp_backends = [
+            'social_auth_backend_bigcommerce.backend.BigCommerceCustomerDefaultAuth',
+            'social_auth_backend_bigcommerce.backend.BigCommerceCustomerTrustworksAuth',
+        ]
+
+        AUTHENTICATION_BACKENDS = list(tmp_backends) + list(AUTHENTICATION_BACKENDS)
+        del tmp_backends
 
 #################### OpenBadges Settings #######################
 
