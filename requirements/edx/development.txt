@@ -617,7 +617,8 @@ edx-opaque-keys[django]==2.3.0
     #   openedx-events
     #   ora2
     #   xmodule
-edx-organizations==6.11.1
+# Using our own CUCWD verison for EducateWorkforce
+# edx-organizations==6.10.0
     # via -r requirements/edx/testing.txt
 edx-proctoring==4.10.2
     # via
@@ -1649,7 +1650,9 @@ zipp==3.8.0
 # setuptools
 
 # EducateWorkforce specific packages. This was manually added because `make upgrade` was causing a lot of packages to update. This limits the Python package changes for the release.
--e git+https://github.com/CUCWD/bigcommerce-api-python.git@bigcommerce-0.22.2-maple.1#egg=bigcommerce==0.22.2
-    # via -r ./requirements/edx/private.in
--e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.1#egg=social-auth-backend-bigcommerce==0.1.0-maple.1
-    # via -r ./requirements/edx/private.in
+	-e git+https://github.com/CUCWD/bigcommerce-api-python.git@bigcommerce-0.22.2-nutmeg#egg=bigcommerce==0.22.2
+		# via -r ./requirements/edx/private.txt
+	-e git+https://github.com/CUCWD/edx-organizations.git@6.11.1-cucwd-nutmeg#egg=edx-organizations==6.11.1
+		# via -r ./requirements/edx/private.txt
+	-e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.1#egg=social-auth-backend-bigcommerce==0.1.0-maple.1
+        # via -r ./requirements/edx/private.txt
