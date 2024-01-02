@@ -638,17 +638,48 @@ SAVE_FOR_LATER_EMAIL_RATE_LIMIT = '5/m'
 # Tests are not behind any proxies
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
 
+#################### OpenBadges Settings #######################
+
+# FEATURES['ENABLE_OPENBADGES'] = True
+
+# Be sure to set up images for course modes using the BadgeImageConfiguration model in
+# the certificates app.
+# BADGR_API_VERSION = "v2"
+# BADGR_API_TOKEN_EXPIRATION = 86400
+# BADGR_API_TOKEN = "FymTGk7wQ3hR268JwS00ngkefdA0GR" # "0WVtn1RWangTSBqf5DDNvEdMTCvSL0"
+# BADGR_API_REFRESH_TOKEN = "F0HDDPNHK1ZBnSVXpMYHslRiD6Qdir" # Ur7ZWamo8pwaPkK3dim124ak7c1YPG"
+
+# BADGR_USERNAME = "cucwd.developer@gmail.com"
+# BADGR_PASSWORD = "Ca2ves2018"
+# BADGR_TOKENS_CACHE_KEY = "badgr_api_token_cache"
+BADGR_API_TOKEN_CACHE = 'default'
+
+# Do not add the trailing slash here.
+# BADGR_BASE_URL = "https://api.badgr.io"
+# BADGR_ISSUER_SLUG = "abcdefghijklmnopqrstuv"  # This override defined in Site Configuration
+
+# Number of seconds to wait on the badging server when contacting it before giving up.
+# Already set in edx-platform/lms/envs/common.py
+# BADGR_TIMEOUT = 10
+
+# Only for v1 Badgr API
+# BADGR_API_NOTIFICATIONS_ENABLED = True
+
+# BADGR_PUBLIC_URL = "https://badgr.io"
+
+# if FEATURES.get('ENABLE_OPENBADGES'):
+#     course_badges_templates_dir = OPENEDX_ROOT / 'features' / 'course_badges' / 'templates'
+#     if course_badges_templates_dir not in MAKO_TEMPLATE_DIRS_BASE:
+#         MAKO_TEMPLATE_DIRS_BASE.insert(0, course_badges_templates_dir)
+
+# BADGR_ENABLE_NOTIFICATIONS = True
+
 #################### BigCommerce Settings #######################
 
-FEATURES.update({
-
-    # Enable BigCommerce feature.
-    'ENABLE_BIGCOMMERCE': True,
-
-})
+FEATURES['ENABLE_BIGCOMMERCE'] = True
 
 if FEATURES.get('ENABLE_BIGCOMMERCE'):
-    BIGCOMMERCE_APP_ACCESS_TOKEN="rg2zptq3s9x1nzh8sttgy8zcjgd9gyu"
+    BIGCOMMERCE_APP_ACCESS_TOKEN = "rg2zptq3s9x1nzh8sttgy8zcjgd9gyu"
     BIGCOMMERCE_APP_CLIENT_ID = "6ms4rvrkhnv5m3h1o582mtqb7wzixyr"
     BIGCOMMERCE_APP_CLIENT_SECRET = "385d434a82fe40cd838ad5891bdbc1548209547112f1e81c4b16bc2842d1a329"
     BIGCOMMERCE_APP_STORE_HASH = "1nol3cto8"
@@ -669,7 +700,3 @@ if FEATURES.get('ENABLE_BIGCOMMERCE'):
 
         AUTHENTICATION_BACKENDS = list(tmp_backends) + list(AUTHENTICATION_BACKENDS)
         del tmp_backends
-
-#################### OpenBadges Settings #######################
-
-BADGR_API_TOKEN_CACHE = 'default'
