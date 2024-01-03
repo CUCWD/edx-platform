@@ -9,6 +9,9 @@ from django.http import HttpResponse
 
 from opaque_keys.edx.keys import CourseKey
 
+import bigcommerce.api as bigcommerce_client
+from bigcommerce.resources.products import ProductCustomFields
+
 from common.djangoapps.student.models import CourseEnrollment
 
 from openedx.core.djangolib.markup import HTML
@@ -19,9 +22,6 @@ from lms.djangoapps.bigcommerce_app.models import (
     StoreCustomer,
     StoreCustomerPlatformUser
 )
-
-import bigcommerce.api as bigcommerce_client
-from bigcommerce.resources.products import ProductCustomFields
 
 LOGGER = logging.getLogger(__name__)
 

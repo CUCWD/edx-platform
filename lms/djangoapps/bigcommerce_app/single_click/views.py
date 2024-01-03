@@ -7,11 +7,12 @@ import logging
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
+
+from bigcommerce.api import BigcommerceApi
+
 from common.djangoapps.edxmako.shortcuts import render_to_response
 from lms.djangoapps.bigcommerce_app.models import StoreAdminUser
 from lms.djangoapps.bigcommerce_app.utils import client_id
-
-from bigcommerce.api import BigcommerceApi
 
 LOGGER = logging.getLogger(__name__)
 # _ = translation.ugettext

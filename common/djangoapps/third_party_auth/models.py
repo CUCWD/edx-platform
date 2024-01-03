@@ -375,28 +375,28 @@ class EmailProviderConfig(ProviderConfig):
     backend_name = models.CharField(
         max_length=50, blank=False, db_index=True,
         help_text=(
-            u"Which python-social-auth Email provider backend to use. "
+            "Which python-social-auth Email provider backend to use. "
             "The list of backend choices is determined by the THIRD_PARTY_AUTH_BACKENDS setting."
             # To be precise, it's set by AUTHENTICATION_BACKENDS
             # which production.py sets from THIRD_PARTY_AUTH_BACKENDS
         )
     )
-    key = models.TextField(blank=True, verbose_name=u"Client ID")
+    key = models.TextField(blank=True, verbose_name="Client ID")
     secret = models.TextField(
         blank=True,
-        verbose_name=u"Client Secret",
+        verbose_name="Client Secret",
         help_text=(
-            u'For increased security, you can avoid storing this in your database by leaving '
+            'For increased security, you can avoid storing this in your database by leaving '
             ' this field blank and setting '
             'SOCIAL_AUTH_OAUTH_SECRETS = {"(backend name)": "secret", ...} '
             'in your instance\'s Django settings (or lms.auth.json)'
         )
     )
-    other_settings = models.TextField(blank=True, help_text=u"Optional JSON object with advanced settings, if any.")
+    other_settings = models.TextField(blank=True, help_text="Optional JSON object with advanced settings, if any.")
 
     class Meta(object):
         app_label = "third_party_auth"
-        verbose_name = u"Provider Configuration (Email)"
+        verbose_name = "Provider Configuration (Email)"
         verbose_name_plural = verbose_name
 
     def clean(self):
@@ -430,7 +430,7 @@ class EmailProviderConfig(ProviderConfig):
             return BigCommerceAPI.bigcommerce_customer_save(payload)
         except Exception as excep:  # pylint: disable=broad-except
             log.error(
-                u"Error decoding Customer payload token and storing in database."
+                "Error decoding Customer payload token and storing in database."
             )
             return internal_server_error(excep)
 
@@ -440,7 +440,7 @@ class EmailProviderConfig(ProviderConfig):
             return BigCommerceAPI.bigcommerce_store_customer_platform_user_save(payload)
         except Exception as excep:  # pylint: disable=broad-except
             log.error(
-                u"Error decoding Customer payload token and storing in database."
+                "Error decoding Customer payload token and storing in database."
             )
             return internal_server_error(excep)
 

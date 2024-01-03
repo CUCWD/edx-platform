@@ -8,6 +8,8 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, reverse
 # from django.urls import reverse
 
+from bigcommerce.api import BigcommerceApi
+
 from lms.djangoapps.bigcommerce_app.models import Store, AdminUser, StoreAdminUser
 from lms.djangoapps.bigcommerce_app.utils import (
     internal_server_error,
@@ -15,8 +17,6 @@ from lms.djangoapps.bigcommerce_app.utils import (
     client_secret,
     platform_lms_url
 )
-
-from bigcommerce.api import BigcommerceApi
 
 LOGGER = logging.getLogger(__name__)
 
