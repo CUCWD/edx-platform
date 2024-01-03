@@ -68,6 +68,10 @@ from openedx_events.learning.signals import (
     COURSE_UNENROLLMENT_COMPLETED,
 )
 from openedx_filters.learning.filters import CourseEnrollmentStarted, CourseUnenrollmentStarted
+
+from organizations import api as organizations_api
+from organizations.models import Organization, UserOrganizationMapping
+
 import openedx.core.djangoapps.django_comment_common.comment_client as cc
 from common.djangoapps.course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from common.djangoapps.student.emails import send_proctoring_requirements_email
@@ -98,9 +102,6 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from openedx.core.djangoapps.xmodule_django.models import NoneToEmptyManager
 from openedx.core.djangolib.model_mixins import DeletableByUserValue
 from openedx.core.toggles import ENTRANCE_EXAMS
-
-from organizations import api as organizations_api
-from organizations.models import Organization, UserOrganizationMapping
 
 log = logging.getLogger(__name__)
 AUDIT_LOG = logging.getLogger("audit")
@@ -1740,7 +1741,7 @@ class CourseEnrollment(models.Model):
                     user_org.save()
 
             except Exception as excep:  # lint-amnesty, pylint: disable=broad-except
-                log.error(u"Could not create UserOrganizationMapping for org %s, user %s\n%s",
+                log.error("Could not create UserOrganizationMapping for org %s, user %s\n%s",
                           organization.name,
                           user.username,
                           excep
