@@ -2,7 +2,6 @@
 MFE API Views for useful information related to mfes.
 """
 
-# import json
 import logging
 import re
 
