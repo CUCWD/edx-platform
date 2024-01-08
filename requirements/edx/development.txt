@@ -1658,3 +1658,5 @@ zipp==3.8.0
         # via -r ./requirements/edx/private.txt
 -e git+https://github.com/CUCWD/edx-ora2.git@4.1.2-nutmeg-cucwd#egg=ora2==4.1.2
     # via -r ./requirements/edx/private.txt
+-e git+https://github.com/CUCWD/custom-form-app.git@0.1-maple.3-cucwd#egg=custom-form-app==0.1
+    # via -r ./requirements/edx/private.txt
