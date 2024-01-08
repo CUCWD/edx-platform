@@ -15,6 +15,7 @@ from django.urls import reverse
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from six.moves.urllib.parse import urlencode, urlparse
 
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from lms.djangoapps.courseware.toggles import courseware_mfe_is_active
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
