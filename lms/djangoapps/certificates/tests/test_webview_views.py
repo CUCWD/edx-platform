@@ -84,7 +84,8 @@ class CommonCertificatesTestCase(ModuleStoreTestCase):
             number='run1',
             display_name='refundable course',
             certificate_available_date=datetime.datetime.today() - datetime.timedelta(days=1),
-            certificates_display_behavior=CertificatesDisplayBehaviors.END_WITH_DATE
+            certificates_display_behavior=CertificatesDisplayBehaviors.END_WITH_DATE,
+            issue_badges=True
         )
         self.course_id = self.course.location.course_key
         self.user = UserFactory.create(
@@ -1106,7 +1107,7 @@ class CertificatesViewsTests(CommonCertificatesTestCase, CacheIsolationTestCase)
         """
         mock_get_course_run_details.return_value = self.mock_course_run_details
         othercourse = CourseFactory.create(
-            org='cstX', number='cst_22', display_name='custom template course'
+            org='cstX', number='cst_22', display_name='custom template course', issue_badges=True
         )
 
         self._add_course_certificates(count=1, signatory_count=2)

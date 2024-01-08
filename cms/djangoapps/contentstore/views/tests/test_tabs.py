@@ -196,7 +196,7 @@ class PrimitiveTabEdit(ModuleStoreTestCase):
         with self.assertRaises(ValueError):
             tabs.primitive_delete(course, 1)
         with self.assertRaises(IndexError):
-            tabs.primitive_delete(course, 7)
+            tabs.primitive_delete(course, 8)  # Increased this to accommodate the Badges Tab by default
 
         assert course.tabs[2] != {'type': 'discussion', 'name': 'Discussion'}
         tabs.primitive_delete(course, 2)

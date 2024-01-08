@@ -63,7 +63,7 @@ class CourseOverviewTestCase(CatalogIntegrationMixin, ModuleStoreTestCase, Cache
     }
 
     COURSE_OVERVIEW_TABS = {
-        'courseware', 'info', 'textbooks', 'discussion', 'wiki', 'progress', 'glossary'
+        'courseware', 'info', 'textbooks', 'discussion', 'wiki', 'progress', 'badges_progress', 'glossary'
     }
 
     ENABLED_SIGNALS = ['course_deleted', 'course_published']
