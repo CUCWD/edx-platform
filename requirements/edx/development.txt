@@ -1656,3 +1656,5 @@ zipp==3.8.0
 		# via -r ./requirements/edx/private.txt
 	-e git+https://github.com/CUCWD/social-auth-backend-bigcommerce.git@0.1.0-maple.1#egg=social-auth-backend-bigcommerce==0.1.0-maple.1
         # via -r ./requirements/edx/private.txt
+-e git+https://github.com/CUCWD/edx-ora2.git@3.7.2-maple.3-cucwd#egg=ora2==3.7.2
+    # via -r ./requirements/edx/private.txt
