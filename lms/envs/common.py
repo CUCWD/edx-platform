@@ -2258,6 +2258,7 @@ base_vendor_js = [
     'common/js/vendor/underscore.js',
     'common/js/vendor/underscore.string.js',
     'common/js/vendor/picturefill.js',
+    'common/js/vendor/bootstrap.bundle.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
     'edx-ui-toolkit/js/utils/global-loader.js',
