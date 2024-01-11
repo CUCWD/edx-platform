@@ -28,6 +28,7 @@ setup(
             "edxnotes = lms.djangoapps.edxnotes.plugins:EdxNotesTab",
             "external_discussion = lms.djangoapps.courseware.tabs:ExternalDiscussionCourseTab",
             "external_link = lms.djangoapps.courseware.tabs:ExternalLinkCourseTab",
+            "glossary = lms.djangoapps.courseware.tabs:GlossaryTab",
             "html_textbooks = lms.djangoapps.courseware.tabs:HtmlTextbookTabs",
             "instructor = lms.djangoapps.instructor.views.instructor_dashboard:InstructorDashboardTab",
             "lti_discussion = openedx.features.lti_course_tab.tab:DiscussionLtiCourseTab",
