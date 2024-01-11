@@ -31,6 +31,7 @@ from lms.djangoapps.commerce.utils import EcommerceService
 from lms.djangoapps.courseware.access import has_access
 from lms.djangoapps.experiments.utils import get_dashboard_course_info, get_experiment_user_metadata_context
 from lms.djangoapps.verify_student.services import IDVerificationService
+from lms.djangoapps.bigcommerce_app.utils import BigCommerceAPI
 from openedx.core.djangoapps.catalog.utils import (
     get_programs,
     get_pseudo_session_for_entitlement,
@@ -167,6 +168,9 @@ def get_course_enrollments(user, org_whitelist, org_blacklist, course_limit=None
         generator[CourseEnrollment]: a sequence of enrollments to be displayed
         on the user's dashboard.
     """
+
+    BigCommerceAPI.get_bc_course_enrollments(user)
+
     for enrollment in CourseEnrollment.enrollments_for_user_with_overviews_preload(user, course_limit):
 
         # If the course is missing or broken, log an error and skip it.

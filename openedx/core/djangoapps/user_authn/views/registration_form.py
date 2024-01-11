@@ -4,6 +4,7 @@ Objects and utilities used to construct registration forms.
 
 import copy
 from importlib import import_module
+import logging
 import re
 
 from django import forms
@@ -34,6 +35,8 @@ from common.djangoapps.util.password_policy_validators import (
     password_validators_restrictions,
     validate_password,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 class TrueCheckbox(widgets.CheckboxInput):
@@ -279,7 +282,7 @@ class AccountCreationForm(forms.Form):
         """
         try:
             year_str = self.cleaned_data["year_of_birth"]
-            return int(year_str) if year_str is not None else None
+            return int(year_str) if year_str is not None and len(year_str) > 0 else None
         except ValueError:
             return None
 
@@ -336,6 +339,8 @@ class RegistrationFormFactory:
         "specialty",
         "marketing_emails_opt_in",
     ]
+
+    CUSTOM_FORM_FIELDS = []
 
     def _is_field_visible(self, field_name):
         """Check whether a field is visible based on Django settings. """
@@ -410,14 +415,15 @@ class RegistrationFormFactory:
             HttpResponse
         """
         form_desc = FormDescription("post", self._get_registration_submit_url(request))
-        self._apply_third_party_auth_overrides(request, form_desc)
 
         # Custom form fields can be added via the form set in settings.REGISTRATION_EXTENSION_FORM
         custom_form = get_registration_extension_form()
         if custom_form:
-            custom_form_field_names = [field_name for field_name, field in custom_form.fields.items()]
-        else:
-            custom_form_field_names = []
+            self.CUSTOM_FORM_FIELDS = [field_name for field_name, field in custom_form.fields.items()]
+
+        # apply third-party auth provider overrides.
+        # need to make sure this is done before adding third-party fields.
+        self._apply_third_party_auth_overrides(request, form_desc)
 
         # Go through the fields in the fields order and add them if they are required or visible
         for field_name in self.field_order:
@@ -428,7 +434,7 @@ class RegistrationFormFactory:
                     form_desc,
                     required=self._is_field_required(field_name)
                 )
-            elif field_name in custom_form_field_names:
+            elif field_name in self.CUSTOM_FORM_FIELDS:
                 for custom_field_name, field in custom_form.fields.items():
                     if field_name == custom_field_name:
                         restrictions = {}
@@ -1117,6 +1123,11 @@ class RegistrationFormFactory:
                 current_provider = third_party_auth.provider.Registry.get_from_pipeline(running_pipeline)
 
                 if current_provider:
+                    # Check to see if BigCommerce backend is the current_provider.
+                    is_bigcommerce_provider_backend = (
+                        current_provider.backend_class.__base__.__name__ == 'BigCommerceCustomerBaseAuth'  # pylint: disable=line-too-long
+                    )
+
                     # Override username / email / full name
                     field_overrides = current_provider.get_register_form_data(
                         running_pipeline.get('kwargs')
@@ -1132,11 +1143,28 @@ class RegistrationFormFactory:
                         ) or current_provider.sync_learner_profile_data
                     )
 
-                    for field_name in self.DEFAULT_FIELDS + self.EXTRA_FIELDS:
+                    for field_name in self.DEFAULT_FIELDS + self.EXTRA_FIELDS + self.CUSTOM_FORM_FIELDS:
                         if field_name in field_overrides:
                             form_desc.override_field_properties(
                                 field_name, default=field_overrides[field_name]
                             )
+
+                            LOGGER.warning("tpa fields %s - override (%s)", field_name, field_overrides[field_name])
+
+                            # handle this field specifically since the third-party service
+                            # may not pass it and this field is required.
+                            # only do this for `BigCommerceCustomerBaseAuth` backends that have
+                            # `Skip registration form` enabled.
+                            if (is_bigcommerce_provider_backend and current_provider.skip_registration_form):
+                                if (field_name in current_provider.get_setting("REGISTRATION_EXTRA_FIELDS") and
+                                        current_provider.skip_registration_form):
+
+                                    # override the field values from the provider.
+                                    form_desc.override_field_properties(
+                                        field_name,
+                                        default=field_overrides[field_name],
+                                        required=(True if current_provider.get_setting("REGISTRATION_EXTRA_FIELDS").get(field_name) == 'required' else False)  # pylint: disable=line-too-long, simplifiable-if-expression
+                                    )
 
                             if (
                                 field_name not in ['terms_of_service', 'honor_code'] and
