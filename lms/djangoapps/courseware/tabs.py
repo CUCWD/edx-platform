@@ -86,10 +86,11 @@ class GlossaryTab(EnrolledTab):
     """
     type = "glossary"
     title = gettext_noop('Glossary')
-    priority = 10
+    priority = None
     view_name = "glossary"
+    is_default = True
+    is_hideable = True
     is_movable = True
-    is_dynamic = True
 
     def __init__(self, tab_dict):
         def link_func(course, reverse_func):
@@ -100,6 +101,32 @@ class GlossaryTab(EnrolledTab):
 
         tab_dict['link_func'] = link_func
         super().__init__(tab_dict)
+
+    @classmethod
+    def is_enabled(cls, course, user=None):
+        """Returns true if the key terms glossary feature is enabled in the course.
+
+        Args:
+            course (CourseDescriptor): the course using the feature
+            user (User): the user interacting with the course
+        """
+        if not super(GlossaryTab, cls).is_enabled(course, user=user):
+            return False
+
+        if not cls.is_feature_enabled():
+            return False
+
+        if user and not user.is_authenticated:
+            return False
+
+        return True
+
+    @classmethod
+    def is_feature_enabled(cls):
+        """
+        Returns True if the teams feature is enabled.
+        """
+        return settings.FEATURES.get('ENABLE_KEY_TERMS_GLOSSARY', False)
 
 
 class SyllabusTab(EnrolledTab):

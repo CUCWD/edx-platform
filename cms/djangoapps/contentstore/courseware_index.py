@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy
 from eventtracking import tracker
 from search.search_engine_base import SearchEngine
+from requests.exceptions import ConnectionError, Timeout  # pylint: disable=redefined-builtin
 
 from cms.djangoapps.contentstore.course_group_config import GroupConfiguration
 from common.djangoapps.course_modes.models import CourseMode
@@ -41,13 +42,25 @@ def keyterms_reindex(course_id):
     from lms.lib.utils import get_parent_unit
     from opaque_keys.edx.keys import UsageKey
     # url for api endpoint
-    URL = settings.KEY_TERMS_API_URL + str(course_id)
+    URL = settings.KEY_TERMS_API_REINDEX_URL + "?course_id=" + str(course_id)
 
-    # when request is sent to endpoint, starts process of retrieving and searching through textbooks for key terms
-    requests.post(URL)
+    try:
+        # when request is sent to endpoint, starts process of retrieving and searching through
+        # textbooks for key terms
+        response = requests.post(URL)
 
-    # retrieve lesson data to be updated
-    response = requests.get(URL)
+        if response.status_code == 200:
+            # retrieve lesson data to be updated
+            response = requests.get(URL)
+    except (ConnectionError, Timeout) as excep:
+        log.info(
+            '[key-terms-api endpoint] Exception raise for key term reindex.\nException: %s',
+            str(excep)
+        )
+        raise SearchIndexingError(
+            'Error(s) present during indexing',
+            _('Error indexing key terms')
+        ) from excep
 
     # holds our updated lesson links
     updatedlesson = {}
@@ -191,7 +204,8 @@ class SearchIndexerBase(metaclass=ABCMeta):
         # instead of per item index API call.
         items_index = []
 
-        keyterms_reindex(structure_key)
+        if settings.FEATURES['ENABLE_KEY_TERMS_GLOSSARY']:
+            keyterms_reindex(structure_key)
 
         def get_item_location(item):
             """
