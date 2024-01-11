@@ -13,6 +13,7 @@ import os
 import warnings
 import yaml
 
+from os.path import abspath, dirname, join
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
