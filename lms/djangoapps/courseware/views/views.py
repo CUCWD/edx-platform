@@ -1163,7 +1163,7 @@ def glossary(request, course_id):
     course_key = CourseKey.from_string(course_id)
     if not (course_home_legacy_is_active(course_key) or request.user.is_staff):
         raise Redirect(get_learning_mfe_home_url(
-            course_key=course_key, view_name=COURSE_DATES_NAME
+            course_key=course_key, url_fragment=COURSE_DATES_NAME
         ))
 
     # Enable NR tracing for this view based on course

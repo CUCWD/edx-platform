@@ -293,7 +293,7 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = False
 # Devstack is directly exposed to the caller
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
 
-CACHES[QUALTRICS_API_TOKEN_CACHE] = {
-    'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-    'LOCATION': 'qualtrics_backends_api_tokens'
-}
+# CACHES[QUALTRICS_API_TOKEN_CACHE] = {
+#     'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+#     'LOCATION': 'qualtrics_backends_api_tokens'
+# }

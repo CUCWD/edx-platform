@@ -38,16 +38,16 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         Calls command on a course with existing tabs, but not all default ones.
         """
         course = CourseFactory()
-        course.tabs = [tab for tab in course.tabs if tab.type != 'dates']
+        course.tabs = [tab for tab in course.tabs if tab.type != 'discussion']
         self.update_course(course, ModuleStoreEnum.UserID.test)
         assert len(course.tabs) == 6
-        assert 'dates' not in {tab.type for tab in course.tabs}
+        assert 'discussion' not in {tab.type for tab in course.tabs}
 
         call_command('backfill_course_tabs')
 
         course = self.store.get_course(course.id)
         assert len(course.tabs) == 7
-        assert 'dates' in {tab.type for tab in course.tabs}
+        assert 'discussion' in {tab.type for tab in course.tabs}
         mock_logger.info.assert_any_call(f'Updating tabs for {course.id}.')
         mock_logger.info.assert_any_call(f'Successfully updated tabs for {course.id}.')
         assert mock_logger.info.call_count == 3
@@ -69,14 +69,14 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         course.tabs = [tab for tab in course.tabs if tab.type in ('course_info', 'courseware')]
         self.update_course(course, ModuleStoreEnum.UserID.test)
         assert len(course.tabs) == 2
-        assert 'dates' not in {tab.type for tab in course.tabs}
+        assert 'wiki' not in {tab.type for tab in course.tabs}
         assert 'progress' not in {tab.type for tab in course.tabs}
 
         call_command('backfill_course_tabs')
 
         course = self.store.get_course(course.id)
         assert len(course.tabs) == 7
-        assert 'dates' in {tab.type for tab in course.tabs}
+        assert 'wiki' in {tab.type for tab in course.tabs}
         assert 'progress' in {tab.type for tab in course.tabs}
         mock_logger.info.assert_any_call('4 courses read from modulestore. Processing 0 to 4.')
         mock_logger.info.assert_any_call(f'Updating tabs for {course.id}.')
@@ -94,14 +94,14 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         Calls command on multiple courses where all of them need updates.
         """
         course_1 = CourseFactory()
-        course_1.tabs = [tab for tab in course_1.tabs if tab.type != 'dates']
+        course_1.tabs = [tab for tab in course_1.tabs if tab.type != 'discussion']
         self.update_course(course_1, ModuleStoreEnum.UserID.test)
         course_2 = CourseFactory()
         course_2.tabs = [tab for tab in course_2.tabs if tab.type != 'progress']
         self.update_course(course_2, ModuleStoreEnum.UserID.test)
         assert len(course_1.tabs) == 6
         assert len(course_2.tabs) == 6
-        assert 'dates' not in {tab.type for tab in course_1.tabs}
+        assert 'discussion' not in {tab.type for tab in course_1.tabs}
         assert 'progress' not in {tab.type for tab in course_2.tabs}
 
         call_command('backfill_course_tabs')
@@ -110,7 +110,7 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         course_2 = self.store.get_course(course_2.id)
         assert len(course_1.tabs) == 7
         assert len(course_2.tabs) == 7
-        assert 'dates' in {tab.type for tab in course_1.tabs}
+        assert 'discussion' in {tab.type for tab in course_1.tabs}
         assert 'progress' in {tab.type for tab in course_2.tabs}
         mock_logger.info.assert_any_call('2 courses read from modulestore. Processing 0 to 2.')
         mock_logger.info.assert_any_call(f'Updating tabs for {course_1.id}.')
@@ -133,12 +133,12 @@ class BackfillCourseTabsTest(ModuleStoreTestCase):
         Command is only manually run and should be monitored.
         """
         error_course = CourseFactory()
-        error_course.tabs = [tab for tab in error_course.tabs if tab.type != 'dates']
+        error_course.tabs = [tab for tab in error_course.tabs if tab.type != 'discussion']
         self.update_course(error_course, ModuleStoreEnum.UserID.test)
         error_course_tabs_before = error_course.tabs
 
         updated_course = CourseFactory()
-        updated_course.tabs = [tab for tab in updated_course.tabs if tab.type != 'dates']
+        updated_course.tabs = [tab for tab in updated_course.tabs if tab.type != 'discussion']
         self.update_course(updated_course, ModuleStoreEnum.UserID.test)
         updated_course_tabs_before = updated_course.tabs
 
