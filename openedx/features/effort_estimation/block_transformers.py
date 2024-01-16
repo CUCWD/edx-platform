@@ -121,6 +121,8 @@ class EffortEstimationTransformer(BlockStructureTransformer):
             block_structure.set_transformer_block_field(block_key, cls, cls.VIDEO_CLIP_DURATION, clip_duration)
 
     def transform(self, usage_info, block_structure):
+        # import pdb;pdb.set_trace()
+        
         # Early exit if our per-course opt-out flag is enabled
         if EFFORT_ESTIMATION_DISABLED_FLAG.is_enabled(block_structure.root_block_usage_key.course_key):
             return
