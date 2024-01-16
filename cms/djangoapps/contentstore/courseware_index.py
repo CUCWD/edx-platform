@@ -16,9 +16,10 @@ from requests.exceptions import ConnectionError, Timeout  # pylint: disable=rede
 from cms.djangoapps.contentstore.course_group_config import GroupConfiguration
 from common.djangoapps.course_modes.models import CourseMode
 from openedx.core.lib.courses import course_image_url
-from xmodule.annotator_mixin import html_to_text  # lint-amnesty, pylint: disable=wrong-import-order
-from xmodule.library_tools import normalize_key_for_search  # lint-amnesty, pylint: disable=wrong-import-order
-from xmodule.modulestore import ModuleStoreEnum  # lint-amnesty, pylint: disable=wrong-import-order
+from xmodule.annotator_mixin import html_to_text
+from xmodule.library_tools import normalize_key_for_search
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.exceptions import ItemNotFoundError
 
 # REINDEX_AGE is the default amount of time that we look back for changes
 # that might have happened. If we are provided with a time at which the
@@ -47,11 +48,49 @@ def keyterms_reindex(course_id):
     try:
         # when request is sent to endpoint, starts process of retrieving and searching through
         # textbooks for key terms
-        response = requests.post(URL)
+        requests.post(URL)
+
+        # retrieve lesson data to be updated
+        payload = json.dumps({})
+        headers = {
+            # 'Authorization': 'Bearer <token>',
+            'Content-Type': 'application/json',
+            # 'Cookie': 'csrftoken=<token>'
+        }
+        response = requests.request("GET", URL, headers=headers, data=payload)
 
         if response.status_code == 200:
-            # retrieve lesson data to be updated
-            response = requests.get(URL)
+            # holds our updated lesson links
+            updatedlesson = {}
+
+            # go through all lessons and update lesson link to find vertical xblock
+            for lesson in response.json():
+                if "vertical+block" not in lesson['lesson_link']:
+                    usage_key = UsageKey.from_string(lesson['lesson_link'])
+                    try:
+                        item = modulestore().get_item(usage_key)
+                        newlink = str(get_parent_unit(item).location)
+                        print(item)
+                        updatedlesson[lesson['lesson_link']] = newlink
+                    except (ItemNotFoundError) as excep:
+                       log.info(
+                            '[keyterms_reindex] Cannot find block %s in modulestore for course %s.\nException: %s',
+                            lesson['lesson_link'], str(course_id), str(excep)
+                        )
+                else:
+                    updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
+
+            # send updated data
+            return requests.post(URL, json=json.dumps(updatedlesson))
+        elif response.status_code == 204:
+            log.info(
+                '[key-terms-api endpoint] No keyterms found when reindexing %s',
+                str(course_id)
+            )
+        else:
+            raise ConnectionError(
+                f"Could not connect to the key-terms api. HTTP status code {response.status_code}"
+            )
     except (ConnectionError, Timeout) as excep:
         log.info(
             '[key-terms-api endpoint] Exception raise for key term reindex.\nException: %s',
@@ -62,22 +101,7 @@ def keyterms_reindex(course_id):
             _('Error indexing key terms')
         ) from excep
 
-    # holds our updated lesson links
-    updatedlesson = {}
-
-    # go through all lessons and update lesson link to find vertical xblock
-    for lesson in response.json():
-        if "vertical+block" not in lesson['lesson_link']:
-            usage_key = UsageKey.from_string(lesson['lesson_link'])
-            item = modulestore().get_item(usage_key)
-            newlink = str(get_parent_unit(item).location)
-            print(item)
-            updatedlesson[lesson['lesson_link']] = newlink
-        else:
-            updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
-
-    # send updated data
-    return requests.post(URL, json=json.dumps(updatedlesson))
+    return False
 
 
 def strip_html_content_to_text(html_content):
