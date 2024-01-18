@@ -423,6 +423,10 @@ if FEATURES.get('ENABLE_ENTERPRISE_INTEGRATION'):
 DCS_SESSION_COOKIE_SAMESITE = 'Lax'
 DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
+################# Import private.py for additional overrides #################
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')):
+    from .private import *  # pylint: disable=import-error,wildcard-import
+
 ########################## THEMING  #######################
 # If you want to enable theming in devstack, uncomment this section and add any relevant
 # theme directories to COMPREHENSIVE_THEME_DIRS

@@ -80,6 +80,55 @@ class CourseInfoTab(CourseTab):
         return True
 
 
+class GlossaryTab(EnrolledTab):
+    """
+    A tab representing the glossary for a course.
+    """
+    type = "glossary"
+    title = gettext_noop('Glossary')
+    priority = None
+    view_name = "glossary"
+    is_default = True
+    is_hideable = True
+    is_movable = True
+
+    def __init__(self, tab_dict):
+        def link_func(course, reverse_func):
+            if course_home_legacy_is_active(course.id):
+                return reverse_func(self.view_name, args=[str(course.id)])
+            else:
+                return get_learning_mfe_home_url(course_key=course.id, url_fragment=self.view_name)
+
+        tab_dict['link_func'] = link_func
+        super().__init__(tab_dict)
+
+    @classmethod
+    def is_enabled(cls, course, user=None):
+        """Returns true if the key terms glossary feature is enabled in the course.
+
+        Args:
+            course (CourseDescriptor): the course using the feature
+            user (User): the user interacting with the course
+        """
+        if not super(GlossaryTab, cls).is_enabled(course, user=user):
+            return False
+
+        if not cls.is_feature_enabled():
+            return False
+
+        if user and not user.is_authenticated:
+            return False
+
+        return True
+
+    @classmethod
+    def is_feature_enabled(cls):
+        """
+        Returns True if the teams feature is enabled.
+        """
+        return settings.FEATURES.get('ENABLE_KEY_TERMS_GLOSSARY', False)
+
+
 class SyllabusTab(EnrolledTab):
     """
     A tab for the course syllabus.

@@ -21,6 +21,7 @@ import copy
 import datetime
 import os
 
+from os.path import abspath, dirname, join
 import yaml
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 from django.core.exceptions import ImproperlyConfigured
@@ -981,6 +982,10 @@ derive_settings(__name__)
 # Load production.py in plugins
 add_plugins(__name__, ProjectType.LMS, SettingsType.PRODUCTION)
 
+########################## Derive Any Derived Settings  #######################
+
+derive_settings(__name__)
+
 ############## Settings for Completion API #########################
 
 # Once a user has watched this percentage of a video, mark it as complete:
@@ -1068,3 +1073,8 @@ DISCUSSIONS_MFE_FEEDBACK_URL = ENV_TOKENS.get('DISCUSSIONS_MFE_FEEDBACK_URL', DI
 
 ############## DRF overrides ##############
 REST_FRAMEWORK.update(ENV_TOKENS.get('REST_FRAMEWORK', {}))
+
+################# Import private.py only if running production #################
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
+   os.environ["DJANGO_SETTINGS_MODULE"] == 'lms.envs.production':
+    from .private import *  # pylint: disable=import-error,wildcard-import

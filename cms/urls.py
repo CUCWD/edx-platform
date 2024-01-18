@@ -128,7 +128,8 @@ urlpatterns = oauth2_urlpatterns + [
     re_path(fr'^import_status/{COURSELIKE_KEY_PATTERN}/(?P<filename>.+)$',
             contentstore_views.import_status_handler, name='import_status_handler'),
     # rest api for course import/export
-    path('api/courses/', include('cms.djangoapps.contentstore.api.urls', namespace='courses_api')
+    path(r'^api/courses/',
+         include('cms.djangoapps.contentstore.api.urls', namespace='courses_api')
          ),
     re_path(fr'^export/{COURSELIKE_KEY_PATTERN}$', contentstore_views.export_handler,
             name='export_handler'),
@@ -156,6 +157,10 @@ urlpatterns = oauth2_urlpatterns + [
             name='textbooks_list_handler'),
     re_path(fr'^textbooks/{settings.COURSE_KEY_PATTERN}/(?P<textbook_id>\d[^/]*)$',
             contentstore_views.textbooks_detail_handler, name='textbooks_detail_handler'),
+    re_path(fr'^textbooks_api/{settings.COURSE_KEY_PATTERN}$', contentstore_views.textbooks_list_api_handler,
+            name='textbooks_list_api_handler'),
+    re_path(fr'^textbooks_api/{settings.COURSE_KEY_PATTERN}/(?P<textbook_name>[^/]*)$',
+            contentstore_views.textbooks_api_handler, name='textbooks_api_handler'),
     re_path(fr'^videos/{settings.COURSE_KEY_PATTERN}(?:/(?P<edx_video_id>[-\w]+))?$',
             contentstore_views.videos_handler, name='videos_handler'),
     re_path(fr'^generate_video_upload_link/{settings.COURSE_KEY_PATTERN}',
@@ -166,8 +171,8 @@ urlpatterns = oauth2_urlpatterns + [
             contentstore_views.transcript_preferences_handler, name='transcript_preferences_handler'),
     re_path(fr'^transcript_credentials/{settings.COURSE_KEY_PATTERN}$',
             contentstore_views.transcript_credentials_handler, name='transcript_credentials_handler'),
-    path('transcript_download/', contentstore_views.transcript_download_handler, name='transcript_download_handler'),
-    path('transcript_upload/', contentstore_views.transcript_upload_handler, name='transcript_upload_handler'),
+    path(r'^transcript_download/$', contentstore_views.transcript_download_handler, name='transcript_download_handler'),
+    path(r'^transcript_upload/$', contentstore_views.transcript_upload_handler, name='transcript_upload_handler'),
     re_path(r'^transcript_delete/{}(?:/(?P<edx_video_id>[-\w]+))?(?:/(?P<language_code>[^/]*))?$'.format(
         settings.COURSE_KEY_PATTERN
     ), contentstore_views.transcript_delete_handler, name='transcript_delete_handler'),

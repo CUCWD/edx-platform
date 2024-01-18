@@ -11,6 +11,8 @@ import codecs
 import copy
 import os
 import warnings
+
+from os.path import abspath, dirname, join
 import yaml
 
 from corsheaders.defaults import default_headers as corsheaders_default_headers
@@ -571,6 +573,10 @@ derive_settings(__name__)
 
 add_plugins(__name__, ProjectType.CMS, SettingsType.PRODUCTION)
 
+########################## Derive Any Derived Settings  #######################
+
+derive_settings(__name__)
+
 ############# CORS headers for cross-domain requests #################
 if FEATURES.get('ENABLE_CORS_HEADERS'):
     CORS_ALLOW_CREDENTIALS = True
@@ -633,3 +639,8 @@ DISCUSSIONS_MFE_FEEDBACK_URL = ENV_TOKENS.get('DISCUSSIONS_MFE_FEEDBACK_URL', DI
 
 ############## DRF overrides ##############
 REST_FRAMEWORK.update(ENV_TOKENS.get('REST_FRAMEWORK', {}))
+
+################# Import private.py only if running production #################
+if os.path.isfile(join(dirname(abspath(__file__)), 'private.py')) and \
+   os.environ["DJANGO_SETTINGS_MODULE"] == 'cms.envs.production':
+    from .private import *  # pylint: disable=import-error,wildcard-import
