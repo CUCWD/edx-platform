@@ -23,7 +23,6 @@ setup(
             "courseware = lms.djangoapps.courseware.tabs:CoursewareTab",
             "course_info = lms.djangoapps.courseware.tabs:CourseInfoTab",
             "dates = lms.djangoapps.courseware.tabs:DatesTab",
-            "glossary = lms.djangoapps.courseware.tabs:GlossaryTab",
             "discussion = lms.djangoapps.discussion.plugins:DiscussionTab",
             "edxnotes = lms.djangoapps.edxnotes.plugins:EdxNotesTab",
             "external_discussion = lms.djangoapps.courseware.tabs:ExternalDiscussionCourseTab",
