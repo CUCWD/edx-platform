@@ -7,12 +7,14 @@ from ddt import data, ddt, unpack
 from django.conf import settings
 from django.test.utils import override_settings
 
+from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
+from xmodule.modulestore.tests.factories import CourseFactory
+
 from common.djangoapps.student.tests.factories import UserFactory
 from common.djangoapps.util.testing import UrlResetMixin
-from lms.djangoapps.badges.tests.factories import BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
+from lms.djangoapps.badges.tests.factories import \
+    BadgeAssertionFactory, BadgeClassFactory, RandomBadgeClassFactory
 from openedx.core.lib.api.test_utils import ApiTestCase
-from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase  # lint-amnesty, pylint: disable=wrong-import-order
-from xmodule.modulestore.tests.factories import CourseFactory  # lint-amnesty, pylint: disable=wrong-import-order
 
 FEATURES_WITH_BADGES_ENABLED = settings.FEATURES.copy()
 FEATURES_WITH_BADGES_ENABLED['ENABLE_OPENBADGES'] = True
@@ -70,7 +72,10 @@ class UserAssertionTestCase(UrlResetMixin, ModuleStoreTestCase, ApiTestCase):
         Create a badge class, using a course id if it's relevant to the URL pattern.
         """
         if check_course:
-            return RandomBadgeClassFactory.create(course_id=self.course.location.course_key, **kwargs)
+            return RandomBadgeClassFactory.create(
+                course_id=self.course.location.course_key,
+                **kwargs
+            )
         return RandomBadgeClassFactory.create(**kwargs)
 
     def get_qs_args(self, check_course, wildcard, badge_class):
@@ -98,7 +103,10 @@ class TestUserBadgeAssertions(UserAssertionTestCase):
         for dummy in range(3):
             BadgeAssertionFactory(user=self.user)
         # Add in a course scoped badge-- these should not be excluded from the full listing.
-        BadgeAssertionFactory(user=self.user, badge_class=BadgeClassFactory(course_id=self.course.location.course_key))
+        BadgeAssertionFactory(
+            user=self.user,
+            badge_class=BadgeClassFactory(course_id=self.course.location.course_key)
+        )
         # Should not be included.
         for dummy in range(3):
             self.create_badge_class(False)
@@ -106,6 +114,9 @@ class TestUserBadgeAssertions(UserAssertionTestCase):
         assert len(response['results']) == 4
 
     def test_assertion_structure(self):
+        """
+        Verify the creation of a badge assertion.
+        """
         badge_class = self.create_badge_class(False)
         assertion = BadgeAssertionFactory.create(user=self.user, badge_class=badge_class)
         response = self.get_json(self.url())
@@ -134,7 +145,9 @@ class TestUserCourseBadgeAssertions(UserAssertionTestCase):
         response = self.get_json(self.url(), data={'course_id': str(course_key)})
         assert len(response['results']) == 3
         unused_course = CourseFactory.create()
-        response = self.get_json(self.url(), data={'course_id': str(unused_course.location.course_key)})
+        response = self.get_json(
+            self.url(), data={'course_id': str(unused_course.location.course_key)}
+        )
         assert len(response['results']) == 0
 
     def test_assertion_structure(self):
@@ -186,7 +199,9 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
         else:
             expected_length = 3
         assert len(response['results']) == expected_length
-        unused_class = self.create_badge_class(check_course, slug='unused_slug', issuing_component='unused_component')
+        unused_class = self.create_badge_class(
+            check_course, slug='unused_slug', issuing_component='unused_component'
+        )
 
         response = self.get_json(
             self.url(),
@@ -196,7 +211,8 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
 
     def check_badge_class_assertion(self, check_course, wildcard, badge_class):
         """
-        Given a badge class, create an assertion for the current user and fetch it, checking the structure.
+        Given a badge class, create an assertion for the current user and fetch it,
+        checking the structure.
         """
         assertion = BadgeAssertionFactory.create(badge_class=badge_class, user=self.user)
         response = self.get_json(
@@ -208,11 +224,19 @@ class TestUserBadgeAssertionsByClass(UserAssertionTestCase):
     @unpack
     @data((False, False), (True, False), (True, True))
     def test_assertion_structure(self, check_course, wildcard):
-        self.check_badge_class_assertion(check_course, wildcard, self.create_badge_class(check_course))
+        """
+        Verifying different badge class assertions.
+        """
+        self.check_badge_class_assertion(
+            check_course, wildcard, self.create_badge_class(check_course)
+        )
 
     @unpack
     @data((False, False), (True, False), (True, True))
     def test_empty_issuing_component(self, check_course, wildcard):
+        """
+        Verifying empty issuing components in badge class.
+        """
         self.check_badge_class_assertion(
             check_course, wildcard, self.create_badge_class(check_course, issuing_component='')
         )

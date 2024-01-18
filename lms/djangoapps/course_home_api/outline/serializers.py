@@ -41,6 +41,7 @@ class CourseBlockSerializer(serializers.Serializer):
 
         serialized = {
             block_key: {
+                'badge_progress': block.get('badge_progress', False),
                 'children': [child['id'] for child in children],
                 'complete': block.get('complete', False),
                 'description': description,

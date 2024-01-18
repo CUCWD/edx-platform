@@ -1,0 +1,81 @@
+{% extends 'admin/change_form.html' %}
+{% load i18n admin_urls static %}
+
+{% block admin_change_form_document_ready %}
+    <script type="text/javascript">
+        async function getOutlineTabData(courseId) {
+
+            if (!django.jQuery('#id_usage_key').val()) {
+                const endpoint = window.location.protocol + '//' + window.location.host + `/api/course_home/outline/${courseId}`;
+
+                django.jQuery.ajax({
+                    type: 'GET',
+                    url: endpoint,
+                    dataType: 'text',
+                    success: (data) => {
+                        console.log("Success: Located chapters for course for blockeventbadgesconfiguration");
+
+                        // Reset `usage_key` drop down in case an option from another course was selected,
+                        // then set the empty option back.
+                        const emptyOption = django.jQuery('<option></option>').attr("value", "").text("---------");
+                        django.jQuery('#id_usage_key').empty().append(emptyOption);
+
+                        let course_blocks = JSON.parse(data).course_blocks.blocks
+                        const chapter_options = [];
+                        for (const block in course_blocks) {
+                            // console.log(`${block}: ${course_blocks[block]}`);
+                            if (course_blocks[block].type === "chapter") {
+                                chapter_options.push({
+                                    "value": course_blocks[block].display_name,
+                                    "key": course_blocks[block].id
+                                });
+                            }
+                        }
+
+                        // Add all chapter options into the `usage_key` dropdown.
+                        for (const option in chapter_options) {
+                            django.jQuery('#id_usage_key').append(django.jQuery("<option></option>")
+                                .attr("value", chapter_options[option].key).text(chapter_options[option].value));
+                        }
+                    },
+                    error: (jqXHR, textStatus, errorThrown) => {
+                        console.log("Error: Could not locate chapters for course for blockeventbadgesconfiguration");
+                        var response, userMessage;
+                        try {
+                            response = jqXHR.responseText ? JSON.parse(jqXHR.responseText) : '';
+                            detailMessage = response ? response.detail : '';
+                            console.log(detailMessage);
+                        } catch (err) {
+                            console.log("Couldn't render out error message from blockeventbadgesconfiguration.");
+                        }
+                    },
+                });
+            }
+        }
+    </script>
+    <script type="text/javascript">
+        django.jQuery(document).ready(function(){
+
+            let courseId = django.jQuery('#id_course').val();
+
+            // Change the value of `usage_key` to empty if `course` is empty.
+            if (courseId == '') {
+                django.jQuery('#id_usage_key').val('');
+            } else {
+                getOutlineTabData(courseId);
+            }
+
+            // Update the value of `usage_key` to empty if `course` is changed.
+            django.jQuery('#id_course').change(function() {
+                courseId = this.value;
+                django.jQuery('#id_usage_key').val('');
+
+                if (courseId) {
+                    getOutlineTabData(courseId);
+                }
+            })
+
+        })
+    </script>
+{% endblock %}
+

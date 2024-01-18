@@ -54,6 +54,7 @@ NPM_INSTALLED_LIBRARIES = [
     'backbone/backbone.js',
     'bootstrap/dist/js/bootstrap.bundle.js',
     'hls.js/dist/hls.js',
+    'iframe-resizer/js/iframeResizer.js',
     'jquery-migrate/dist/jquery-migrate.js',
     'jquery.scrollto/jquery.scrollTo.js',
     'jquery/dist/jquery.js',

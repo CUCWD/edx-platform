@@ -2,8 +2,10 @@
 <%!
 import logging
 import json
+import os
 from django.contrib.staticfiles.storage import staticfiles_storage
 from common.djangoapps.pipeline_mako import compressed_css, compressed_js
+from common.djangoapps.pipeline_mako.helpers.badgesfrontend import load_bfe_i18n_messages
 from common.djangoapps.pipeline_mako.helpers.studiofrontend import load_sfe_i18n_messages
 from django.utils.translation import get_language_bidi
 from mako.exceptions import TemplateLookupException
@@ -107,6 +109,47 @@ if not source:
     raise TemplateDoesNotExist(path)
 
 %>${source | n, decode.utf8}</%def>
+
+<%def name="badgesfrontend(entry)">
+    <%doc>
+        Loads a badges-frontend page, with the necessary context. Context is expected
+        as a dictionary in the body of this tag.
+    </%doc>
+    <%
+        body = capture(caller.body)
+        body_dict = json.loads(body)
+        locale = body_dict['lang']
+
+        messages = load_bfe_i18n_messages(locale)
+    %>
+    <script type="application/json" id="BFE_i18n_data">
+      {
+        "locale": "${ locale | n, decode.utf8}",
+        "messages": ${ messages | n, decode.utf8}
+      }
+    </script>
+    <script type="application/javascript" id='courseContext'>
+        var lmsContext = ${ body | n, decode.utf8};
+    </script>
+    % if settings.LMS_FRONTEND_BADGES_CONTAINER_URL:
+        ## At this time all the /dist files exclude the [chunkhash].js extension to make this code easier to call
+        ## the corresponding code on the micro-frontend site. Extension is set to `*.min.js` instead.
+
+        <iframe id="mfe-badges" title="MFE Course Badges" src="${settings.LMS_FRONTEND_BADGES_CONTAINER_URL}/course/course-v1:CUCWD+SB101+SANDBOX/badge/progress" width="100%" height="100%" allowfullscreen marginwidth="0" marginheight="0" frameborder="0" scrolling="no" onload="iFrameResize({ log: true }, '#mfe-badges')">
+            Your browser does not support IFrames.
+        </iframe>
+    % else:
+        ## At the moment I have not included this setup should you add this `badges-frontend` app to
+        ## `NPM_INSTALLED_LIBRARIES` under `edx-platform/pavelib/assets.py`. When the call to `process_npm_assets()`
+        ## gets made it will install all npm installed libraries at `/common/static/common/js/vendor/`.
+        ## When doing it this way it seemed to have a conflict with `studio-frontend` so keeping this application
+        ## out of the platform at separate NGINX site seemed to work just fine and setting the
+        ## `LMS_FRONTEND_BADGES_CONTAINER_URL` value seemed to allow for that.
+        <p>Please set the <strong>settings.LMS_FRONTEND_BADGES_CONTAINER_URL</strong> to configure the
+            <em>`badges-frontend`</em> micro-frontend application.
+        </p>
+    % endif
+</%def>
 
 <%def name="studiofrontend(entry)">
     <%doc>
