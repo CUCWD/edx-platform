@@ -2447,6 +2447,13 @@ BULK_EMAIL_LOG_SENT_EMAILS = False
 ############### Settings for django file storage ##################
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
+#################### Qualtrics Settings #######################
+# QUALTRICS_BACKEND = 'qualtrics.backends.qualtrics.qualtricsBackend'
+QUALTRICS_API_VERSION = "v3"
+QUALTRICS_API_TOKEN_EXPIRATION = 3599  # 1 hr
+QUALTRICS_API_TOKEN_CACHE = 'qualtrics_api_token_cache'
+QUALTRICS_ORGANIZATION_API_CONFIGS = []
+
 ###################### Grade Downloads ######################
 # These keys are used for all of our asynchronous downloadable files, including
 # the ones that contain information other than grades.
