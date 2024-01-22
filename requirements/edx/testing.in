@@ -51,3 +51,4 @@ unidiff                   # Required by coverage_pytest_plugin
 pylint-pytest==0.3.0      # A Pylint plugin to suppress pytest-related false positives.
 pact-python               # Library for contract testing 
 
+-r private.txt            # Include our EducateWorkforce specific packages

@@ -16,6 +16,7 @@ import crum
 import hashlib  # lint-amnesty, pylint: disable=wrong-import-order
 import json  # lint-amnesty, pylint: disable=wrong-import-order
 import logging  # lint-amnesty, pylint: disable=wrong-import-order
+import six  # lint-amnesty, pylint: disable=wrong-import-order
 import uuid  # lint-amnesty, pylint: disable=wrong-import-order
 from collections import defaultdict, namedtuple  # lint-amnesty, pylint: disable=wrong-import-order
 from datetime import date, datetime, timedelta  # lint-amnesty, pylint: disable=wrong-import-order
@@ -67,6 +68,10 @@ from openedx_events.learning.signals import (
     COURSE_UNENROLLMENT_COMPLETED,
 )
 from openedx_filters.learning.filters import CourseEnrollmentStarted, CourseUnenrollmentStarted
+
+from organizations import api as organizations_api
+from organizations.models import Organization, UserOrganizationMapping
+
 import openedx.core.djangoapps.django_comment_common.comment_client as cc
 from common.djangoapps.course_modes.models import CourseMode, get_cosmetic_verified_display_price
 from common.djangoapps.student.emails import send_proctoring_requirements_email
@@ -1711,6 +1716,36 @@ class CourseEnrollment(models.Model):
                 creation_date=enrollment.created,
             )
         )
+
+        # Mapping a user to an organization for Figures analytics.
+        organization_data = organizations_api.get_course_organizations(six.text_type(course_key))
+        if len(organization_data):
+            organization = Organization.objects.get(id=organization_data[0].get('id'))
+
+            try:
+                user_org = UserOrganizationMapping.objects.filter(
+                    user=user,
+                    organization=organization
+                ).first()
+                if not user_org:
+                    UserOrganizationMapping.objects.create(
+                        user=user,
+                        organization=organization,
+                        is_active=True,
+                        is_amc_admin=False
+                    )
+                else:
+                    # Enable `is_active` for the user_org record if it already exists in
+                    # the database.
+                    user_org.is_active = True
+                    user_org.save()
+
+            except Exception as excep:  # lint-amnesty, pylint: disable=broad-except
+                log.error("Could not create UserOrganizationMapping for org %s, user %s\n%s",
+                          organization.name,
+                          user.username,
+                          excep
+                          )
 
         return enrollment
 
