@@ -679,7 +679,8 @@ class StudentDashboardTests(SharedModuleStoreTestCase, MilestonesTestCaseMixin, 
         return'''
             <div class="course-info">
             <span class="info-university">{org} - </span>
-            <span class="info-course-id">{course}</span>
+            <span class="info-course-id">{course} - </span>
+            <span class="info-course-run">{run}</span>
             <span class="info-date-block-container">
             <button class="change-session btn-link ">Change or Leave Session</button>
             </span>
@@ -687,6 +688,7 @@ class StudentDashboardTests(SharedModuleStoreTestCase, MilestonesTestCaseMixin, 
         '''.format(
             org=course_key.org,
             course=course_key.course,
+            run=course_key.run
         )
 
     def test_view_course_appears_on_dashboard(self):
@@ -901,6 +903,7 @@ class StudentDashboardTests(SharedModuleStoreTestCase, MilestonesTestCaseMixin, 
                 expected_button = html_for_view_buttons[i]
                 unexpected_button = html_for_resume_buttons[i] + html_for_entitlement[i]
 
+            # import pdb;pdb.set_trace()
             assert expected_button in dashboard_html
             assert unexpected_button not in dashboard_html
 

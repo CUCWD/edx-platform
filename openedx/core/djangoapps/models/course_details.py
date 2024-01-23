@@ -61,7 +61,7 @@ class CourseDetails:
         self.overview = ""  # html to render as the overview
         self.about_sidebar_html = ""
         self.intro_video = None  # a video pointer
-        self.revision_number = "" # identifies course revision number
+        self.revision_number = ""  # identifies course revision number
         self.effort = None  # hours/week
         self.license = "all-rights-reserved"  # default course license is all rights reserved
         self.course_image_name = ""
