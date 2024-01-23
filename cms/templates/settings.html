@@ -390,6 +390,11 @@ CMS.URL.UPLOAD_ASSET = '${upload_asset_url | n, js_escaped_string}'
               </select>
               <span class="tip tip-stacked">${_("Identify the course language here. This is used to assist users find courses that are taught in a specific language. It is also used to localize the 'From:' field in bulk emails.")}</span>
             </li>
+            <li class="field text" id="field-course-revision-number">
+              <label for="course-revision-number">${_("Course Revision Number")}</label>
+              <input id="course-revision-number" type="text" placeholder="YYYY.MM">
+              <span class="tip tip-stacked">${_("Identify the course revision number here. This is used to assist with identifying what changes have been made for a course. Placeholder indicates a date format (YYYY.MM), however, we don't have to explicity tie this to a date for the number identification.")}</span>
+            </li>
           </ol>
         </div>
         % endif
