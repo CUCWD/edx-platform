@@ -19,8 +19,8 @@ The resulting JSON object has one entry for each module in the course:
 
 # import json
 from datetime import datetime
-from pytz import UTC
 from textwrap import dedent
+from pytz import UTC
 
 from django.core.management.base import BaseCommand, CommandError
 # from opaque_keys import InvalidKeyError

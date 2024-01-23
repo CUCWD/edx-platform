@@ -180,7 +180,7 @@ def make_learning_mfe_courseware_url(
     strings. They're only ever used to concatenate a URL string.
     `params` is an optional QueryDict object (e.g. request.GET)
     """
-    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))
+    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))  # pylint: disable=line-too-long
     mfe_link = f'{learning_microfrontend_url}/course/{course_key}'
 
     if sequence_key:
@@ -211,7 +211,7 @@ def get_learning_mfe_home_url(
     `url_fragment` is an optional string.
     `params` is an optional QueryDict object (e.g. request.GET)
     """
-    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))
+    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))  # pylint: disable=line-too-long
     mfe_link = f'{learning_microfrontend_url}/course/{course_key}'
 
     if url_fragment:
@@ -227,7 +227,7 @@ def is_request_from_learning_mfe(request: HttpRequest):
     """
     Returns whether the given request was made by the frontend-app-learning MFE.
     """
-    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))
+    learning_microfrontend_url = configuration_helpers.get_value('LEARNING_MICROFRONTEND_URL', getattr(settings, 'LEARNING_MICROFRONTEND_URL', ''))  # pylint: disable=line-too-long
 
     if not learning_microfrontend_url:
         return False

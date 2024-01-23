@@ -23,7 +23,6 @@ from lms.djangoapps.courseware.tabs import get_course_tab_list
 from lms.djangoapps.courseware.toggles import courseware_mfe_is_visible
 
 
-
 class CourseHomeMetadataView(RetrieveAPIView):
     """
     **Use Cases**
