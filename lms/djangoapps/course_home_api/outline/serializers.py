@@ -120,6 +120,7 @@ class OutlineTabSerializer(DatesBannerSerializer, VerifiedModeSerializer):
     course_blocks = CourseBlockSerializer()
     course_goals = CourseGoalsSerializer()
     course_tools = CourseToolSerializer(many=True)
+    course_revision = serializers.CharField()
     dates_widget = DatesWidgetSerializer()
     enroll_alert = EnrollAlertSerializer()
     enrollment_mode = serializers.CharField()
