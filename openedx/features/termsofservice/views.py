@@ -7,10 +7,6 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from .models import TermsOfService, TermsOfServiceAllSites, TermsOfServiceSites
 
 
-
-
-
-
 logger = logging.getLogger(__name__)
 
 
