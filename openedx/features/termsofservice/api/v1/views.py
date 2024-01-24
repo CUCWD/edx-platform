@@ -2,14 +2,11 @@
 
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import HttpResponse, JsonResponse
-
 from django.contrib.sites.models import Site
 from django.conf import settings
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-
 from openedx.features.termsofservice.models import TermsOfServiceSites, TermsOfService
 from openedx.features.termsofservice.models import TermsOfServiceAcknowledgement, TermsOfServiceAllSites
-
 
 
 @ensure_csrf_cookie
