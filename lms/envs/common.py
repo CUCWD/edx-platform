@@ -2269,6 +2269,9 @@ base_vendor_js = [
     'common/js/vendor/iframeResizer.js',
 
     # Load Owl Carousel
+    'js/vendor/OwlCarousel2/owl.carousel.js',
+
+    # Load Owl Carousel
     'common/js/vendor/owl.carousel.js',
 
     # Make some edX UI Toolkit utilities available in the global "edx" namespace
@@ -2280,7 +2283,12 @@ base_vendor_js = [
     'common/js/vendor/require.js',
     'js/RequireJS-namespace-undefine.js',
     'js/vendor/URI.min.js',
-    'common/js/vendor/backbone.js'
+    'common/js/vendor/backbone.js',
+
+    # Used for Glossary
+    'common/js/vendor/jquery.easytabs.js',
+    'common/js/vendor/jquery.hashchange.js',
+    'common/js/vendor/jquery.scrollTo.js',
 ]
 
 main_vendor_js = base_vendor_js + [
@@ -2394,6 +2402,8 @@ PIPELINE['STYLESHEETS'] = {
         'source_filenames': [
             'css/vendor/font-awesome.css',
             'css/vendor/jquery.qtip.min.css',
+            'css/vendor/OwlCarousel2/owl.carousel.css',
+            'css/vendor/OwlCarousel2/owl.theme.default.css',
         ],
         'output_filename': 'css/lms-style-vendor.css',
     },

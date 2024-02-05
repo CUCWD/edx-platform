@@ -30,6 +30,7 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                    options = options || {};
         // fill in fields
                    this.$el.find('#course-language').val(this.model.get('language'));
+                   this.$el.find('#course-revision-number').val(this.model.get('revision_number'));
                    this.$el.find('#course-organization').val(this.model.get('org'));
                    this.$el.find('#course-number').val(this.model.get('course_id'));
                    this.$el.find('#course-name').val(this.model.get('run'));
@@ -112,6 +113,7 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                        this.$el.find('.remove-course-introduction-video').show();
                    } else this.$el.find('.remove-course-introduction-video').hide();
 
+                   this.$el.find('#' + this.fieldToSelectorMap.revision_number).val(this.model.get('revision_number'));
                    this.$el.find('#' + this.fieldToSelectorMap.effort).val(this.model.get('effort'));
                    this.$el.find("#" + this.fieldToSelectorMap.certificates_display_behavior).val(this.model.get('certificates_display_behavior'));
                    this.updateCertificatesDisplayBehavior();
@@ -188,7 +190,8 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                    course_settings_learning_fields: 'course-settings-learning-fields',
                    add_course_learning_info: 'add-course-learning-info',
                    add_course_instructor_info: 'add-course-instructor-info',
-                   course_learning_info: 'course-learning-info'
+                   course_learning_info: 'course-learning-info',
+                   revision_number: 'course-revision-number'
                },
 
                addLearningFields: function() {
@@ -312,7 +315,8 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                        this.updateCertificatesDisplayBehavior();
                        break;
                    case 'course-language':
-                   case 'course-effort':
+                   case 'course-version':
+                   case 'course-revision-number':
                    case 'course-title':
                    case 'course-subtitle':
                    case 'course-duration':

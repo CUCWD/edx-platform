@@ -127,6 +127,7 @@ class CourseOverview(TimeStampedModel):
     self_paced = models.BooleanField(default=False)
     marketing_url = models.TextField(null=True)
     eligible_for_financial_aid = models.BooleanField(default=True)
+    revision_number = models.TextField(null=True)
 
     # Course highlight info, used to guide course update emails
     has_highlights = models.BooleanField(null=True, default=None)  # if None, you have to look up the answer yourself
@@ -243,6 +244,7 @@ class CourseOverview(TimeStampedModel):
 
         course_overview.catalog_visibility = course.catalog_visibility
         course_overview.short_description = CourseDetails.fetch_about_attribute(course.id, 'short_description')
+        course_overview.revision_number = CourseDetails.fetch_about_attribute(course.id, 'revision_number')
         course_overview.effort = CourseDetails.fetch_about_attribute(course.id, 'effort')
         course_overview.course_video_url = CourseDetails.fetch_video_url(course.id)
         course_overview.self_paced = course.self_paced

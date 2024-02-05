@@ -108,6 +108,8 @@ class OutlineTabView(RetrieveAPIView):
                 days_per_week: (int) The number of days the learner wants to learn per week
                 subscribed_to_reminders: (bool) Whether the learner wants email reminders about their goal
             weekly_learning_goal_enabled: Flag indicating if this feature is enabled for this call
+        course_revision: (str) Course revision number used to identify what version number
+            from Instructional design team.
         course_tools: List of serialized Course Tool objects. Each serialization has the following fields:
             analytics_id: (str) The unique id given to the tool.
             title: (str) The display title of the tool.
@@ -329,6 +331,7 @@ class OutlineTabView(RetrieveAPIView):
             'course_blocks': course_blocks,
             'course_goals': course_goals,
             'course_tools': course_tools,
+            'course_revision': course_overview.revision_number,
             'dates_widget': dates_widget,
             'enable_proctored_exams': enable_proctored_exams,
             'enroll_alert': enroll_alert,
