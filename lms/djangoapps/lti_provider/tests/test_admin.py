@@ -14,7 +14,7 @@ class LtiConsumerAdminTests(TestCase):
     """
     Test the customizations applied for the LtiConsumerAdmin
     """
-    def setUp(self):
+    def setUp(self):  # pylint: disable=super-method-not-called
         self.site = AdminSite()
         self.consumer = LtiConsumer(
             consumer_name="Test Consumer",

@@ -17,7 +17,6 @@ from six.moves.urllib.parse import urlencode, urlparse
 
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from lms.djangoapps.courseware.toggles import courseware_mfe_is_active
-from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from xmodule.modulestore.django import modulestore  # lint-amnesty, pylint: disable=wrong-import-order
 from xmodule.modulestore.search import navigation_index, path_to_location  # lint-amnesty, pylint: disable=wrong-import-order
 

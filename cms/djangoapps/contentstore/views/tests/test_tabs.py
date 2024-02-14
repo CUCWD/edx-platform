@@ -88,7 +88,7 @@ class TabsPageTests(CourseTestCase):
         course_tabs.sort(
             key=lambda tab: (100 + random.random())
             if tab.type == "static_tab"
-            else (float("inf") if tab.type == "glossary" else tab.priority)
+            else (float("inf") if tab.type == "badges_progress" else (float("inf") if tab.type == "glossary" else tab.priority))  # pylint: disable=line-too-long
         )
 
         tabs_data = [

@@ -22,7 +22,6 @@ import datetime
 import os
 from os.path import abspath, dirname, join
 
-from os.path import abspath, dirname, join
 import yaml
 from corsheaders.defaults import default_headers as corsheaders_default_headers
 from django.core.exceptions import ImproperlyConfigured
