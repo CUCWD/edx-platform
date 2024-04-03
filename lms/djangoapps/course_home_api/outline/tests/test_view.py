@@ -300,7 +300,7 @@ class OutlineTabTestViews(BaseCourseHomeTests):
         assert response.status_code == 200
 
         exam_data = response.data['course_blocks']['blocks'][str(sequential.location)]
-        assert exam_data['display_name'] == 'Test (2 Questions)'
+        assert exam_data['display_name'] == 'Test'
         assert exam_data['icon'] == 'fa-pencil-square-o'
 
         ungraded_data = response.data['course_blocks']['blocks'][str(sequential2.location)]
