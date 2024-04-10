@@ -535,16 +535,19 @@ class UserProfile(models.Model):
 
     # Optional demographic data we started capturing from Fall 2012
     this_year = datetime.now(UTC).year
-    VALID_YEARS = list(range(this_year, this_year - 120, -1))
+    starting_year = 1923
+    VALID_YEARS = list(range(starting_year, this_year + 1))
     year_of_birth = models.IntegerField(blank=True, null=True, db_index=True)
     GENDER_CHOICES = (
         ('m', gettext_noop('Male')),
         ('f', gettext_noop('Female')),
+        ('nbtg', gettext_noop('Non-binary / third gender')),
         # Translators: 'Other' refers to the student's gender
-        ('o', gettext_noop('Other/Prefer Not to Say'))
+        # ('o', gettext_noop('Self-describe/other')) # TODO - Need to change this option to a freetext input
+        ('prefer-not-to-say', gettext_noop('Prefer not to say'))
     )
     gender = models.CharField(
-        blank=True, null=True, max_length=6, db_index=True, choices=GENDER_CHOICES
+        blank=True, null=True, max_length=25, db_index=True, choices=GENDER_CHOICES
     )
 
     # [03/21/2013] removed these, but leaving comment since there'll still be
@@ -552,22 +555,22 @@ class UserProfile(models.Model):
     # ('p_se', 'Doctorate in science or engineering'),
     # ('p_oth', 'Doctorate in another field'),
     LEVEL_OF_EDUCATION_CHOICES = (
+        ('some-hs', gettext_noop("Some high school")),
+        ('hs', gettext_noop("High School or GED")),
+        ('some-college', gettext_noop("Some college")),
+        ('a', gettext_noop("2-year degree")),
+        ('b', gettext_noop("4-year degree")),
+        ('m', gettext_noop("Master's")),
         ('p', gettext_noop('Doctorate')),
-        ('m', gettext_noop("Master's or professional degree")),
-        ('b', gettext_noop("Bachelor's degree")),
-        ('a', gettext_noop("Associate degree")),
-        ('hs', gettext_noop("Secondary/high school")),
-        ('jhs', gettext_noop("Junior secondary/junior high/middle school")),
-        ('el', gettext_noop("Elementary/primary school")),
-        # Translators: 'None' refers to the student's level of education
-        ('none', gettext_noop("No formal education")),
-        # Translators: 'Other' refers to the student's level of education
-        ('other', gettext_noop("Other education"))
+        ('jd-md', gettext_noop("Professional degree (J.D., M.D.)")),
+        ('prefer-not-to-say', gettext_noop("Prefer not to say")),
     )
+
     level_of_education = models.CharField(
-        blank=True, null=True, max_length=6, db_index=True,
+        blank=True, null=True, max_length=25, db_index=True,
         choices=LEVEL_OF_EDUCATION_CHOICES
     )
+
     mailing_address = models.TextField(blank=True, null=True)
     city = models.TextField(blank=True, null=True)
     country = CountryField(blank=True, null=True)

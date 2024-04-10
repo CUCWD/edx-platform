@@ -85,9 +85,16 @@ class AnnouncementList extends React.Component {
   }
 
   render() {
-    var children = this.state.announcements.map(
+    // Filter announcements based on `props.displayBanner` and what is defined
+    // on the LMS /announcements/page/# REST API result.
+    var filteredAnnouncements = this.state.announcements.filter(announcement => {
+      return (this.props.displayBanner ? announcement.promote_to_banner == true : announcement.promote_to_banner == false);
+    });
+
+    var children = filteredAnnouncements.map(
       (announcement, index) => <Announcement key={index} content={announcement.content} />
     );
+     
     if (this.state.has_prev)
     {
       var prev_button = (
@@ -126,11 +133,21 @@ class AnnouncementList extends React.Component {
 
 
 export default class AnnouncementsView {
-  constructor() {
-    ReactDOM.render(
-      <AnnouncementList />,
-      document.getElementById('announcements'),
-    );
+  constructor(props) {
+    if (props.displayBanner)
+    {
+      ReactDOM.render(
+        <AnnouncementList displayBanner={props.displayBanner} />,
+        document.getElementById('announcements-banner'),
+      );
+    }
+    else
+    {
+      ReactDOM.render(
+        <AnnouncementList displayBanner={props.displayBanner} />,
+        document.getElementById('announcements-sidebar'),
+      );
+    }
     ReactDOM.render(
       <AnnouncementSkipLink />,
       document.getElementById('announcements-skip'),

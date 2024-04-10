@@ -7,10 +7,13 @@ import logging
 
 from django.conf import settings
 from django.http import Http404, HttpResponseBadRequest, HttpResponseForbidden
+from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.decorators.csrf import csrf_exempt
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
+from common.djangoapps.student.models import CourseEnrollment
+from common.djangoapps.course_modes.models import CourseMode
 from common.djangoapps.util.views import add_p3p_header
 from lms.djangoapps.lti_provider.models import LtiConsumer
 from lms.djangoapps.lti_provider.outcomes import store_outcome_parameters
@@ -36,6 +39,7 @@ OPTIONAL_PARAMETERS = [
 
 @csrf_exempt
 @add_p3p_header
+@xframe_options_exempt
 def lti_launch(request, course_id, usage_id):
     """
     Endpoint for all requests to embed edX content via the LTI protocol. This
@@ -89,6 +93,16 @@ def lti_launch(request, course_id, usage_id):
     # Create an edX account if the user identifed by the LTI launch doesn't have
     # one already, and log the edX account into the platform.
     authenticate_lti_user(request, params['user_id'], lti_consumer)
+
+    # This assumes that you call this method when the user has already authenticated and has `Learner` rights.
+    # Using `honor` mode because we need to issue certificates of completion.
+    # We're excluding other roles (e.g. "Instructor") because those accounts will manually
+    # be enrolled on the platform side.
+    log.info(
+        "lti_launch roles %s", params['roles']
+    )
+    if "Learner" in params['roles']:
+        CourseEnrollment.enroll(request.user, course_key, mode=CourseMode.HONOR)
 
     # Store any parameters required by the outcome service in order to report
     # scores back later. We know that the consumer exists, since the record was

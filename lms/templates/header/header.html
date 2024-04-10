@@ -43,6 +43,13 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 % endif
 
 <header class="global-header ${'slim' if course else ''}">
+    % if settings.FEATURES.get('ENABLE_ANNOUNCEMENTS'):
+        <div id="announcements-banner" role="alert" aria-label="Announcements" tabindex="-1"></div>
+
+        <%static:webpack entry="AnnouncementsView">
+        new AnnouncementsView({ displayBanner: true });
+        </%static:webpack>
+    % endif
     % if use_cookie_banner:
         ${static.renderReact(
             component="CookiePolicyBanner",

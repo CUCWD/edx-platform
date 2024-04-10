@@ -88,7 +88,7 @@ class TabsPageTests(CourseTestCase):
         course_tabs.sort(
             key=lambda tab: (100 + random.random())
             if tab.type == "static_tab"
-            else (float("inf") if tab.type == "glossary" else tab.priority)
+            else (float("inf") if tab.type == "badges_progress" else (float("inf") if tab.type == "glossary" else tab.priority))  # pylint: disable=line-too-long
         )
 
         tabs_data = [
@@ -196,7 +196,7 @@ class PrimitiveTabEdit(ModuleStoreTestCase):
         with self.assertRaises(ValueError):
             tabs.primitive_delete(course, 1)
         with self.assertRaises(IndexError):
-            tabs.primitive_delete(course, 7)
+            tabs.primitive_delete(course, 8)  # Increased this to accommodate the Badges Tab by default
 
         assert course.tabs[2] != {'type': 'discussion', 'name': 'Discussion'}
         tabs.primitive_delete(course, 2)

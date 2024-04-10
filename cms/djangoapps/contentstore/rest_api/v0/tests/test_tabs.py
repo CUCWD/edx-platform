@@ -109,10 +109,11 @@ class TabsAPITests(CourseTestCase):
         assert num_orig_tabs >= 5
 
         # Randomize the order of static tabs, leaving the rest intact
+        # course_tabs.sort(key=lambda tab: (100 + random.random()) if tab.type == 'static_tab' else tab.priority)
         course_tabs.sort(
             key=lambda tab: (100 + random.random())
             if tab.type == "static_tab"
-            else (float("inf") if tab.type == "glossary" else tab.priority)
+            else (float("inf") if tab.type == "glossary" else (float("inf") if tab.type == "badges_progress" else tab.priority))  # pylint: disable=line-too-long
         )
 
         tabs_data = [

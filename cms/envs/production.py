@@ -11,7 +11,6 @@ import codecs
 import copy
 import os
 import warnings
-
 from os.path import abspath, dirname, join
 import yaml
 

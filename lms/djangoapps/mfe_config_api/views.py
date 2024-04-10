@@ -2,14 +2,13 @@
 MFE API Views for useful information related to mfes.
 """
 
-# import json
 import logging
 import re
 
 from django.conf import settings
 from django.http import HttpResponseNotFound, JsonResponse
-# from django.utils.decorators import method_decorator
-# from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator  # pylint: disable=unused-import
+from django.views.decorators.cache import cache_page  # pylint: disable=unused-import
 from rest_framework import status
 from rest_framework.views import APIView
 
@@ -84,7 +83,8 @@ class MFEConfigView(APIView):
                             mfe = str(request.query_params.get('mfe')).upper()
 
                             mfe_config.update(configuration.get_value(
-                                f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {})))
+                                f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {}))
+                            )
 
                         # Exit out of the loop once you find first correct
                         # MFE_CONFIG in Site Configuration.

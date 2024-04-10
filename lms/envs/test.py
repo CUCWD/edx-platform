@@ -638,6 +638,26 @@ SAVE_FOR_LATER_EMAIL_RATE_LIMIT = '5/m'
 # Tests are not behind any proxies
 CLOSEST_CLIENT_IP_FROM_HEADERS = []
 
+################## MFE API ####################
+ENABLE_MFE_CONFIG_API = True
+MFE_CONFIG = {
+    "BASE_URL": "https://name_of_mfe.example.com",
+    "LANGUAGE_PREFERENCE_COOKIE_NAME": "example-language-preference",
+    "LOGO_URL": "https://courses.example.com/logo.png"
+}
+
+MFE_CONFIG_MYMFE = {
+    "LANGUAGE_PREFERENCE_COOKIE_NAME": "mymfe-language-preference",
+    "LOGO_URL": "https://courses.example.com/mymfe-logo.png"
+}
+
+################################ FORMS ################################
+
+# Install custom reg form since this is a requirement to Qualtrics Survey XBlock.
+INSTALLED_APPS.append('custom_reg_form')
+
+# Set the location of the form extra info.
+REGISTRATION_EXTENSION_FORM = 'custom_reg_form.forms.ExtraInfoForm'
 #################### OpenBadges Settings #######################
 
 # FEATURES['ENABLE_OPENBADGES'] = True

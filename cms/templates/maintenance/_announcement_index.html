@@ -18,13 +18,22 @@ from openedx.core.djangolib.markup import HTML, Text
                     </div>
 
                     <div class="actions-list">
-                        <span>
-                          % if announcement.active:
-                            Active <span class="icon fa fa-check-square-o" aria-hidden="true" />
-                          % else:
-                            Inactive <span class="icon fa fa-square-o" aria-hidden="true" />
-                          % endif
-                        </span>
+                        <div>
+                          <span>
+                            % if announcement.active:
+                              Active <span class="icon fa fa-check-square-o" aria-hidden="true" />
+                            % else:
+                              Inactive <span class="icon fa fa-square-o" aria-hidden="true" />
+                            % endif
+                          </span>
+                          <span>
+                            % if announcement.promote_to_banner:
+                              Banner Displayed <span class="icon fa fa-check-square-o" aria-hidden="true" />
+                            % else:
+                              Not In Banner <span class="icon fa fa-square-o" aria-hidden="true" />
+                            % endif
+                          </span>
+                        </div>
                         <a class="action-item announcement-edit"
                           href="${ reverse('maintenance:announcement_edit', kwargs={'pk': announcement.pk}) }">
                             <button class="btn-default">Edit</button>

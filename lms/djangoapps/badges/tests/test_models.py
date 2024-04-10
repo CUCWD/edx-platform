@@ -126,7 +126,7 @@ class BadgeClassTest(ModuleStoreTestCase):
         """
         Verify that the course_id is used in fetching existing badges or creating new ones.
         """
-        course_key = CourseFactory.create().location.course_key
+        course_key = CourseFactory.create(metadata={'issue_badges': True}).location.course_key
         premade_badge_class = BadgeClassFactory.create(course_id=course_key)
         badge_class = BadgeClass.get_badge_class(
             slug='test_slug', issuing_component='test_component', description='Attempted override',
@@ -270,7 +270,7 @@ class BadgeAssertionTest(ModuleStoreTestCase):
         """
         user = UserFactory()
         assertions = [BadgeAssertionFactory.create(user=user).id for _i in range(3)]
-        course = CourseFactory.create()
+        course = CourseFactory.create(metadata={'issue_badges': True})
         course_key = course.location.course_key
         course_badges = [RandomBadgeClassFactory(course_id=course_key) for _i in range(3)]
         course_assertions = [

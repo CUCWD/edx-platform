@@ -34,6 +34,7 @@ class LtiConsumer(models.Model):
     consumer_key = models.CharField(max_length=32, unique=True, db_index=True, default=short_token)
     consumer_secret = models.CharField(max_length=32, unique=True, default=short_token)
     instance_guid = CharNullField(max_length=255, blank=True, null=True, unique=True)
+    auto_link_users_using_email = models.BooleanField(blank=True, default=False)
 
     @staticmethod
     def get_or_supplement(instance_guid, consumer_key):
@@ -140,7 +141,7 @@ class LtiUser(models.Model):
     """
     lti_consumer = models.ForeignKey(LtiConsumer, on_delete=models.CASCADE)
     lti_user_id = models.CharField(max_length=255)
-    edx_user = models.OneToOneField(User, on_delete=models.CASCADE)
+    edx_user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
         unique_together = ('lti_consumer', 'lti_user_id')
