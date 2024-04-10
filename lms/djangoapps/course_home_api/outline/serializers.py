@@ -2,6 +2,7 @@
 Outline Tab Serializers.
 """
 
+from django.conf import settings  # lint-amnesty, pylint: disable=wrong-import-order
 from django.utils.translation import ngettext
 from rest_framework import serializers
 
@@ -28,7 +29,8 @@ class CourseBlockSerializer(serializers.Serializer):
         num_graded_problems = block.get('num_graded_problems', 0)
         scored = block.get('scored')
 
-        if num_graded_problems and block_type == 'sequential':
+        if (settings.FEATURES.get('ENABLE_COURSEWARE_OUTLINE_QUESTION_COUNT') and
+            num_graded_problems and block_type == 'sequential'):
             questions = ngettext('({number} Question)', '({number} Questions)', num_graded_problems)
             display_name += ' ' + questions.format(number=num_graded_problems)
 
@@ -39,6 +41,12 @@ class CourseBlockSerializer(serializers.Serializer):
             description = block['special_exam_info'].get('short_description')
             icon = block['special_exam_info'].get('suggested_icon', 'fa-pencil-square-o')
 
+        effort_activities = None
+        effort_time = None
+        if settings.FEATURES.get('ENABLE_COURSEWARE_OUTLINE_EFFORT_ESTIMATES'):
+            effort_activities = block.get('effort_activities')
+            effort_time = block.get('effort_time')
+
         serialized = {
             block_key: {
                 'badge_progress': block.get('badge_progress', False),
@@ -47,8 +55,8 @@ class CourseBlockSerializer(serializers.Serializer):
                 'description': description,
                 'display_name': display_name,
                 'due': block.get('due'),
-                'effort_activities': block.get('effort_activities'),
-                'effort_time': block.get('effort_time'),
+                'effort_activities': effort_activities,
+                'effort_time': effort_time,
                 'icon': icon,
                 'id': block_key,
                 'lms_web_url': block['lms_web_url'] if enable_links else None,
