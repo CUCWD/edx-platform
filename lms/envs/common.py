@@ -518,6 +518,12 @@ FEATURES = {
     # .. toggle_tickets: https://openedx.atlassian.net/browse/OSPR-1320
     'ENABLE_COMBINED_LOGIN_REGISTRATION_FOOTER': False,
 
+    # Enable courseware outline question count
+    'ENABLE_COURSEWARE_OUTLINE_QUESTION_COUNT': False,
+
+    # Enable courseware outline effort estimates
+    'ENABLE_COURSEWARE_OUTLINE_EFFORT_ESTIMATES': False,
+
     # Enable organizational email opt-in
     'ENABLE_MKTG_EMAIL_OPT_IN': False,
 
