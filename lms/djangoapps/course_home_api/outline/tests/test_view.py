@@ -279,6 +279,8 @@ class OutlineTabTestViews(BaseCourseHomeTests):
         assert exam_data['due'] is not None
         assert exam_data['icon'] == 'fa-foo-bar'
 
+    @patch.dict('django.conf.settings.FEATURES', {'ENABLE_COURSEWARE_OUTLINE_QUESTION_COUNT': True})
+    @patch.dict('django.conf.settings.FEATURES', {'ENABLE_COURSEWARE_OUTLINE_EFFORT_ESTIMATES': True})
     def test_assignment(self):
         course = CourseFactory.create()
         with self.store.bulk_operations(course.id):
