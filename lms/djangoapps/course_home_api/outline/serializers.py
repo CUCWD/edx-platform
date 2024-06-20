@@ -20,7 +20,7 @@ class CourseBlockSerializer(serializers.Serializer):
     def get_blocks(self, block):  # pylint: disable=missing-function-docstring
         block_key = block['id']
         block_type = block['type']
-        children = block.get('children', []) if block_type != 'sequential' else []  # Don't descend past sequential
+        children = block.get('children', []) if block_type != 'vertical' else []  # Don't descend past vertical
         description = block.get('format')
         display_name = block['display_name']
         enable_links = self.context.get('enable_links')
@@ -30,7 +30,7 @@ class CourseBlockSerializer(serializers.Serializer):
         scored = block.get('scored')
 
         if (settings.FEATURES.get('ENABLE_COURSEWARE_OUTLINE_QUESTION_COUNT') and
-                num_graded_problems and block_type == 'sequential'):
+                num_graded_problems and block_type == 'vertical'):
             questions = ngettext('({number} Question)', '({number} Questions)', num_graded_problems)
             display_name += ' ' + questions.format(number=num_graded_problems)
 
