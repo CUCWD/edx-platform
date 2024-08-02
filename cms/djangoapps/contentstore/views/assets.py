@@ -30,10 +30,12 @@ from xmodule.exceptions import NotFoundError
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
+from ..asset_storage_handlers import get_asset_usage_path_json
 from ..exceptions import AssetNotFoundException, AssetSizeTooLargeException
 from ..utils import reverse_course_url
 
-__all__ = ['assets_handler']
+
+__all__ = ['assets_handler', 'asset_usage_path_handler']
 
 REQUEST_DEFAULTS = {
     'page': 0,
@@ -362,6 +364,13 @@ def _get_assets_in_json_format(assets, course_key):
         assets_in_json_format.append(asset_in_json)
 
     return assets_in_json_format
+
+
+@login_required
+@ensure_csrf_cookie
+def asset_usage_path_handler(request, course_key_string, asset_key_string):
+    """returns json of locations of assets used in a course."""
+    return get_asset_usage_path_json(request, course_key_string, asset_key_string)
 
 
 def update_course_run_asset(course_key, upload_file):
