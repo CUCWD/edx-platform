@@ -37,6 +37,7 @@ define(['backbone', 'underscore', 'gettext', 'js/models/validation_helpers', 'js
                 learning_info: [],
                 instructor_info: {},
                 self_paced: null,
+                course_institution: '',
                 revision_number: ''
             },
 

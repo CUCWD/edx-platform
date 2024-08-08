@@ -31,6 +31,7 @@ ABOUT_ATTRIBUTES = [
     'entrance_exam_id',
     'entrance_exam_minimum_score_pct',
     'about_sidebar_html',
+    'course_institution',
     'revision_number',
 ]
 
@@ -71,6 +72,7 @@ class CourseDetails:
         self.video_thumbnail_image_name = ""
         self.video_thumbnail_image_asset_path = ""
         self.pre_requisite_courses = []  # pre-requisite courses
+        self.course_institution = ""  # course institution
         self.entrance_exam_enabled = ""  # is entrance exam enabled
         self.entrance_exam_id = ""  # the content location for the entrance exam
         self.entrance_exam_minimum_score_pct = settings.FEATURES.get(

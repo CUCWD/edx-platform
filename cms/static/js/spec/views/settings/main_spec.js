@@ -51,6 +51,7 @@ define([
                     instructors: [{name: '', title: '', organization: '', image: '', bio: ''}]
                 },
                 self_paced: false,
+                course_institution: '',
                 revision_number: ''
             },
 
@@ -193,6 +194,19 @@ define([
             });
             $('#course-language').val('en').trigger('change');
             expect(this.model.get('language')).toEqual('en');
+            this.view.saveView();
+            AjaxHelpers.expectJsonRequest(
+                requests, 'POST', urlRoot, expectedJson
+            );
+        });
+
+        it('should save institution as part of course details', function() {
+            var requests = AjaxHelpers.requests(this);
+            var expectedJson = $.extend(true, {}, modelData, {
+                course_institution: ''
+            });
+            $('#course-institution').val('').trigger('change');
+            expect(this.model.get('course_institution')).toEqual('');
             this.view.saveView();
             AjaxHelpers.expectJsonRequest(
                 requests, 'POST', urlRoot, expectedJson
