@@ -561,6 +561,75 @@
       }
     }
 
+    .program-survey {
+      box-shadow: 3px 3px 10px -3px grey;
+
+      border: 1px solid theme-color("secondary");
+      border-radius: 3px;
+      padding: 30px;
+      margin-bottom: 30px;
+
+      .program-survey-header {
+        @extend %t-title4;
+
+        @include padding-right($baseline/2);
+      }
+
+      .program-details {
+        color: $gray;
+        margin-bottom: lh();
+        line-height: 1.3em;
+      }
+
+      .survey-details-wrapper {
+        margin-top: 30px;
+        column-count: 2;
+        column-width: auto;
+
+        .survey-wrapper {
+
+          margin-right: 50px;
+          
+          hr {
+            @extend .faded-hr-divider-medium;
+          }
+
+          .survey-title {
+            @extend %t-title5;
+
+            font-weight: 600;
+            @include padding-right($baseline/2);
+          }
+
+          .survey-instructions {
+            font: -apple-system-short-subheadline !important;
+            color: $gray-d1;
+            font-weight: 600;
+
+            @extend %t-title7;
+
+            display: inline-block;
+          }
+
+          .survey-details {
+            @extend %t-title7;
+
+            color: $gray-d1;
+            margin-bottom: lh();
+            line-height: 1.3em;
+          }
+
+          .provide-feedback-btn {
+            font: -apple-system-short-subheadline !important;
+    
+            @extend %btn-primary-blue;
+    
+            margin-top: $baseline;
+          }
+        }
+      }
+    }
+
     // Responsive behavior
     @include media-breakpoint-down(md) {
       padding: $baseline;
