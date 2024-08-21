@@ -8,31 +8,21 @@ from common.djangoapps.student.models import AnonymousUserId
 
 <%namespace name='static' file='../static_content.html'/>
 
+<!-- Ensure that program surveys are only shown to learners who are enrolled in courses from CA organization -->
 <% show_program_survey = False
 course_institution = ''%>
 % for enrollment in course_enrollments:
 <% course_overview = CourseOverview.get_from_id(enrollment.course_id) %>
-% if course_overview.org == "CUCWD":
+% if course_overview.org == "CA":
 <% show_program_survey = True %>
     % if course_overview.course_institution:
     <% course_institution = course_overview.course_institution %>
+    <% break %>
     % endif
 % endif
 % endfor
 
-<!-- What is needed for qualtrics url pass:
-     course_overview.org
-     course_overview.course_institution
-     user.username
-     user.email
-     course_institution = OrganizationInstitution.get(short_name=course_overview.course_institution)
-     course_institution.short_name
-     course_institution.name
-     course_institution.city
-     course_institution.state
-     course_institution.zipcode
--->
-
+<!-- If program surveys are being shown to learner, start building strings to pass organization and institution information to qualtrics -->
 % if show_program_survey:
 <% course_institution = OrganizationInstitution.get_by_shortname(short_name=course_overview.course_institution)
 %>
@@ -68,7 +58,7 @@ org_institution_zipcode_string = "org_institution_zipcode=" + course_institution
             <hr>
             <p class="survey-instructions">Answer this survey prior to taking any course content</p>
             <p class="survey-details">This will help us understand your career awareness and interest, gauge where you are with FAA General maintenance knowledge and skill confidence, career plans, and demographic information.</p>
-            <a class="provide-feedback-btn" href="https://clemson.yul1.qualtrics.com/jfe/preview/previewId/bd5378b8-6946-4afe-b865-ccd3c38f791a/SV_3C2RY5TuB0uIZ70?Q_CHL=preview&Q_SurveyVersionID=current&display_meta=1&${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
+            <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_3C2RY5TuB0uIZ70?${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
                 Provide Feedback</a>
         </div>
 
@@ -77,7 +67,7 @@ org_institution_zipcode_string = "org_institution_zipcode=" + course_institution
             <hr>
             <p class="survey-instructions">Answer this survey after you have completed most of this program's courses</p>
             <p class="survey-details">This will help us understand your completion of FAA General maintenance program, career awareness and interest, kwowledge and skill confidence, and demographic information.</p>
-            <a class="provide-feedback-btn" href="https://clemson.yul1.qualtrics.com/jfe/preview/previewId/bd5378b8-6946-4afe-b865-ccd3c38f791a/SV_3C2RY5TuB0uIZ70?Q_CHL=preview&Q_SurveyVersionID=current&display_meta=1&${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
+            <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_1Al5SpJgWVv6bFI?${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
             Provide Feedback</a>
         </div>
     </div>
