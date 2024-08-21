@@ -8,79 +8,68 @@ from common.djangoapps.student.models import AnonymousUserId
 
 <%namespace name='static' file='../static_content.html'/>
 
-<% show_program_survey = False
-course_institution = ''%>
-% for enrollment in course_enrollments:
-<% course_overview = CourseOverview.get_from_id(enrollment.course_id) %>
-% if course_overview.org == "CUCWD":
-<% show_program_survey = True %>
-    % if course_overview.course_institution:
-    <% course_institution = course_overview.course_institution %>
-    % endif
-% endif
-% endfor
+<!-- Ensure that program surveys are only shown to learners who are enrolled in courses from CA organization -->
+<% 
+show_program_survey = False
+course_institution = ''
 
-<!-- What is needed for qualtrics url pass:
-     course_overview.org
-     course_overview.course_institution
-     user.username
-     user.email
-     course_institution = OrganizationInstitution.get(short_name=course_overview.course_institution)
-     course_institution.short_name
-     course_institution.name
-     course_institution.city
-     course_institution.state
-     course_institution.zipcode
--->
+for enrollment in course_enrollments:
+    course_overview = CourseOverview.get_from_id(enrollment.course_id)
+    if course_overview.org == "CA":
+        show_program_survey = True
 
+        if course_overview.course_institution:
+            course_institution = course_overview.course_institution
+            break
+%>
+
+<!-- If program surveys are being shown to learner, start building strings to pass organization and institution information to qualtrics -->
 % if show_program_survey:
-<% course_institution = OrganizationInstitution.get_by_shortname(short_name=course_overview.course_institution)
-%>
-    % if user.is_anonymous:
-    <% anonymous_user_id = user.id %>
-    % else:
-    <% 
-    anonymous_user_id = AnonymousUserId.objects.filter(user=user).order_by('-id')
-    anonymous_user_id = anonymous_user_id[0].anonymous_user_id 
+    <%
+        course_institution = OrganizationInstitution.get_by_shortname(short_name=course_overview.course_institution)
+
+        if user.is_anonymous:
+            anonymous_user_id = user.id
+        else: 
+            anonymous_user_id = AnonymousUserId.objects.filter(user=user, course_id=None).order_by('-id')
+            anonymous_user_id = anonymous_user_id[0].anonymous_user_id 
+
+        platform_anonymous_user_id_string = "platform_anonymous_user_id=" + (anonymous_user_id or "")
+        username_string = "platform_username=" + (user.username or "")
+        user_email_string = "platform_email=" + (user.email or "")
+        org_institution_name_string = "org_institution_name=" + (course_institution.name or "")
+        org_institution_shortname_string = "org_institution_short_name=" + (course_institution.short_name or "")
+        org_institution_city_string = "org_institution_city=" + (course_institution.city or "")
+        org_institution_state_string = "org_institution_state=" + (course_institution.state or "")
+        org_institution_zipcode_string = "org_institution_zipcode=" + (course_institution.zipcode or "")
     %>
-    % endif
-<% platform_anonymous_user_id_string = "platform_anonymous_user_id=" + anonymous_user_id
-username_string = "platform_username=" + user.username
-user_email_string = "platform_email=" + user.email
-org_institution_name_string = "org_institution_name=" + course_institution.name
-org_institution_shortname_string = "org_institution_short_name=" + course_institution.short_name
-org_institution_city_string = "org_institution_city=" + course_institution.city
-org_institution_state_string = "org_institution_state=" + course_institution.state
-org_institution_zipcode_string = "org_institution_zipcode=" + course_institution.zipcode
-%>
 
-<div class="program-survey">
-    <h2 class="program-survey-header">
-        Aviation Mechanic General
-    </h2>
-    <div class="program-details">
-        <p>This program of courses equips learners for entry into the FAA mechanic pathway. Upon completion, they gain foundational knowledge in mathematics, aircraft drawings, weight and balance, aircraft materials, processes and tools, physics, electricity, inspection, ground operations, and FAA regulations governing maintenance technician certification and work.</p>
-    </div>
+    <div class="program-survey">
+        <h2 class="program-survey-header">
+            Aviation Mechanic General
+        </h2>
+        <div class="program-details">
+            <p>This program of courses equips learners for entry into the FAA mechanic pathway. Upon completion, they gain foundational knowledge in mathematics, aircraft drawings, weight and balance, aircraft materials, processes and tools, physics, electricity, inspection, ground operations, and FAA regulations governing maintenance technician certification and work.</p>
+        </div>
 
-    <div class="survey-details-wrapper">
-        <div class="survey-wrapper">
-            <h2 class="survey-title">Pre-Program Survey</h2>
-            <hr>
-            <p class="survey-instructions">Answer this survey prior to taking any course content</p>
-            <p class="survey-details">This will help us understand your career awareness and interest, gauge where you are with FAA General maintenance knowledge and skill confidence, career plans, and demographic information.</p>
-            <a class="provide-feedback-btn" href="https://clemson.yul1.qualtrics.com/jfe/preview/previewId/bd5378b8-6946-4afe-b865-ccd3c38f791a/SV_3C2RY5TuB0uIZ70?Q_CHL=preview&Q_SurveyVersionID=current&display_meta=1&${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
+        <div class="survey-details-wrapper">
+            <div class="survey-wrapper">
+                <h2 class="survey-title">Pre-Program Survey</h2>
+                <hr>
+                <p class="survey-instructions">Answer this survey prior to taking any course content</p>
+                <p class="survey-details">This will help us understand your career awareness and interest, gauge where you are with FAA General maintenance knowledge and skill confidence, career plans, and demographic information.</p>
+                <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_3C2RY5TuB0uIZ70?${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
+                    Provide Feedback</a>
+            </div>
+
+            <div class="survey-wrapper">
+                <h2 class="survey-title">Post-Program Survey</h2>
+                <hr>
+                <p class="survey-instructions">Answer this survey after you have completed most of this program's courses</p>
+                <p class="survey-details">This will help us understand your completion of FAA General maintenance program, career awareness and interest, kwowledge and skill confidence, and demographic information.</p>
+                <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_1Al5SpJgWVv6bFI?${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
                 Provide Feedback</a>
-        </div>
-
-        <div class="survey-wrapper">
-            <h2 class="survey-title">Post-Program Survey</h2>
-            <hr>
-            <p class="survey-instructions">Answer this survey after you have completed most of this program's courses</p>
-            <p class="survey-details">This will help us understand your completion of FAA General maintenance program, career awareness and interest, kwowledge and skill confidence, and demographic information.</p>
-            <a class="provide-feedback-btn" href="https://clemson.yul1.qualtrics.com/jfe/preview/previewId/bd5378b8-6946-4afe-b865-ccd3c38f791a/SV_3C2RY5TuB0uIZ70?Q_CHL=preview&Q_SurveyVersionID=current&display_meta=1&${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
-            Provide Feedback</a>
+            </div>
         </div>
     </div>
-</div>
-
 % endif
