@@ -15,6 +15,7 @@ from cms.djangoapps.contentstore.courseware_index import (
     CoursewareSearchIndexer,
     LibrarySearchIndexer,
 )
+from cms.djangoapps.contentstore.estimated_time import (get_estimated_time)
 from common.djangoapps.track.event_transaction_utils import get_event_transaction_id, get_event_transaction_type
 from common.djangoapps.util.module_utils import yield_dynamic_descriptor_descendants
 from lms.djangoapps.grades.api import task_compute_all_grades_for_course
@@ -71,12 +72,14 @@ def listen_for_course_publish(sender, course_key, **kwargs):  # pylint: disable=
     if settings.COURSEGRAPH_DUMP_COURSE_ON_PUBLISH:
         # Push the course out to CourseGraph asynchronously.
         dump_course_to_neo4j.delay(course_key_str)
-
+    
     # Finally, call into the course search subsystem
     # to kick off an indexing action
     if CoursewareSearchIndexer.indexing_is_enabled() and CourseAboutSearchIndexer.indexing_is_enabled():
         update_search_index.delay(course_key_str, datetime.now(UTC).isoformat())
 
+    get_estimated_time(modulestore(), course_key)
+    # print("Came from publish")
     update_discussions_settings_from_course_task.delay(course_key_str)
 
 

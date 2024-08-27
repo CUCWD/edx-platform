@@ -340,7 +340,7 @@ class XModuleFields:
         default=None
     )
     estimated_time = RelativeTime(
-        display_name=_("Estimated Time"),
+        display_name=_("Estimated Time test"),
         help=_("The estimated time to complete this component. Formatted as HH:MM:SS. The maximum value is 23:59:59."),
         scope=Scope.settings,
         default=datetime.timedelta(seconds=60)
