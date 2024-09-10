@@ -4,6 +4,7 @@
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from organizations.models import OrganizationInstitution
 from common.djangoapps.student.models import AnonymousUserId
+from custom_reg_form.models import ExtraInfo
 %>
 
 <%namespace name='static' file='../static_content.html'/>
@@ -36,12 +37,19 @@ for enrollment in course_enrollments:
 
         platform_anonymous_user_id_string = "platform_anonymous_user_id=" + (anonymous_user_id or "")
         username_string = "platform_username=" + (user.username or "")
+        platform_fullname = "platform_fullname=" + (user.profile.name or "")
         user_email_string = "platform_email=" + (user.email or "")
         org_institution_name_string = "org_institution_name=" + (course_institution.name or "")
         org_institution_shortname_string = "org_institution_short_name=" + (course_institution.short_name or "")
         org_institution_city_string = "org_institution_city=" + (course_institution.city or "")
         org_institution_state_string = "org_institution_state=" + (course_institution.state or "")
         org_institution_zipcode_string = "org_institution_zipcode=" + (course_institution.zipcode or "")
+        try:
+            demographic_zipcode = "demographic_zipcode=" + (ExtraInfo.objects.get(user_id=user.id).zipcode or "")
+        except:
+            demographic_zipcode = "demographic_zipcode="
+        demographic_country = "demographic_country=" + (str(user.profile.country) or "")
+        program_name = "program_name=" + "Aviation Mechanic General"
     %>
 
     <div class="program-survey">
@@ -58,7 +66,7 @@ for enrollment in course_enrollments:
                 <hr>
                 <p class="survey-instructions">Answer this survey prior to taking any course content</p>
                 <p class="survey-details">This will help us understand your career awareness and interest, gauge where you are with FAA General maintenance knowledge and skill confidence, career plans, and demographic information.</p>
-                <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_3C2RY5TuB0uIZ70?${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
+                <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_3C2RY5TuB0uIZ70?${username_string}&${platform_fullname}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}&${demographic_zipcode}&${demographic_country}&${program_name}">
                     Provide Feedback</a>
             </div>
 
@@ -67,7 +75,7 @@ for enrollment in course_enrollments:
                 <hr>
                 <p class="survey-instructions">Answer this survey after you have completed most of this program's courses</p>
                 <p class="survey-details">This will help us understand your completion of FAA General maintenance program, career awareness and interest, kwowledge and skill confidence, and demographic information.</p>
-                <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_1Al5SpJgWVv6bFI?${username_string}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}">
+                <a class="provide-feedback-btn" href="https://clemson.qualtrics.com/jfe/form/SV_1Al5SpJgWVv6bFI?${username_string}&${platform_fullname}&${user_email_string}&${platform_anonymous_user_id_string}&${org_institution_name_string}&${org_institution_shortname_string}&${org_institution_city_string}&${org_institution_state_string}&${org_institution_zipcode_string}&${demographic_zipcode}&${demographic_country}&${program_name}">
                 Provide Feedback</a>
             </div>
         </div>
