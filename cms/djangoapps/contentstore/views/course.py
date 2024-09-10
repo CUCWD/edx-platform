@@ -31,7 +31,7 @@ from milestones import api as milestones_api
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from opaque_keys.edx.locator import BlockUsageLocator
-from organizations.api import add_organization_course, ensure_organization
+from organizations.api import add_organization_course, ensure_organization, get_course_organization, get_organization_institutions
 from organizations.exceptions import InvalidOrganizationException
 from rest_framework.exceptions import ValidationError
 
@@ -1184,6 +1184,11 @@ def settings_handler(request, course_key_string):  # lint-amnesty, pylint: disab
                 'upgrade_deadline': upgrade_deadline,
                 'mfe_proctored_exam_settings_url': get_proctored_exam_settings_url(course_module.id),
             }
+
+            course_org = get_course_organization(course_key)
+            institutions = get_organization_institutions(course_org)
+            settings_context.update({'possible_organization_institutions': list(institutions)})
+
             if is_prerequisite_courses_enabled():
                 courses, in_process_course_actions = get_courses_accessible_to_user(request)
                 # exclude current course from the list of available courses

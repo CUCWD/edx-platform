@@ -77,6 +77,7 @@ class CourseOverview(TimeStampedModel):
     display_name = TextField(null=True)
     display_number_with_default = TextField()
     display_org_with_default = TextField()
+    course_institution = TextField(null=True)
 
     start = DateTimeField(null=True)
     end = DateTimeField(null=True)
@@ -204,6 +205,7 @@ class CourseOverview(TimeStampedModel):
         course_overview.display_name = display_name
         course_overview.display_number_with_default = course.display_number_with_default
         course_overview.display_org_with_default = course.display_org_with_default
+        course_overview.course_institution = CourseDetails.fetch_about_attribute(course.id, 'course_institution')
 
         course_overview.start = start
         course_overview.end = end
