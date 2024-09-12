@@ -7,7 +7,6 @@
 
 
 import mimetypes
-
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotFound, HttpResponseServerError
 from django.shortcuts import redirect
@@ -22,7 +21,7 @@ from common.djangoapps.edxmako.shortcuts import render_to_response, render_to_st
 from common.djangoapps.util.cache import cache_if_anonymous
 from common.djangoapps.util.views import fix_crum_request
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
-
+from openedx.features.termsofservice import views as tos_views
 valid_templates = []
 
 if settings.STATIC_GRAB:
@@ -59,6 +58,11 @@ def render(request, template):
         # This is necessary for the dialog presented with the TOS in /register
         if template == 'honor.html':
             context['allow_iframing'] = True
+
+        if settings.FEATURES.get('ENABLE_TERMSOFSERVICE'):
+            latest_tos_html = tos_views.latest_terms_of_service()
+            context['tos_html'] = latest_tos_html
+
         # Format Examples: static_template_about_header
         configuration_base = 'static_template_' + template.replace('.html', '').replace('-', '_')
         page_header = configuration_helpers.get_value(configuration_base + '_header')

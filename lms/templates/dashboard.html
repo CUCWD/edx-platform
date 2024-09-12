@@ -397,3 +397,12 @@ from common.djangoapps.student.models import CourseEnrollment
 </div>
 
 <%include file="dashboard/_dashboard_entitlement_unenrollment_modal.html"/>
+
+<%include file="dashboard/_dashboard_entitlement_unenrollment_modal.html"/>
+
+% if settings.FEATURES.get('ENABLE_TERMSOFSERVICE'):
+    <%include file='termsofservice/modal_termsofservice.html' />
+% endif
+
+
+
