@@ -29,6 +29,8 @@ from path import Path as path
 
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.xml_exporter import export_course_to_xml
+from xmodule.modulestore.imscc_exporter import export_course_to_imscc
+
 
 
 class Command(BaseCommand):
@@ -40,6 +42,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('course_id')
         parser.add_argument('--output')
+        parser.add_argument('--cc-lti', action = 'store_true', help = 'Run the command with Common Cartridge format')
 
     def handle(self, *args, **options):
         course_id = options['course_id']
@@ -58,7 +61,8 @@ class Command(BaseCommand):
             filename = mktemp()
             pipe_results = True
 
-        export_course_to_tarfile(course_key, filename)
+        cc_lti = options.get('cc_lti', False)
+        export_course_to_tarfile(course_key, filename, cc_lti)
 
         results = self._get_results(filename) if pipe_results else b''
 
@@ -78,17 +82,22 @@ class Command(BaseCommand):
         return results
 
 
-def export_course_to_tarfile(course_key, filename):
+def export_course_to_tarfile(course_key, filename, cc_lti):
+    # test for --cc-lti flag functionality it works
+    if cc_lti:
+        print("CC_LTI")
+    else:
+        print("NO CC_LTI")
     """Exports a course into a tar.gz file"""
     tmp_dir = mkdtemp()
     try:
-        course_dir = export_course_to_directory(course_key, tmp_dir)
+        course_dir = export_course_to_directory(course_key, tmp_dir, cc_lti)
         compress_directory(course_dir, filename)
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def export_course_to_directory(course_key, root_dir):
+def export_course_to_directory(course_key, root_dir, cc_lti):
     """Export course into a directory"""
     store = modulestore()
     course = store.get_course(course_key)
@@ -102,7 +111,10 @@ def export_course_to_directory(course_key, root_dir):
     course_dir = replacement_char.join([course.id.org, course.id.course, course.id.run])
     course_dir = re.sub(r'[^\w\.\-]', replacement_char, course_dir)
 
-    export_course_to_xml(store, None, course.id, root_dir, course_dir)
+    if cc_lti:
+        export_course_to_imscc(store, None, course.id, root_dir, course_dir)
+    else:
+        export_course_to_xml(store, None, course.id, root_dir, course_dir)
 
     export_dir = path(root_dir) / course_dir
     return export_dir
