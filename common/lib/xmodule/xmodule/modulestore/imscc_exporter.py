@@ -32,6 +32,31 @@ DEFAULT_CONTENT_FIELDS = ['metadata', 'data']
 def create_uuid():
     return 'g' + (str(uuid.uuid4())).replace('-', '')
 
+def get_total_score(sequential):
+    total_score = 0
+    
+    # Get the direct children of the sequential
+    children = sequential.get_children()
+    
+    for child in children:
+        try:
+            # Check if the child has a score and add it
+            score = child.get_score()
+            print("max score rtest")
+            print(child.max_score())
+            if score is not None:
+                print(getattr(child, 'display_name'))
+                print(score)
+                print(getattr(child, 'max_score'))
+                total_score += score[1]
+        except NotImplementedError:
+            # Handle the case where get_score is not implemented
+            print(f"Score not implemented for child: {child}")
+        
+        # Recursively get the score from the child's children
+        total_score += get_total_score(child)
+    
+    return total_score
 class TestExportManager:
     """
     Manages XML exporting for courselike objects.
@@ -52,7 +77,10 @@ class TestExportManager:
         self.root_dir = root_dir
         self.target_dir = str(target_dir)
 
-        self.course_settings_identifier = None
+        self.sequential_to_identifier = {}
+        self.sequential_to_identifierref = {}
+        self.assignment_group_to_identifier = {}
+        self.external_tool_identifierref = create_uuid()
 
     def get_key(self):
         """
@@ -99,13 +127,14 @@ class TestExportManager:
 
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
-                
+        
         position = 1
         # Accessing each asignment type with their weight
         for grade in courselike.grading_policy['GRADER']:
             grade_name = grade['type']
             grade_weight = grade['weight'] * 100 # openedx uses 0-1 grading weight, imscc uses 0-100
-            assignment_group = lxml.etree.SubElement(root, 'assignmentGroup', {'identifier': create_uuid()})
+            self.assignment_group_to_identifier[grade_name] = create_uuid()
+            assignment_group = lxml.etree.SubElement(root, 'assignmentGroup', {'identifier': str(self.assignment_group_to_identifier[grade_name])})
             lxml.etree.SubElement(assignment_group, 'title').text = 'EW - ' + grade_name
             lxml.etree.SubElement(assignment_group, 'position').text = str(position)
             position += 1
@@ -199,7 +228,46 @@ class TestExportManager:
             tree = lxml.etree.ElementTree(root)
             tree.write(media_tracks_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
-    def write_imsmanifest_xml(self, export_fs, modulestore, courselike_key):
+    def export_assignment_folders(self, modulestore, courselike_key, courselike, export_fs):
+        sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
+        
+        # parse out non assignments
+        assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
+        only_assignments = (sequential for sequential in sequential_modules if getattr(sequential, 'format') in assignment_types)
+        
+        for sequential in only_assignments:
+            self.sequential_to_identifier[sequential] = create_uuid()
+            self.sequential_to_identifierref[sequential] = create_uuid()
+            
+            root = lxml.etree.Element(
+                'assignment',
+                {
+                    'identifier': self.sequential_to_identifier[sequential]
+                },
+                nsmap={
+                    None: 'http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1',
+                    'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                }
+            )
+            root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
+                'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
+
+            lxml.etree.SubElement(root, 'title').text = str(getattr(sequential, 'display_name'))
+            lxml.etree.SubElement(root, 'assignment_group_identifierref').text = str(self.assignment_group_to_identifier[(str(getattr(sequential, 'format')))])
+            lxml.etree.SubElement(root, 'points_possible').text = str(getattr(sequential, 'max_score'))
+            lxml.etree.SubElement(root, 'submission_types').text = 'external_tool'
+            lxml.etree.SubElement(root, 'external_tool_identifierref').text = self.external_tool_identifierref
+            lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + 'type@' + str(getattr(sequential, 'url_name'))
+            lxml.etree.SubElement(root, 'external_tool_url').text = lti_link
+            
+            export_fs.makedirs(str(self.sequential_to_identifier[sequential]), recreate=True)
+
+            with export_fs.open(str(self.sequential_to_identifier[sequential]) + '/assignment_settings.xml', 'wb') as assignment_settings_xml:
+                tree = lxml.etree.ElementTree(root)
+                tree.write(assignment_settings_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
+
+
+    def write_imsmanifest_xml(self, modulestore, courselike_key, courselike, export_fs):
         ############### Metadata section of imsmanifeset.xml ####################
         # Create the root element with proper namespaces
         root = lxml.etree.Element(
@@ -208,7 +276,7 @@ class TestExportManager:
                 'identifier': create_uuid()
             },
             nsmap={
-                None: 'http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1',  # Default namespace
+                None: 'http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1',
                 'lom': 'http://ltsc.ieee.org/xsd/imsccv1p1/LOM/resource',
                 'lomimscc': 'http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest',
                 'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
@@ -221,26 +289,21 @@ class TestExportManager:
                 'http://ltsc.ieee.org/xsd/imsccv1p1/LOM/resource http://www.imsglobal.org/profile/cc/ccv1p1/LOM/ccv1p1_lomresource_v1p0.xsd '
                 'http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest http://www.imsglobal.org/profile/cc/ccv1p1/LOM/ccv1p1_lommanifest_v1p0.xsd')
 
-        # Create the metadata element
         metadata = lxml.etree.SubElement(root, 'metadata')
         lxml.etree.SubElement(metadata, 'schema').text = 'IMS Common Cartridge'
         lxml.etree.SubElement(metadata, 'schemaversion').text = '1.1.0'
 
-        # Create the LOM element
         lom = lxml.etree.SubElement(metadata, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}lom')
 
-        # Build the general element
         general = lxml.etree.SubElement(lom, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}general')
         title = lxml.etree.SubElement(general, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}title')
-        lxml.etree.SubElement(title, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}string').text = 'TEMP-TITlE' # Need to extract some general title
+        lxml.etree.SubElement(title, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}string').text = str(courselike_key)
 
-        # Create the lifecycle element
         lifecycle = lxml.etree.SubElement(lom, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}lifeCycle')
         contribute = lxml.etree.SubElement(lifecycle, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}contribute')
         date = lxml.etree.SubElement(contribute, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}date')
         lxml.etree.SubElement(date, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}dateTime').text = (datetime.now()).strftime('%Y-%m-%d') # extract current date
 
-        # Create the rights element
         rights = lxml.etree.SubElement(lom, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}rights')
         copyright = lxml.etree.SubElement(rights, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}copyrightAndOtherRestrictions')
         lxml.etree.SubElement(copyright, '{http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest}value').text = 'yes'
@@ -253,20 +316,30 @@ class TestExportManager:
         organizations = lxml.etree.SubElement(root, 'organizations')
         organization = lxml.etree.SubElement(organizations, 'organization', {'identifier': 'org_1', 'structure': 'rooted-hierarchy'})
 
-        # Create outer learning_module, for first iteration of imscc_exporter, this will be hard coded for the one course, later implementations will need to incorporate multiple courses
-        learning_modules = lxml.etree.SubElement(organization, 'item', {'identifier': 'uuid'})
-        module = lxml.etree.SubElement(learning_modules, 'item', {'identifier': 'uuid'})
-        lxml.etree.SubElement(module, 'title').text = (self.get_key()).course
+        learning_module = lxml.etree.SubElement(organization, 'item', {'identifier': 'LearningModules'})
 
-        uuids = []
+        # single module is created here for the one course, will need to be updated later to incorporate multiple courses
+        module = lxml.etree.SubElement(learning_module, 'item', {'identifier': create_uuid()})
+        lxml.etree.SubElement(module, 'title').text = (self.get_key()).course
 
         # Build out all the sequentials underneath the one learning module (course)
         sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
         for sequential in sequential_modules:
-            identifier = create_uuid()
-            uuids.append(identifier)
-            sequential_xml = lxml.etree.SubElement(module, 'item', {'identifier': identifier})
-            lxml.etree.SubElement(sequential_xml, 'title').text = str(getattr(sequential, 'display_name'))
+            self.sequential_to_identifier[sequential] = create_uuid()
+            self.sequential_to_identifierref[sequential] = create_uuid()
+
+            print(str(getattr(sequential, 'display_name')))
+            print(str(getattr(sequential, 'format')))
+            
+            assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
+
+            if str(getattr(sequential, 'format')) in assignment_types:
+                sequential_xml = lxml.etree.SubElement(module, 'item', {'identifier': self.sequential_to_identifier[sequential], 'identifierref': self.sequential_to_identifierref[sequential]})
+                lxml.etree.SubElement(sequential_xml, 'title').text = str(getattr(sequential, 'display_name'))
+            else:
+                sequential_xml = lxml.etree.SubElement(module, 'item', {'identifier': self.sequential_to_identifier[sequential]})
+                lxml.etree.SubElement(sequential_xml, 'title').text = str(getattr(sequential, 'display_name'))
+                self.sequential_to_identifierref[sequential] = None
 
         tree = lxml.etree.ElementTree(root)
         tree.write('test2.xml', xml_declaration=True, encoding='UTF-8', pretty_print=True)
@@ -295,8 +368,9 @@ class TestExportManager:
 
                 # make the directory to export to
                 export_fs = courselike.runtime.export_fs = fsm.makedir(self.target_dir, recreate=True)
-
+                #self.write_imsmanifest_xml(self.modulestore, self.courselike_key, courselike, export_fs)
                 self.export_all_course_settings(courselike, self.modulestore, self.courselike_key, export_fs)
+                self.export_assignment_folders(self.modulestore, self.courselike_key, courselike, export_fs)
                 
 """
 Function "export_course_to_imscc" below get called by the django management comman from export_olx.py
