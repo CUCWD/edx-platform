@@ -23,6 +23,7 @@ from xmodule.modulestore.store_utilities import draft_node_constructor, get_draf
 
 import uuid
 from datetime import datetime
+import re
 
 DRAFT_DIR = "drafts"
 PUBLISHED_DIR = "published"
@@ -30,6 +31,9 @@ PUBLISHED_DIR = "published"
 DEFAULT_CONTENT_FIELDS = ['metadata', 'data']
 
 def create_uuid():
+    """
+    Returns an essentially unique identifier following canvas's default format
+    """
     return 'g' + (str(uuid.uuid4())).replace('-', '')
 
 def get_total_score(sequential):
@@ -43,7 +47,7 @@ def get_total_score(sequential):
             # Check if the child has a score and add it
             score = child.get_score()
             print("max score rtest")
-            print(child.max_score())
+
             if score is not None:
                 print(getattr(child, 'display_name'))
                 print(score)
@@ -57,6 +61,7 @@ def get_total_score(sequential):
         total_score += get_total_score(child)
     
     return total_score
+
 class TestExportManager:
     """
     Manages XML exporting for courselike objects.
@@ -77,10 +82,41 @@ class TestExportManager:
         self.root_dir = root_dir
         self.target_dir = str(target_dir)
 
+        """
+        Sets up some information to share between export functions
+
+        'sequential_to_identifier': A dictionary mapping each sequential to an unique identifier
+                                    An 'identifier' attribute of the 'item' element containing sequential information in the 'imsmanifest.xml' file
+                                    An 'identifier' attribute of the 'item' element containing sequential information in the 'course_settings/module_meta.xml' file 
+                                    Links sequentials with all the information above
+
+        'sequential_to_identifierref': A dictionary mapping each sequential to an unique identifier
+                                       An 'identifierref' attribute of the 'item' element containing sequential information in the 'imsmanifest.xml file'
+                                       An 'identifierref' attribute of the 'item' element containing sequential information in the 'course_settings/module_meta.xml' file
+                                       An 'identifier' attribute of the assignment object in each sequential's individual assignment_settings.xml file
+                                       The name of the folder that stores a sequential's assignment_settings.xml file and html file
+                                       Links sequentials with all the information above
+        
+        'assignment_group_to_identifier': A dictionary mapping the names of each assignment group to an unique identifier
+                                          An 'identifier' attribute of the 'assignmentGroup' element in 'assignment_groups.xml'
+                                          An 'assignment_group_identifierref' child element of the 'assignment' element in an assignment's 'assignment_settings.xml' file
+                                          Links assignments to their assignment types
+
+        'external_tool_identifierref': A pre-made identifier to link all external tool references
+                                       The name of the file + '.xml' in the root directory containing LTI metadata and information
+                                       An 'identifierref' attrubute of the 'item' element containing LTI data
+                                       An 'external_tool_identifierref' element of the 'assignment' element in an assignment's 'assignment_settings.xml' file
+
+        'course_settings_identifier': A pre-made identifier to link course_settings references
+                                       An 'identifier' attrubute of the 'course' element in course_settings/course_settings.xml file containing course settings
+                                       An 'identifier' attribute of the 'resource' element in 'imsmanifest.xml' file containing course settings information                 
+        """
+
         self.sequential_to_identifier = {}
         self.sequential_to_identifierref = {}
         self.assignment_group_to_identifier = {}
         self.external_tool_identifierref = create_uuid()
+        self.course_settings_identifier = create_uuid()
 
     def get_key(self):
         """
@@ -116,6 +152,9 @@ class TestExportManager:
         return sequentials
 
     def export_assignment_groups(self, modulestore, courselike, export_fs):
+        """
+        Exports the 'assignment_groups.xml' file in course_settings
+        """
         # Create root
         root = lxml.etree.Element(
             'assignmentGroups',
@@ -128,8 +167,8 @@ class TestExportManager:
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
         
+        # Accessing each asignment type with their weight and adding it to the xml
         position = 1
-        # Accessing each asignment type with their weight
         for grade in courselike.grading_policy['GRADER']:
             grade_name = grade['type']
             grade_weight = grade['weight'] * 100 # openedx uses 0-1 grading weight, imscc uses 0-100
@@ -140,11 +179,16 @@ class TestExportManager:
             position += 1
             lxml.etree.SubElement(assignment_group, 'group_weight').text = str(grade_weight)
 
+        # Write to file
         with export_fs.open('course_settings/assignment_groups.xml', 'wb') as assignment_groups_xml:
             tree = lxml.etree.ElementTree(root)
             tree.write(assignment_groups_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
     def export_media_tracks(self, export_fs):
+        """
+        Exports the mostly empty 'media_tracks.xml' file in course_settings
+        """
+
         # Create root
         root = lxml.etree.Element(
             'media_tracks',
@@ -157,11 +201,15 @@ class TestExportManager:
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
         
+        # Write to file
         with export_fs.open('course_settings/media_tracks.xml', 'wb') as media_tracks_xml:
             tree = lxml.etree.ElementTree(root)
             tree.write(media_tracks_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
     def export_files_meta(self, export_fs):
+        """
+        Exports the mostly empty 'files_meta.xml' file in course_settings
+        """
         # Create root
         root = lxml.etree.Element(
             'fileMeta',
@@ -174,14 +222,21 @@ class TestExportManager:
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
         
+        # Write to file
         with export_fs.open('course_settings/files_meta.xml', 'wb') as files_meta_xml:
             tree = lxml.etree.ElementTree(root)
             tree.write(files_meta_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
     def export_course_settings(self, modulestore, courselike_key, export_fs):
+        """
+        Exports the 'course_settings.xml' file in course_settings
+        """
         # Create root
         root = lxml.etree.Element(
             'course',
+            {
+                'identifier': self.course_settings_identifier
+            },
             nsmap = {
                 None: 'http://canvas.instructure.com/xsd/cccv1p0',
                 'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
@@ -224,34 +279,47 @@ class TestExportManager:
         # lxml.etree.SubElement(root, 'homeroom_course').text = false
         # lxml.etree.SubElement(root, 'grading_standard_enabled').text = false
 
+        # Write to file
         with export_fs.open('course_settings/course_settings.xml', 'wb') as media_tracks_xml:
             tree = lxml.etree.ElementTree(root)
             tree.write(media_tracks_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
+        
+        # There's this file called canvas_export.txt that contains nothing but a pun...
+        # It's referenced in the ims_manifest file for some reason so we're adding it
+        with export_fs.open('course_settings/canvas_export.txt', 'w') as canvas_export_txt:
+            canvas_export_txt.write('Q: What did the panda say when he was forced out of his natural habitat?\nA: This is un-BEAR-able\n')
 
     def export_assignment_folders(self, modulestore, courselike_key, courselike, export_fs):
+        """
+        Exports all the individual folders for each sequential that is an assignment
+        """
         sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
         
-        # parse out non assignments
+        # Parse out non assignments
         assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
         only_assignments = (sequential for sequential in sequential_modules if getattr(sequential, 'format') in assignment_types)
         
-        for sequential in only_assignments:
+        # Set all the identifiers
+        for sequential in sequential_modules:
             self.sequential_to_identifier[sequential] = create_uuid()
             self.sequential_to_identifierref[sequential] = create_uuid()
-            
+
+        for sequential in only_assignments:
+            # Create root
             root = lxml.etree.Element(
                 'assignment',
                 {
-                    'identifier': self.sequential_to_identifier[sequential]
+                    'identifier': self.sequential_to_identifierref[sequential]
                 },
                 nsmap={
-                    None: 'http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1',
+                    None: 'http://canvas.instructure.com/xsd/cccv1p0',
                     'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
                 }
             )
             root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
-
+            
+            # Add assignment data like points, assignemtn type, lti, etc.
             lxml.etree.SubElement(root, 'title').text = str(getattr(sequential, 'display_name'))
             lxml.etree.SubElement(root, 'assignment_group_identifierref').text = str(self.assignment_group_to_identifier[(str(getattr(sequential, 'format')))])
             lxml.etree.SubElement(root, 'points_possible').text = str(getattr(sequential, 'max_score'))
@@ -260,15 +328,44 @@ class TestExportManager:
             lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + 'type@' + str(getattr(sequential, 'url_name'))
             lxml.etree.SubElement(root, 'external_tool_url').text = lti_link
             
-            export_fs.makedirs(str(self.sequential_to_identifier[sequential]), recreate=True)
+            # Create corresponding HTML file
+            # HTML content is hard coded for now, seems that every assignment has the exact same html structure and not  much too it
+            html_content ='''<html>
+            <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+            <title>Assignment: '''
 
-            with export_fs.open(str(self.sequential_to_identifier[sequential]) + '/assignment_settings.xml', 'wb') as assignment_settings_xml:
+            html_content_pt2 ='''</title>
+            </head>
+            <body>
+
+            </body>
+            </html>'''
+
+            html_file_name = re.sub(r'[^a-zA-Z0-9\s-]', '', str(getattr(sequential, 'display_name')))
+            html_file_name = html_file_name.lower()
+            html_file_name = html_file_name.replace(' ', '-')
+            html_file_name = html_file_name + '.html'
+            
+            # Write to file
+            export_fs.makedirs(str(self.sequential_to_identifierref[sequential]), recreate=True)
+
+            with export_fs.open(str(self.sequential_to_identifierref[sequential]) + '/assignment_settings.xml', 'wb') as assignment_settings_xml:
                 tree = lxml.etree.ElementTree(root)
                 tree.write(assignment_settings_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
+            with export_fs.open(str(self.sequential_to_identifierref[sequential]) + '/' + html_file_name, 'w') as html_file:
+                html_file.write(html_content)
+                html_file.write(str(getattr(sequential, 'display_name')))
+                html_file.write(html_content_pt2)
 
     def write_imsmanifest_xml(self, modulestore, courselike_key, courselike, export_fs):
+        """
+        Exports the imsmanifest.xml file
+        """
+
         ############### Metadata section of imsmanifeset.xml ####################
+
         # Create the root element with proper namespaces
         root = lxml.etree.Element(
             'manifest',
@@ -283,12 +380,12 @@ class TestExportManager:
             }
         )
 
-        # Set the schemaLocation attribute
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1 http://www.imsglobal.org/profile/cc/ccv1p1/ccv1p1_imscp_v1p2_v1p0.xsd '
                 'http://ltsc.ieee.org/xsd/imsccv1p1/LOM/resource http://www.imsglobal.org/profile/cc/ccv1p1/LOM/ccv1p1_lomresource_v1p0.xsd '
                 'http://ltsc.ieee.org/xsd/imsccv1p1/LOM/manifest http://www.imsglobal.org/profile/cc/ccv1p1/LOM/ccv1p1_lommanifest_v1p0.xsd')
 
+        # Set all the metadata values
         metadata = lxml.etree.SubElement(root, 'metadata')
         lxml.etree.SubElement(metadata, 'schema').text = 'IMS Common Cartridge'
         lxml.etree.SubElement(metadata, 'schemaversion').text = '1.1.0'
@@ -318,33 +415,95 @@ class TestExportManager:
 
         learning_module = lxml.etree.SubElement(organization, 'item', {'identifier': 'LearningModules'})
 
-        # single module is created here for the one course, will need to be updated later to incorporate multiple courses
+        # Single module is created here for the one course, will need to be updated later to incorporate multiple courses
         module = lxml.etree.SubElement(learning_module, 'item', {'identifier': create_uuid()})
         lxml.etree.SubElement(module, 'title').text = (self.get_key()).course
 
         # Build out all the sequentials underneath the one learning module (course)
         sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
         for sequential in sequential_modules:
-            self.sequential_to_identifier[sequential] = create_uuid()
-            self.sequential_to_identifierref[sequential] = create_uuid()
-
-            print(str(getattr(sequential, 'display_name')))
-            print(str(getattr(sequential, 'format')))
             
             assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
 
+            sequential_xml = lxml.etree.SubElement(module, 'item', {'identifier': self.sequential_to_identifier[sequential], 'identifierref': self.sequential_to_identifierref[sequential]})
+            lxml.etree.SubElement(sequential_xml, 'title').text = str(getattr(sequential, 'display_name'))
+            
+        ############################# Resources section of imsmanifest.xml #############################
+        
+        # Create resources element
+        resources = lxml.etree.SubElement(root, 'resources')
+        type_string = 'associatedcontent/imscc_xmlv1p1/learning-application-resource'
+        
+        # Course settings
+        course_settings_resource = lxml.etree.SubElement(resources, 'resource', {'identifier': self.course_settings_identifier, 'type': type_string, 'href': 'course_settings/canvas_export.txt'})
+        
+        course_settings_path = 'course_settings'
+        for filename in export_fs.listdir(course_settings_path):
+            lxml.etree.SubElement(course_settings_resource, 'file', {'href': 'course_settings/' + filename})
+
+        # Create resources for sequentials
+        for sequential in sequential_modules:
             if str(getattr(sequential, 'format')) in assignment_types:
-                sequential_xml = lxml.etree.SubElement(module, 'item', {'identifier': self.sequential_to_identifier[sequential], 'identifierref': self.sequential_to_identifierref[sequential]})
-                lxml.etree.SubElement(sequential_xml, 'title').text = str(getattr(sequential, 'display_name'))
-            else:
-                sequential_xml = lxml.etree.SubElement(module, 'item', {'identifier': self.sequential_to_identifier[sequential]})
-                lxml.etree.SubElement(sequential_xml, 'title').text = str(getattr(sequential, 'display_name'))
-                self.sequential_to_identifierref[sequential] = None
+                html_file_path = self.sequential_to_identifierref[sequential]
+                xml_file_path = self.sequential_to_identifierref[sequential]
+                for filename in export_fs.listdir(self.sequential_to_identifierref[sequential]):
+                    if filename.endswith('.html'):
+                        html_file_path = html_file_path + '/' + filename
+                    if filename.endswith('xml'):
+                        xml_file_path = xml_file_path + '/' + filename
+                resource = lxml.etree.SubElement(resources , 'resource', {'identifier': self.sequential_to_identifierref[sequential], 'type': type_string, 'href': html_file_path})
+                lxml.etree.SubElement(resource, 'file', {'href': html_file_path})
+                lxml.etree.SubElement(resource, 'file', {'href': xml_file_path})
 
-        tree = lxml.etree.ElementTree(root)
-        tree.write('test2.xml', xml_declaration=True, encoding='UTF-8', pretty_print=True)
+        # Write to file
+        with export_fs.open('imsmanifest.xml', 'wb') as imsmanifest_xml:
+            tree = lxml.etree.ElementTree(root)
+            tree.write(imsmanifest_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
-    def export_all_course_settings(self, courselike, modulestore, courselike_key, export_fs):
+    def export_external_tool(self, export_fs):
+        # Create the root element
+        root = lxml.etree.Element(
+            'cartridge_basiclti_link',
+            nsmap={
+                None: "http://www.imsglobal.org/xsd/imslticc_v1p0",
+                'blti': "http://www.imsglobal.org/xsd/imsbasiclti_v1p0",
+                'lticm': "http://www.imsglobal.org/xsd/imslticm_v1p0",
+                'lticp': "http://www.imsglobal.org/xsd/imslticp_v1p0",
+                'xsi': "http://www.w3.org/2001/XMLSchema-instance"
+            },
+            xsi_schemaLocation="http://www.imsglobal.org/xsd/imslticc_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticc_v1p0.xsd\n"
+                            "http://www.imsglobal.org/xsd/imsbasiclti_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imsbasiclti_v1p0p1.xsd\n"
+                            "http://www.imsglobal.org/xsd/imslticm_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticm_v1p0.xsd\n"
+                            "http://www.imsglobal.org/xsd/imslticp_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticp_v1p0.xsd"
+        )
+
+        # Create child elements
+        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}title', nsmap={'blti': "http://www.imsglobal.org/xsd/imsbasiclti_v1p0"}).text = "EducateWorkforce (courses.educateworkforce.com)"
+        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}description').text = ""
+        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}secure_launch_url').text = "https://courses.educateworkforce.com/lti_provider/"
+
+        # Vendor information
+        vendor = lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}vendor')
+        lxml.etree.SubElement(vendor, '{http://www.imsglobal.org/xsd/imslticp_v1p0}code').text = "unknown"
+        lxml.etree.SubElement(vendor, '{http://www.imsglobal.org/xsd/imslticp_v1p0}name').text = "unknown"
+
+        # Custom element
+        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}custom')
+
+        # Extensions
+        extensions = lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}extensions', platform="canvas.instructure.com")
+        lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name="privacy_level").text = "public"
+        lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name="domain").text = "courses.educateworkforce.com"
+        lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name="lti_version").text = "1.1"
+
+        with export_fs.open(self.external_tool_identifierref + '.xml', 'wb') as external_tool_identifierref_xml:
+                tree = lxml.etree.ElementTree(root)
+                tree.write(external_tool_identifierref_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
+
+    def export_all_course_settings(self, modulestore, courselike_key, courselike, export_fs):
+        """
+        Function to export all course_settings at once
+        """
         export_fs.makedirs('course_settings', recreate=True)
         self.export_assignment_groups(modulestore, courselike, export_fs)
         self.export_media_tracks(export_fs)
@@ -368,9 +527,13 @@ class TestExportManager:
 
                 # make the directory to export to
                 export_fs = courselike.runtime.export_fs = fsm.makedir(self.target_dir, recreate=True)
-                #self.write_imsmanifest_xml(self.modulestore, self.courselike_key, courselike, export_fs)
-                self.export_all_course_settings(courselike, self.modulestore, self.courselike_key, export_fs)
+
+                # Call export functions
+                self.export_external_tool(export_fs)
+                self.export_all_course_settings(self.modulestore, self.courselike_key, courselike, export_fs)
                 self.export_assignment_folders(self.modulestore, self.courselike_key, courselike, export_fs)
+                self.write_imsmanifest_xml(self.modulestore, self.courselike_key, courselike, export_fs)
+
                 
 """
 Function "export_course_to_imscc" below get called by the django management comman from export_olx.py
