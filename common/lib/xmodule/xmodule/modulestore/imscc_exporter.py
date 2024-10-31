@@ -553,18 +553,21 @@ class TestExportManager:
                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifier[chapter_sequential]})
                 lxml.etree.SubElement(item, 'content_type').text = 'Assignment'
                 lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
+                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
                 lxml.etree.SubElement(item, 'identifierref').text = self.sequential_to_identifierref[chapter_sequential]
             elif chapter_sequential.category == 'sequential':
                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifierref[chapter_sequential]})
                 lxml.etree.SubElement(item, 'content_type').text = 'ContextExternalTool'
                 lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
+                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
                 lxml.etree.SubElement(item, 'identifierref').text = self.external_tool_identifierref
                 lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
                 lxml.etree.SubElement(item, 'url').text = lti_link
             else:
                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})   
                 lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
-                lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name    
+                lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
+                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
 
         # Write to file
         with export_fs.open('course_settings/module_meta.xml', 'wb') as module_meta_xml:
