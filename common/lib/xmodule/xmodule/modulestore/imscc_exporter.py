@@ -126,6 +126,13 @@ class TestExportManager:
         self.course_settings_identifier = create_uuid()
         self.module_identifier = create_uuid()
 
+        """
+        Sets up xml roots to access for multi course exporting
+        'assignment_groups_root': xml root for assignment_groups
+        """
+        # Declare variable for all the xml tree roots
+        self.assignment_groups_root = None
+
     def get_key(self):
         """
         Get the courselike locator key
@@ -187,12 +194,12 @@ class TestExportManager:
                     sequentials_chapters.append(module)
         return sequentials_chapters
 
-    def export_assignment_groups(self, modulestore, courselike, export_fs):
+    def prepare_roots(self):
         """
-        Exports the 'assignment_groups.xml' file in course_settings
+        Prepares roots with basic metadata that is the same across all courses for multi-course exporting to build on
         """
-        # Create root
-        root = lxml.etree.Element(
+        ################### Assignment groups root ###################
+        self.assignment_groups_root = lxml.etree.Element(
             'assignmentGroups',
             nsmap = {
                 None: 'http://canvas.instructure.com/xsd/cccv1p0',
@@ -200,22 +207,26 @@ class TestExportManager:
             }
         )
 
-        root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
+        assignment_groups_root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
+
+    def export_assignment_groups(self, modulestore, courselike, export_fs):
+        """
+        Exports the 'assignment_groups.xml' file in course_settings
+        """
         
         # Accessing each asignment type with their weight and adding it to the xml
         for grade in courselike.grading_policy['GRADER']:
-            grade_name = grade['type']
-            grade_weight = grade['weight'] * 100 # openedx uses 0-1 grading weight, imscc uses 0-100
-            self.assignment_group_to_identifier[grade_name] = create_uuid()
-            assignment_group = lxml.etree.SubElement(root, 'assignmentGroup', {'identifier': str(self.assignment_group_to_identifier[grade_name])})
-            lxml.etree.SubElement(assignment_group, 'title').text = 'EW - ' + grade_name
-            lxml.etree.SubElement(assignment_group, 'group_weight').text = str(grade_weight)
-
-        # Write to file
-        with export_fs.open('course_settings/assignment_groups.xml', 'wb') as assignment_groups_xml:
-            tree = lxml.etree.ElementTree(root)
-            tree.write(assignment_groups_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
+            # Only add the assignmeent group if it doesn't already exist in the xml
+            # For CUCWD, this should only add the 4 primary assignment groups (pre-test, activities, module reinforcement, post-tests)
+            # For other platforms, all the assignment groups may not add up correctly but can easily be fixed in post on Canvas
+            if assignment_group_to_identifier[grade_name] == None:
+                grade_name = grade['type']
+                grade_weight = grade['weight'] * 100 # openedx uses 0-1 grading weight, imscc uses 0-100
+                self.assignment_group_to_identifier[grade_name] = create_uuid()
+                assignment_group = lxml.etree.SubElement(root, 'assignmentGroup', {'identifier': str(self.assignment_group_to_identifier[grade_name])})
+                lxml.etree.SubElement(assignment_group, 'title').text = 'EW - ' + grade_name
+                lxml.etree.SubElement(assignment_group, 'group_weight').text = str(grade_weight)
 
     def export_media_tracks(self, export_fs):
         """
@@ -539,7 +550,8 @@ class TestExportManager:
 
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
-
+        
+        # Single module is created here, need to iterate
         module = lxml.etree.SubElement(root, 'module', {'identifier': self.module_identifier})
         lxml.etree.SubElement(module, 'title').text =  (self.get_key()).course
         lxml.etree.SubElement(module, 'workflow_state').text = 'active'
@@ -580,8 +592,13 @@ class TestExportManager:
         """
         export_fs.makedirs('course_settings', recreate=True)
         self.export_assignment_groups(modulestore, courselike, export_fs)
+        # Write assignment_groups to a file
+        with export_fs.open('course_settings/assignment_groups.xml', 'wb') as assignment_groups_xml:
+            tree = lxml.etree.ElementTree(self.assignment_groups_root)
+            tree.write(assignment_groups_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
+
         self.export_media_tracks(export_fs)
-        self.export_files_meta(export_fs)
+        self.export_files_meta(export_fs)ß
         self.export_course_settings(modulestore, courselike_key, export_fs)
 
     def export(self):
@@ -590,11 +607,11 @@ class TestExportManager:
         """
         with self.modulestore.bulk_operations(self.courselike_key):
 
-             fsm = OSFS(self.root_dir)
-             root = lxml.etree.Element('unknown')
+            fsm = OSFS(self.root_dir)
+            root = lxml.etree.Element('unknown')
 
-             # export only the published content
-             with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, self.courselike_key):
+            # export only the published content
+            with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, self.courselike_key):
 
                 # stores metadata for the course
                 courselike = self.get_courselike()

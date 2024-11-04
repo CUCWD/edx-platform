@@ -40,19 +40,27 @@ class Command(BaseCommand):
     help = dedent(__doc__).strip()
 
     def add_arguments(self, parser):
-        parser.add_argument('course_id')
+        parser.add_argument('course_id',  nargs="+") #nargs = "+" allows parsing of unlimited course ids
         parser.add_argument('--output')
         parser.add_argument('--cc-lti', action = 'store_true', help = 'Run the command with Common Cartridge format')
 
     def handle(self, *args, **options):
-        course_id = options['course_id']
+        cc_lti = options.get('cc_lti', False)
+        course_ids = options['course_id']
+        
+        # Raise an error only allowing courses to be exported 1 at a time when not using Common Cartridge packaging standards
+        if not cc_lti and len(course_ids) > 1:
+            raise CommandError("Can only export 1 OpenEdX course at at time in default OpenEdX packaging standards")
 
-        try:
-            course_key = CourseKey.from_string(course_id)
-        except InvalidKeyError:
-            raise CommandError("Unparsable course_id")  # lint-amnesty, pylint: disable=raise-missing-from
-        except IndexError:
-            raise CommandError("Insufficient arguments")  # lint-amnesty, pylint: disable=raise-missing-from
+        # stores all the different course keys based on the inputted course ids
+        course_keys = []
+        for course_id in course_ids:
+            try:
+                course_keys.append(CourseKey.from_string(course_id))
+            except InvalidKeyError:
+                raise CommandError("Unparsable course_id")  # lint-amnesty, pylint: disable=raise-missing-from
+            except IndexError:
+                raise CommandError("Insufficient arguments")  # lint-amnesty, pylint: disable=raise-missing-from
 
         filename = options['output']
         pipe_results = False
@@ -61,8 +69,7 @@ class Command(BaseCommand):
             filename = mktemp()
             pipe_results = True
 
-        cc_lti = options.get('cc_lti', False)
-        export_course_to_tarfile(course_key, filename, cc_lti)
+        export_course_to_tarfile(course_keys, filename, cc_lti)
 
         results = self._get_results(filename) if pipe_results else b''
 
@@ -82,39 +89,40 @@ class Command(BaseCommand):
         return results
 
 
-def export_course_to_tarfile(course_key, filename, cc_lti):
-    # test for --cc-lti flag functionality it works
-    if cc_lti:
-        print("CC_LTI")
-    else:
-        print("NO CC_LTI")
+def export_course_to_tarfile(course_keys, filename, cc_lti):
     """Exports a course into a tar.gz file"""
     tmp_dir = mkdtemp()
     try:
-        course_dir = export_course_to_directory(course_key, tmp_dir, cc_lti)
+        course_dir = export_course_to_directory(course_keys, tmp_dir, cc_lti)
         compress_directory(course_dir, filename)
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def export_course_to_directory(course_key, root_dir, cc_lti):
+def export_course_to_directory(course_keys, root_dir, cc_lti):
     """Export course into a directory"""
+    # attempt to get all the courses based on the course_keys
     store = modulestore()
-    course = store.get_course(course_key)
-    if course is None:
-        raise CommandError("Invalid course_id")
+    courses = []
+    for course_key in course_keys:
+        course = store.get_course(course_key)
+        if course is None:
+            raise CommandError("Invalid course_id")
+        courses.append(course)
 
     # The safest characters are A-Z, a-z, 0-9, <underscore>, <period> and <hyphen>.
     # We represent the first four with \w.
     # TODO: Once we support courses with unicode characters, we will need to revisit this.
     replacement_char = '-'
-    course_dir = replacement_char.join([course.id.org, course.id.course, course.id.run])
+    course_dir = replacement_char.join([courses[0].id.org, courses[0].id.course, courses[0].id.run])
     course_dir = re.sub(r'[^\w\.\-]', replacement_char, course_dir)
 
     if cc_lti:
-        export_course_to_imscc(store, None, course.id, root_dir, course_dir)
+        if len(courses) > 1:
+            course_dir = "MULTI-COURSE-EXPORT"
+        export_course_to_imscc(store, None, courses[0].id, root_dir, course_dir)
     else:
-        export_course_to_xml(store, None, course.id, root_dir, course_dir)
+        export_course_to_xml(store, None, courses[0].id, root_dir, course_dir)
 
     export_dir = path(root_dir) / course_dir
     return export_dir
