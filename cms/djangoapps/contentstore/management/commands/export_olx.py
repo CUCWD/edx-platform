@@ -110,6 +110,9 @@ def export_course_to_directory(course_keys, root_dir, cc_lti):
             raise CommandError("Invalid course_id")
         courses.append(course)
 
+    course_ids = []
+    for course in courses:
+        course_ids.append(course.id)
     # The safest characters are A-Z, a-z, 0-9, <underscore>, <period> and <hyphen>.
     # We represent the first four with \w.
     # TODO: Once we support courses with unicode characters, we will need to revisit this.
@@ -120,9 +123,9 @@ def export_course_to_directory(course_keys, root_dir, cc_lti):
     if cc_lti:
         if len(courses) > 1:
             course_dir = "MULTI-COURSE-EXPORT"
-        export_course_to_imscc(store, None, courses[0].id, root_dir, course_dir)
+        export_course_to_imscc(store, None, course_ids, root_dir, course_dir)
     else:
-        export_course_to_xml(store, None, courses[0].id, root_dir, course_dir)
+        export_course_to_xml(store, None, course_ids[0], root_dir, course_dir)
 
     export_dir = path(root_dir) / course_dir
     return export_dir
