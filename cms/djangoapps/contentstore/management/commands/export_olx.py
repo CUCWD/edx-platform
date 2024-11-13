@@ -43,14 +43,18 @@ class Command(BaseCommand):
         parser.add_argument('course_id',  nargs="+") #nargs = "+" allows parsing of unlimited course ids
         parser.add_argument('--output')
         parser.add_argument('--cc-lti', action = 'store_true', help = 'Run the command with Common Cartridge format')
+        parser.add_argument('--external-tool-only', action = 'store_true', help = 'Export Common Cartridge file using only external tools and no assignment types')
 
     def handle(self, *args, **options):
         cc_lti = options.get('cc_lti', False)
+        external_tool_only = options.get('external_tool_only', False)
         course_ids = options['course_id']
         
         # Raise an error only allowing courses to be exported 1 at a time when not using Common Cartridge packaging standards
         if not cc_lti and len(course_ids) > 1:
             raise CommandError("Can only export 1 OpenEdX course at at time in default OpenEdX packaging standards")
+        if external_tool_only and not cc_lti:
+            raise CommandError("Cannot export with the --external_tool_only option in default OpenEdX packaging standards")
 
         # stores all the different course keys based on the inputted course ids
         course_keys = []
@@ -69,7 +73,7 @@ class Command(BaseCommand):
             filename = mktemp()
             pipe_results = True
 
-        export_course_to_tarfile(course_keys, filename, cc_lti)
+        export_course_to_tarfile(course_keys, filename, cc_lti, external_tool_only)
 
         results = self._get_results(filename) if pipe_results else b''
 
@@ -89,17 +93,17 @@ class Command(BaseCommand):
         return results
 
 
-def export_course_to_tarfile(course_keys, filename, cc_lti):
+def export_course_to_tarfile(course_keys, filename, cc_lti, external_tool_only):
     """Exports a course into a tar.gz file"""
     tmp_dir = mkdtemp()
     try:
-        course_dir = export_course_to_directory(course_keys, tmp_dir, cc_lti)
+        course_dir = export_course_to_directory(course_keys, tmp_dir, cc_lti, external_tool_only)
         compress_directory(course_dir, filename)
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def export_course_to_directory(course_keys, root_dir, cc_lti):
+def export_course_to_directory(course_keys, root_dir, cc_lti, external_tool_only):
     """Export course into a directory"""
     # attempt to get all the courses based on the course_keys
     store = modulestore()
@@ -123,7 +127,7 @@ def export_course_to_directory(course_keys, root_dir, cc_lti):
     if cc_lti:
         if len(courses) > 1:
             course_dir = "MULTI-COURSE-EXPORT"
-        export_course_to_imscc(store, None, course_ids, root_dir, course_dir)
+        export_course_to_imscc(store, None, course_ids, root_dir, course_dir, external_tool_only)
     else:
         export_course_to_xml(store, None, course_ids[0], root_dir, course_dir)
 

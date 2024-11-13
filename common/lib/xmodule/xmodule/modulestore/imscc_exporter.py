@@ -104,21 +104,23 @@ class TestExportManager:
     """
     Manages IMSCC exporting for courselike objects.
     """
-    def __init__(self, modulestore, contentstore, courselike_keys, root_dir, target_dir):
+    def __init__(self, modulestore, contentstore, courselike_keys, root_dir, target_dir, external_tool_only):
         """
         Export all modules from `modulestore` and content from `contentstore` as xml to `root_dir`.
 
         `modulestore`: A `ModuleStore` object that is the source of the modules to export
         `contentstore`: A `ContentStore` object that is the source of the content to export, can be None
-        `courselike_key`: The Locator of the Descriptor to export
+        `courselike_keys`: The Locators of the Descriptor to export
         `root_dir`: The directory to write the exported xml to
         `target_dir`: The name of the directory inside `root_dir` to write the content to
+        'external_tool_only': Option to export the course without any assignments and have everything be set as an external tool
         """
         self.modulestore = modulestore
         self.contentstore = contentstore
         self.courselike_keys = courselike_keys
         self.root_dir = root_dir
         self.target_dir = str(target_dir)
+        self.external_tool_only = external_tool_only
 
         """
         Sets up some information to share between export functions
@@ -483,7 +485,7 @@ class TestExportManager:
                             html_file.write(sequential.display_name)
                             html_file.write(html_content_pt2)
 
-    def export_imsmanifest_xml(self, modulestore, courselike_keys, courselikes, export_fs):
+    def export_imsmanifest_xml(self, modulestore, courselike_keys, courselikes, export_fs, external_tool_only):
         """
         Exports the imsmanifest.xml file
         """
@@ -577,28 +579,30 @@ class TestExportManager:
         for filename in export_fs.listdir(course_settings_path):
             lxml.etree.SubElement(course_settings_resource, 'file', {'href': 'course_settings/' + filename})
 
-        # Iterate through all the courselike keys and courselikes
-        for courselike_key, courselike in zip(courselike_keys, courselikes):
-            # Bulk operations and only operate on published content
-            with self.modulestore.bulk_operations(courselike_key):
-                with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
-                    # Create resources for assignment sequentials
-                    sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
-                    
-                    assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
-                    for sequential in sequential_modules:
-                        sequential = self.serialize_chapter_sequential(sequential)
-                        if sequential.format in assignment_types:
-                            html_file_path = self.sequential_to_identifierref[sequential]
-                            xml_file_path = self.sequential_to_identifierref[sequential]
-                            for filename in export_fs.listdir(self.sequential_to_identifierref[sequential]):
-                                if filename.endswith('.html'):
-                                    html_file_path = html_file_path + '/' + filename
-                                if filename.endswith('xml'):
-                                    xml_file_path = xml_file_path + '/' + filename
-                            resource = lxml.etree.SubElement(resources , 'resource', {'identifier': self.sequential_to_identifierref[sequential], 'type': type_string, 'href': html_file_path})
-                            lxml.etree.SubElement(resource, 'file', {'href': html_file_path})
-                            lxml.etree.SubElement(resource, 'file', {'href': xml_file_path})
+        # Only export assignment resources if we're not doing external_tool_only
+        if not external_tool_only:
+            # Iterate through all the courselike keys and courselikes
+            for courselike_key, courselike in zip(courselike_keys, courselikes):
+                # Bulk operations and only operate on published content
+                with self.modulestore.bulk_operations(courselike_key):
+                    with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+                        # Create resources for assignment sequentials
+                        sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
+                        
+                        assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
+                        for sequential in sequential_modules:
+                            sequential = self.serialize_chapter_sequential(sequential)
+                            if sequential.format in assignment_types:
+                                html_file_path = self.sequential_to_identifierref[sequential]
+                                xml_file_path = self.sequential_to_identifierref[sequential]
+                                for filename in export_fs.listdir(self.sequential_to_identifierref[sequential]):
+                                    if filename.endswith('.html'):
+                                        html_file_path = html_file_path + '/' + filename
+                                    if filename.endswith('xml'):
+                                        xml_file_path = xml_file_path + '/' + filename
+                                resource = lxml.etree.SubElement(resources , 'resource', {'identifier': self.sequential_to_identifierref[sequential], 'type': type_string, 'href': html_file_path})
+                                lxml.etree.SubElement(resource, 'file', {'href': html_file_path})
+                                lxml.etree.SubElement(resource, 'file', {'href': xml_file_path})
 
         # Additional last resource for the external tool xml
         external_tool_resource = lxml.etree.SubElement(resources, 'resource', {'identifier': self.external_tool_identifierref, 'type': 'imsbasiclti_xmlv1p0'})
@@ -645,7 +649,7 @@ class TestExportManager:
             tree = lxml.etree.ElementTree(root)
             tree.write(external_tool_identifierref_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
-    def export_module_meta_xml(self, modulestore, courselike_keys, courselikes, export_fs):
+    def export_module_meta_xml(self, modulestore, courselike_keys, courselikes, export_fs, external_tool_only):
         """
         Exports the module_meta.xml file in course_settings
         """
@@ -683,39 +687,59 @@ class TestExportManager:
 
                     # Iterate through chapter_sequential_modules and assign their type as they would appear in the modules page
                     # Example types: Header that just has text, external tool, assignment, etc.
-                    for chapter_sequential in chapter_sequential_modules:
-                        chapter_sequential = self.serialize_chapter_sequential(chapter_sequential)
-                        if chapter_sequential.format in assignment_types:
-                            item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifier[chapter_sequential]})
-                            lxml.etree.SubElement(item, 'content_type').text = 'Assignment'
-                            lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
-                            lxml.etree.SubElement(item, 'workflow_state').text= 'active'
-                            lxml.etree.SubElement(item, 'identifierref').text = self.sequential_to_identifierref[chapter_sequential]
-                        elif chapter_sequential.category == 'sequential':
-                            item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifierref[chapter_sequential]})
-                            lxml.etree.SubElement(item, 'content_type').text = 'ContextExternalTool'
-                            lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
-                            lxml.etree.SubElement(item, 'workflow_state').text= 'active'
-                            lxml.etree.SubElement(item, 'identifierref').text = self.external_tool_identifierref
-                            lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
-                            lxml.etree.SubElement(item, 'url').text = lti_link
-                        else:
-                            item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})   
-                            lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
-                            lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
-                            lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+
+                    # Check for external_tool_only
+                    if not external_tool_only:
+                        for chapter_sequential in chapter_sequential_modules:
+                            chapter_sequential = self.serialize_chapter_sequential(chapter_sequential)
+                            if chapter_sequential.format in assignment_types:
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifier[chapter_sequential]})
+                                lxml.etree.SubElement(item, 'content_type').text = 'Assignment'
+                                lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
+                                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+                                lxml.etree.SubElement(item, 'identifierref').text = self.sequential_to_identifierref[chapter_sequential]
+                            elif chapter_sequential.category == 'sequential':
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifierref[chapter_sequential]})
+                                lxml.etree.SubElement(item, 'content_type').text = 'ContextExternalTool'
+                                lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
+                                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+                                lxml.etree.SubElement(item, 'identifierref').text = self.external_tool_identifierref
+                                lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
+                                lxml.etree.SubElement(item, 'url').text = lti_link
+                            else:
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})   
+                                lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
+                                lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
+                                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+                    else:
+                        for chapter_sequential in chapter_sequential_modules:
+                            chapter_sequential = self.serialize_chapter_sequential(chapter_sequential)
+                            if chapter_sequential.category == 'sequential':
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifierref[chapter_sequential]})
+                                lxml.etree.SubElement(item, 'content_type').text = 'ContextExternalTool'
+                                lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
+                                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+                                lxml.etree.SubElement(item, 'identifierref').text = self.external_tool_identifierref
+                                lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
+                                lxml.etree.SubElement(item, 'url').text = lti_link
+                            else:
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})   
+                                lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
+                                lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
+                                lxml.etree.SubElement(item, 'workflow_state').text= 'active'
 
         # Write to file
         with export_fs.open('course_settings/module_meta.xml', 'wb') as module_meta_xml:
             tree = lxml.etree.ElementTree(root)
             tree.write(module_meta_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
 
-    def export_all_course_settings(self, modulestore, courselike_keys, courselikes, export_fs):
+    def export_all_course_settings(self, modulestore, courselike_keys, courselikes, export_fs, external_tool_only):
         """
         Function to export all course_settings at once
         """
         export_fs.makedirs('course_settings', recreate=True)
-        self.export_assignment_groups(modulestore, courselikes, export_fs)
+        if not external_tool_only:
+            self.export_assignment_groups(modulestore, courselikes, export_fs)
         self.export_media_tracks(export_fs)
         self.export_files_meta(export_fs)
         self.export_course_settings(modulestore, courselike_keys, export_fs)
@@ -736,10 +760,11 @@ class TestExportManager:
         
         # Call export functions
         self.export_external_tool(export_fs)
-        self.export_all_course_settings(self.modulestore, self.courselike_keys, courselikes, export_fs)
-        self.export_assignment_folders(self.modulestore, self.courselike_keys, courselikes, export_fs)
-        self.export_imsmanifest_xml(self.modulestore, self.courselike_keys, courselikes, export_fs)
-        self.export_module_meta_xml(self.modulestore, self.courselike_keys, courselikes, export_fs)
+        self.export_all_course_settings(self.modulestore, self.courselike_keys, courselikes, export_fs, self.external_tool_only)
+        if not self.external_tool_only:
+            self.export_assignment_folders(self.modulestore, self.courselike_keys, courselikes, export_fs)
+        self.export_imsmanifest_xml(self.modulestore, self.courselike_keys, courselikes, export_fs, self.external_tool_only)
+        self.export_module_meta_xml(self.modulestore, self.courselike_keys, courselikes, export_fs, self.external_tool_only)
 
 
                 
@@ -747,8 +772,8 @@ class TestExportManager:
 Function "export_course_to_imscc" below get called by the django management comman from export_olx.py
 """
 
-def export_course_to_imscc(modulestore, contentstore, course_key, root_dir, course_dir):
+def export_course_to_imscc(modulestore, contentstore, course_key, root_dir, course_dir, external_tool_only):
     """
     Thin wrapper for the Export Manager. See ExportManager for details.
     """
-    TestExportManager(modulestore, contentstore, course_key, root_dir, course_dir).export()
+    TestExportManager(modulestore, contentstore, course_key, root_dir, course_dir, external_tool_only).export()
