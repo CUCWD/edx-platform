@@ -29,37 +29,6 @@ PUBLISHED_DIR = "published"
 
 DEFAULT_CONTENT_FIELDS = ['metadata', 'data']
 
-# Returns an essentially 'unique' uuid for identifying and linking data up
-def create_uuid():
-    """
-    Returns an essentially unique identifier following canvas's default format
-    """
-    return 'g' + (str(uuid.uuid4())).replace('-', '')
-
-########## THIS FUNCTION DOESN'T WORK ######################################
-########## ALL IT DOES IS RETURNS ZERO, NEED TO FIX TO GET ACTUAL SCORE ####
-# def get_total_score(sequential):
-#     total_score = 0.0
-    
-#     # Get the direct children of the sequential
-#     children = sequential.get_children()
-    
-#     for child in children:
-#         try:
-#             # Call get_max_score() on the individual child
-#             score = child.get_max_score()  # Change this line to use child
-#             total_score += score
-#         except Exception as e:
-#             pass  # Handle the exception if necessary
-            
-#         # Recursively get the score from the child's children
-#         total_score += get_total_score(child)
-    
-#     if total_score != 0:
-#         print(total_score)
-#     return total_score
-
-
 class SerializableChapterSequential:
     """
     A serialized chapter or sequential object which allows for access of only the important attributes
@@ -171,21 +140,21 @@ class TestExportManager:
             sequential_modules = self.get_sequential_modules(self.modulestore, courselike_key)
             for sequential in sequential_modules:
                 sequential = self.serialize_chapter_sequential(sequential)
-                self.sequential_to_identifier[sequential] = create_uuid()
-                self.sequential_to_identifierref[sequential] = create_uuid()
+                self.sequential_to_identifier[sequential] = self.create_uuid()
+                self.sequential_to_identifierref[sequential] = self.create_uuid()
         
         for courselike_key in self.courselike_keys:
             chapter_modules = self.get_chapter_modules(self.modulestore, courselike_key)
             for chapter in chapter_modules:
                 chapter = self.serialize_chapter_sequential(chapter)
-                self.chapter_to_identifier[chapter] = create_uuid()
+                self.chapter_to_identifier[chapter] = self.create_uuid()
         
         for courselike_key in self.courselike_keys:
-            self.module_identifiers[courselike_key] = create_uuid()
+            self.module_identifiers[courselike_key] = self.create_uuid()
 
         self.assignment_group_to_identifier = {}
-        self.external_tool_identifierref = create_uuid()
-        self.course_settings_identifier = create_uuid()
+        self.external_tool_identifierref = self.create_uuid()
+        self.course_settings_identifier = self.create_uuid()
 
     def get_key(self, courselike_key):
         """
@@ -287,6 +256,46 @@ class TestExportManager:
         else:
             return ''
 
+    def get_total_score(self, sequential):
+        """
+        Returns the total amount of points that can be earned for an assignment sequential
+        """
+        total_score = 0.0
+        
+        # Get the direct children of the sequential
+        children = sequential.get_children()
+        
+        # Recursively iterate through the children to get access to the max_score of individual problem components
+        for child in children:
+            # This try statement will attempt to access max_count, a variable of quiz types with a bank of x amount of questions
+            # These quizzes randomly choose max_count number of questions to display from the bank
+            # Unable to recurse through the quizzes because otherwise, the total_score returned will include every single question in the bank,
+            # not just how many are displayed to the student
+            
+            try:
+                max_count = child.max_count
+                # If max_count is 0 or set to None, keep recursing through it's children
+                if max_count == 0 or max_count == None:
+                    raise Exception()
+                total_score += max_count
+            except Exception as e:
+                # Attempt to grab max_score value
+                try:
+                    score = child.max_score()
+                    total_score += score
+                except Exception as e:
+                    pass
+                # Only recursively get the score if no max_score or max_count is present
+                total_score += self.get_total_score(child)
+
+        return total_score
+
+    def create_uuid(self):
+        """
+        Returns an essentially unique identifier following canvas's default format
+        """
+        return 'g' + (str(uuid.uuid4())).replace('-', '')
+
     def export_assignment_groups(self, modulestore, courselikes, export_fs):
         """
         Exports the 'assignment_groups.xml' file in course_settings
@@ -312,7 +321,7 @@ class TestExportManager:
                 grade_name = grade['type']
                 grade_weight = grade['weight'] * 100 # openedx uses 0-1 grading weight, imscc uses 0-100
                 if grade_name not in self.assignment_group_to_identifier:
-                    self.assignment_group_to_identifier[grade_name] = create_uuid()
+                    self.assignment_group_to_identifier[grade_name] = self.create_uuid()
                     assignment_group = lxml.etree.SubElement(root, 'assignmentGroup', {'identifier': str(self.assignment_group_to_identifier[grade_name])})
                     lxml.etree.SubElement(assignment_group, 'title').text = 'EW - ' + grade_name
                     lxml.etree.SubElement(assignment_group, 'group_weight').text = str(grade_weight)
@@ -422,6 +431,8 @@ class TestExportManager:
                     course_abbreviation = self.get_course_abbreviation(courselike_key)
 
                     for sequential in only_assignments:
+                        # Store a non serialized version of the sequential in order to get access to its children for points_possible
+                        non_serialized_sequential = sequential
                         sequential = self.serialize_chapter_sequential(sequential)
                         # Create root
                         root = lxml.etree.Element(
@@ -441,9 +452,9 @@ class TestExportManager:
                         lxml.etree.SubElement(root, 'title').text = course_abbreviation + sequential.display_name
                         lxml.etree.SubElement(root, 'assignment_group_identifierref').text = str(self.assignment_group_to_identifier[sequential.format])
 
-                        ###### NEED TO FIX #######
-                        lxml.etree.SubElement(root, 'points_possible').text = '0'#str(get_total_score(sequential))
-                        ##########################
+                        # Adds the maximum number of points to the assignment information
+                        lxml.etree.SubElement(root, 'points_possible').text = str(self.get_total_score(non_serialized_sequential))
+                        lxml.etree.SubElement(root, 'grading_type').text = 'points'
 
                         lxml.etree.SubElement(root, 'submission_types').text = 'external_tool'
                         lxml.etree.SubElement(root, 'external_tool_identifierref').text = self.external_tool_identifierref
@@ -496,7 +507,7 @@ class TestExportManager:
         root = lxml.etree.Element(
             'manifest',
             {
-                'identifier': create_uuid()
+                'identifier': self.create_uuid()
             },
             nsmap={
                 None: 'http://www.imsglobal.org/xsd/imsccv1p1/imscp_v1p1',
