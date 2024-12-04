@@ -134,6 +134,8 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                    pre_requisite_courses = pre_requisite_courses.length > 0 ? pre_requisite_courses : '';
                    this.$el.find('#' + this.fieldToSelectorMap.pre_requisite_courses).val(pre_requisite_courses);
 
+                   this.$el.find('#' + this.fieldToSelectorMap.course_institution).val(this.model.get('course_institution'));
+
                    if (this.model.get('entrance_exam_enabled') == 'true') {
                        this.$('#' + this.fieldToSelectorMap.entrance_exam_enabled).attr('checked', this.model.get('entrance_exam_enabled'));
                        this.$('.div-grade-requirements').show();
@@ -185,6 +187,7 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                    banner_image_asset_path: 'banner-image-url',
                    video_thumbnail_image_asset_path: 'video-thumbnail-image-url',
                    pre_requisite_courses: 'pre-requisite-course',
+                   course_institution: 'course-institution',
                    entrance_exam_enabled: 'entrance-exam-enabled',
                    entrance_exam_minimum_score_pct: 'entrance-exam-minimum-score-pct',
                    course_settings_learning_fields: 'course-settings-learning-fields',
@@ -318,6 +321,7 @@ define(['js/views/validation', 'codemirror', 'underscore', 'jquery', 'jquery.ui'
                    case 'course-version':
                    case 'course-revision-number':
                    case 'course-title':
+                   case 'course-institution':
                    case 'course-subtitle':
                    case 'course-duration':
                    case 'course-description':
