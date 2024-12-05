@@ -70,11 +70,11 @@ class CourseOverview(TimeStampedModel):
     # Course identification
     id = CourseKeyField(db_index=True, primary_key=True, max_length=255)
     _location = UsageKeyField(max_length=255)
-    org = TextField(max_length=255, default='outdated_entry')
-    display_name = TextField(null=True)
-    display_number_with_default = TextField()
-    display_org_with_default = TextField()
-    course_institution = TextField(null=True)
+    org = models.TextField(max_length=255, default='outdated_entry')
+    display_name = models.TextField(null=True)
+    display_number_with_default = models.TextField()
+    display_org_with_default = models.TextField()
+    course_institution = models.TextField(null=True)
 
     start = models.DateTimeField(null=True)
     end = models.DateTimeField(null=True)
