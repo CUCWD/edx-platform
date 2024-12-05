@@ -2,32 +2,15 @@
 Methods for exporting course data to IMSCC
 """
 
-import logging
-import os
-from abc import abstractmethod
-from json import dumps
-
 import lxml.etree
 from fs.osfs import OSFS
-from opaque_keys.edx.locator import CourseLocator, LibraryLocator
-from xblock.fields import Reference, ReferenceList, ReferenceValueDict, Scope
-
-from xmodule.assetstore import AssetMetadata
-from xmodule.contentstore.content import StaticContent
-from xmodule.exceptions import NotFoundError
-from xmodule.modulestore import LIBRARY_ROOT, EdxJSONEncoder, ModuleStoreEnum
-from xmodule.modulestore.draft_and_published import DIRECT_ONLY_CATEGORIES
-from xmodule.modulestore.inheritance import own_metadata
-from xmodule.modulestore.store_utilities import draft_node_constructor, get_draft_subtree_roots
+from opaque_keys.edx.locator import CourseLocator
+from xmodule.modulestore import ModuleStoreEnum
 
 import uuid
 from datetime import datetime
 import re
 
-DRAFT_DIR = "drafts"
-PUBLISHED_DIR = "published"
-
-DEFAULT_CONTENT_FIELDS = ['metadata', 'data']
 
 class SerializableChapterSequential:
     """
@@ -69,7 +52,7 @@ class SerializableChapterSequential:
                     self.course_id == other.course_id)
         return False
 
-class TestExportManager:
+class CourseExportManager:
     """
     Manages IMSCC exporting for courselike objects.
     """
@@ -787,4 +770,4 @@ def export_course_to_imscc(modulestore, contentstore, course_key, root_dir, cour
     """
     Thin wrapper for the Export Manager. See ExportManager for details.
     """
-    TestExportManager(modulestore, contentstore, course_key, root_dir, course_dir, external_tool_only).export()
+    CourseExportManager(modulestore, contentstore, course_key, root_dir, course_dir, external_tool_only).export()
