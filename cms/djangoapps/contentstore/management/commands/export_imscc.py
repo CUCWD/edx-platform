@@ -31,7 +31,10 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('course_id',  nargs="+") #nargs = "+" allows parsing of unlimited course ids
         parser.add_argument('--output')
-        parser.add_argument('--external-tool-only', action = 'store_true', help = 'Export Common Cartridge file using only external tools and no assignment types')
+        parser.add_argument(
+            '--external-tool-only',
+            action = 'store_true',
+            help = 'Export Common Cartridge file using only external tools and no assignment types')
 
     def handle(self, *args, **options):
         external_tool_only = options.get('external_tool_only', False)
