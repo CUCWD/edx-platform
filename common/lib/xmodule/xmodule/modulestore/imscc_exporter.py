@@ -79,7 +79,7 @@ class CourseExportManager:
 
         'sequential_to_identifier': A dictionary mapping each sequential to an unique identifier
                                     An 'identifier' attribute of the 'item' element containing sequential information in the 'imsmanifest.xml' file
-                                    An 'identifier' attribute of the 'item' element containing sequential information in the 'course_settings/module_meta.xml' file 
+                                    An 'identifier' attribute of the 'item' element containing sequential information in the 'course_settings/module_meta.xml' file
                                     Links sequentials with all the information above
 
         'sequential_to_identifierref': A dictionary mapping each sequential to an unique identifier
@@ -88,12 +88,12 @@ class CourseExportManager:
                                        An 'identifier' attribute of the assignment object in each sequential's individual assignment_settings.xml file
                                        The name of the folder that stores a sequential's assignment_settings.xml file and html file
                                        Links sequentials with all the information above
-        
+
         'chapter_to_identifier': A dictionary mapping each chapter to an unique identifier
                                  An 'identifier' attribute of the 'item' element containing chapter information in the 'imsmanifest.xml' file
-                                 An 'identifier' attribute of the 'item' element containing chapter information in the 'course_settings/module_meta.xml' file 
+                                 An 'identifier' attribute of the 'item' element containing chapter information in the 'course_settings/module_meta.xml' file
                                  Links sequentials with all the information above
-        
+
         'assignment_group_to_identifier': A dictionary mapping the names of each assignment group to an unique identifier
                                           An 'identifier' attribute of the 'assignmentGroup' element in 'assignment_groups.xml'
                                           An 'assignment_group_identifierref' child element of the 'assignment' element in an assignment's 'assignment_settings.xml' file
@@ -106,7 +106,7 @@ class CourseExportManager:
 
         'course_settings_identifier': A pre-made identifier to link course_settings references
                                        An 'identifier' attrubute of the 'course' element in 'course_settings/course_settings.xml' file containing course settings
-                                       An 'identifier' attribute of the 'resource' element in 'imsmanifest.xml' file containing course settings information      
+                                       An 'identifier' attribute of the 'resource' element in 'imsmanifest.xml' file containing course settings information
 
         'module_identifier': A pre-made identifier to link the only module that is created
                              An 'identifier' attribute of the 'item' element under the 'item' element with the identifier 'LearningModules' in 'imsmanfiest.xml'
@@ -125,13 +125,13 @@ class CourseExportManager:
                 sequential = self.serialize_chapter_sequential(sequential)
                 self.sequential_to_identifier[sequential] = self.create_uuid()
                 self.sequential_to_identifierref[sequential] = self.create_uuid()
-        
+
         for courselike_key in self.courselike_keys:
             chapter_modules = self.get_chapter_modules(self.modulestore, courselike_key)
             for chapter in chapter_modules:
                 chapter = self.serialize_chapter_sequential(chapter)
                 self.chapter_to_identifier[chapter] = self.create_uuid()
-        
+
         for courselike_key in self.courselike_keys:
             self.module_identifiers[courselike_key] = self.create_uuid()
 
@@ -171,7 +171,7 @@ class CourseExportManager:
                 if module.category == 'sequential':
                     sequentials.append(module)
         return sequentials
-    
+
     def get_chapter_modules(self, modulestore, courselike_key):
         """
         Retrieve all chapter modules from the course
@@ -185,7 +185,7 @@ class CourseExportManager:
                 if module.category == 'chapter':
                     chapter.append(module)
         return chapter
-    
+
     def get_chapter_sequential_modules(self, modulestore, courselike_key):
         """
         Retrieve all chapter and sequential modules from the course
@@ -199,7 +199,7 @@ class CourseExportManager:
                 if module.category == 'sequential' or module.category == 'chapter':
                     sequentials_chapters.append(module)
         return sequentials_chapters
-    
+
     def serialize_chapter_sequential(self, chapter_sequential):
         """
         Return a serialized object of an inputted chpater or sequential in order to bypass dictionary key issues
@@ -221,14 +221,14 @@ class CourseExportManager:
         between_pluses = r'(?<=\+)(.*?)(?=\+)'
         # re pattern for the 'FAA-ACS-AM-IA-ACE' that all courses seem to have
         course_type = r'([A-Za-z]{3}-[A-Za-z]{3}-[A-Za-z]{2}-[A-Za-z]{2}-[A-Za-z]{3})'
-        
+
         courselike_key = str(courselike_key)
-        
+
         match = re.search(between_pluses, courselike_key)
-    
+
         if match:
             extracted_value = match.group(1)
-            
+
             # Check if it matches the course pattern
             if re.match(course_type, extracted_value):
                 # If it matches, extract the last 2 letters dash 3 letters
@@ -244,17 +244,17 @@ class CourseExportManager:
         Returns the total amount of points that can be earned for an assignment sequential
         """
         total_score = 0.0
-        
+
         # Get the direct children of the sequential
         children = sequential.get_children()
-        
+
         # Recursively iterate through the children to get access to the max_score of individual problem components
         for child in children:
             # This try statement will attempt to access max_count, a variable of quiz types with a bank of x amount of questions
             # These quizzes randomly choose max_count number of questions to display from the bank
             # Unable to recurse through the quizzes because otherwise, the total_score returned will include every single question in the bank,
             # not just how many are displayed to the student
-            
+
             try:
                 max_count = child.max_count
                 # If max_count is 0 or set to None, keep recursing through it's children
@@ -308,7 +308,7 @@ class CourseExportManager:
                     assignment_group = lxml.etree.SubElement(root, 'assignmentGroup', {'identifier': str(self.assignment_group_to_identifier[grade_name])})
                     lxml.etree.SubElement(assignment_group, 'title').text = 'EW - ' + grade_name
                     lxml.etree.SubElement(assignment_group, 'group_weight').text = str(grade_weight)
-                
+
                 # Write assignment_groups to a file
             with export_fs.open('course_settings/assignment_groups.xml', 'wb') as assignment_groups_xml:
                 tree = lxml.etree.ElementTree(root)
@@ -330,7 +330,7 @@ class CourseExportManager:
 
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
-        
+
         # Write to file
         with export_fs.open('course_settings/media_tracks.xml', 'wb') as media_tracks_xml:
             tree = lxml.etree.ElementTree(root)
@@ -351,7 +351,7 @@ class CourseExportManager:
 
         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                 'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
-        
+
         # Write to file
         with export_fs.open('course_settings/files_meta.xml', 'wb') as files_meta_xml:
             tree = lxml.etree.ElementTree(root)
@@ -389,7 +389,7 @@ class CourseExportManager:
         with export_fs.open('course_settings/course_settings.xml', 'wb') as course_settings_xml:
             tree = lxml.etree.ElementTree(root)
             tree.write(course_settings_xml, xml_declaration=True, encoding='UTF-8', pretty_print=True)
-        
+
         # There's this file called canvas_export.txt that contains nothing but a pun...
         # It's referenced in the ims_manifest file for some reason so we're adding it
         with export_fs.open('course_settings/canvas_export.txt', 'w') as canvas_export_txt:
@@ -405,7 +405,7 @@ class CourseExportManager:
             with self.modulestore.bulk_operations(courselike_key):
                 with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
                     sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
-                    
+
                     # Parse out non assignments
                     assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
                     only_assignments = (sequential for sequential in sequential_modules if sequential.format in assignment_types)
@@ -430,7 +430,7 @@ class CourseExportManager:
                         )
                         root.set('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation',
                             'http://canvas.instructure.com/xsd/cccv1p0 https://canvas.instructure.com/xsd/cccv1p0.xsd')
-                        
+
                         # Add assignment data like points, assignment type, lti, etc.
                         lxml.etree.SubElement(root, 'title').text = course_abbreviation + sequential.display_name
                         lxml.etree.SubElement(root, 'assignment_group_identifierref').text = str(self.assignment_group_to_identifier[sequential.format])
@@ -446,7 +446,7 @@ class CourseExportManager:
                         lxml.etree.SubElement(root, 'external_tool_data_json').text = '\"\"'
                         lxml.etree.SubElement(root, 'external_tool_link_settings_json').text = '{\"selection_width\":\"\",\"selection_height":\"\"}'
                         lxml.etree.SubElement(root, 'external_tool_new_tab').text = 'false'
-                        
+
                         # Create corresponding HTML file
                         # HTML files follow this same cookie cutter format with the only thing changing is the title
                         html_content ='''<html>
@@ -466,7 +466,7 @@ class CourseExportManager:
                         html_file_name = html_file_name.lower()
                         html_file_name = html_file_name.replace(' ', '-')
                         html_file_name = html_file_name + '.html'
-                        
+
                         # Write to file
                         export_fs.makedirs(str(self.sequential_to_identifierref[sequential]), recreate=True)
 
@@ -560,13 +560,13 @@ class CourseExportManager:
                         else:
                             chapter = lxml.etree.SubElement(module, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
                             lxml.etree.SubElement(chapter, 'title').text = course_abbreviation + chapter_sequential.display_name
-                
+
         ############################# Resources section of imsmanifest.xml #############################
-        
+
         # Create resources element
         resources = lxml.etree.SubElement(root, 'resources')
         type_string = 'associatedcontent/imscc_xmlv1p1/learning-application-resource'
-        
+
         # Course settings
         course_settings_resource = lxml.etree.SubElement(resources, 'resource', {'identifier': self.course_settings_identifier, 'type': type_string, 'href': 'course_settings/canvas_export.txt'})
         course_settings_path = 'course_settings'
@@ -582,7 +582,7 @@ class CourseExportManager:
                     with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
                         # Create resources for assignment sequentials
                         sequential_modules = self.get_sequential_modules(modulestore, courselike_key)
-                        
+
                         assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
                         for sequential in sequential_modules:
                             sequential = self.serialize_chapter_sequential(sequential)
@@ -701,7 +701,7 @@ class CourseExportManager:
                                 lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
                                 lxml.etree.SubElement(item, 'url').text = lti_link
                             else:
-                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})   
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
                                 lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
                                 lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
@@ -717,7 +717,7 @@ class CourseExportManager:
                                 lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
                                 lxml.etree.SubElement(item, 'url').text = lti_link
                             else:
-                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})   
+                                item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
                                 lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
                                 lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
@@ -746,12 +746,12 @@ class CourseExportManager:
         courselikes = []
         for courselike_key in self.courselike_keys:
             courselikes.append(self.get_courselike(courselike_key))
-        
+
         fsm = OSFS(self.root_dir)
 
         # Make the directory to export to
         export_fs = fsm.makedir(self.target_dir, recreate=True)
-        
+
         # Call export functions
         self.export_external_tool(export_fs)
         self.export_all_course_settings(self.modulestore, self.courselike_keys, courselikes, export_fs, self.external_tool_only)
@@ -761,7 +761,7 @@ class CourseExportManager:
         self.export_module_meta_xml(self.modulestore, self.courselike_keys, courselikes, export_fs, self.external_tool_only)
 
 
-                
+
 """
 Function "export_course_to_imscc" below get called by the django management comman from export_olx.py
 """
@@ -771,3 +771,4 @@ def export_course_to_imscc(modulestore, contentstore, course_key, root_dir, cour
     Thin wrapper for the Export Manager. See ExportManager for details.
     """
     CourseExportManager(modulestore, contentstore, course_key, root_dir, course_dir, external_tool_only).export()
+    
