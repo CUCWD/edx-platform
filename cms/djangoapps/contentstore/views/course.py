@@ -1189,9 +1189,9 @@ def settings_handler(request, course_key_string):  # lint-amnesty, pylint: disab
                 'upgrade_deadline': upgrade_deadline,
                 'mfe_proctored_exam_settings_url': get_proctored_exam_settings_url(course_module.id),
             }
-            
+
             course_org = get_course_organization(course_key)
-            if (course_org):
+            if course_org:
                 institutions = get_organization_institutions(course_org)
                 settings_context.update({'possible_organization_institutions': list(institutions)})
             else:
