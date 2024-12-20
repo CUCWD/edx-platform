@@ -395,6 +395,17 @@ CMS.URL.UPLOAD_ASSET = '${upload_asset_url | n, js_escaped_string}'
               <input id="course-revision-number" type="text" placeholder="YYYY.MM">
               <span class="tip tip-stacked">${_("Identify the course revision number here. This is used to assist with identifying what changes have been made for a course. Placeholder indicates a date format (YYYY.MM), however, we don't have to explicity tie this to a date for the number identification.")}</span>
             </li>
+            <li class="field field-select" id="field-course-institution">
+              <label for="course-institution">${_("Institution Name")}</label>
+              <select class="input" id="course-institution">
+                  <option value="">${_("None")}</option>
+                  % for institution in sorted(possible_organization_institutions, key=lambda s: s['name'].lower() if s['name'] is not None else ''):
+                  <option value="${institution['short_name']}">${institution['name']}</option>
+                  % endfor
+              </select>
+              <span class="tip tip-inline">${_("Institution that is hosting this course run")}</span>
+              <button type="submit" class="sr" name="submit" value="submit">${_("set course institution")}</button>
+          </li>
           </ol>
         </div>
         % endif
