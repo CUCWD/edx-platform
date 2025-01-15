@@ -6,6 +6,7 @@ import copy
 from importlib import import_module
 import logging
 import re
+from datetime import datetime # lint-amnesty, pylint: disable=wrong-import-order
 
 from django import forms
 from django.conf import settings
@@ -16,6 +17,7 @@ from django.forms import widgets
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django_countries import countries
+from pytz import UTC
 
 from common.djangoapps import third_party_auth
 from common.djangoapps.edxmako.shortcuts import marketing_link
@@ -35,6 +37,8 @@ from common.djangoapps.util.password_policy_validators import (
     password_validators_restrictions,
     validate_password,
 )
+
+from lms.envs.common import PARENTAL_CONSENT_AGE_LIMIT
 
 LOGGER = logging.getLogger(__name__)
 
@@ -277,14 +281,37 @@ class AccountCreationForm(forms.Form):
 
     def clean_year_of_birth(self):
         """
-        Parse year_of_birth to an integer, but just use None instead of raising
-        an error if it is malformed
+        Parse year_of_birth to an integer
+        Returns None if the year_of_birth is malformed
+        Raises ValidationError if year_of_birth isn't malformed and doesn't meet the minimum age requirement
+        Returns a clean year_of_birth otherwise
         """
         try:
             year_str = self.cleaned_data["year_of_birth"]
-            return int(year_str) if year_str is not None and len(year_str) > 0 else None
+            year_int = int(year_str) if year_str is not None and len(year_str) > 0 else None
         except ValueError:
+            year_int = None
+        
+        # year_of_birth was malformed, return None
+        if year_int == None:
             return None
+        
+        # Check age limit if the setting exists
+        if PARENTAL_CONSENT_AGE_LIMIT != None:
+            # Raise ValidationError if the user has a year of birth specified and that year is fewer years in the past than the limit.
+            #
+            # Note: we have to be conservative using the user's year of birth as their birth date could be
+            # December 31st. This means that if the number of years since their birth year is exactly equal
+            # to the age limit then we have to assume that they might still not be old enough.
+
+            age = datetime.now(UTC).year - year_int - 1
+
+            if age < PARENTAL_CONSENT_AGE_LIMIT:
+                raise ValidationError(_("You must be 13 years or older to create an account."))
+        
+        # If year_of_birth wasn't malformed and age was confirmed for parental consent, return
+        # the clean year_of_birth
+        return year_int
 
     @property
     def cleaned_extended_profile(self):
