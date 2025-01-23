@@ -65,26 +65,40 @@ class MFEConfigView(APIView):
             referer = re.sub(r'^https?:\/\/', '', request.META.get('HTTP_REFERER')).split('/')[0]  # pylint: disable=anomalous-backslash-in-string
 
             for site_config in SiteConfiguration.objects.all():
+                configuration = getattr(site_config.site, "configuration", None)
                 mfe_config = site_config.site_values.get("MFE_CONFIG", {})
+
+                if request.query_params.get('mfe'):
+                    mfe = str(request.query_params.get('mfe')).upper()
+
+                    mfe_config.update(configuration.get_value(
+                        f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {}))
+                    )
+
                 if mfe_config.get("BASE_URL"):
                     mfe_config_base_url = re.sub(r'^https?:\/\/', '', mfe_config.get("BASE_URL")).split('/')[0]  # pylint: disable=anomalous-backslash-in-string
 
+                    log.info(
+                        "MFEConfigView.get - mfe_config_base_url (%s), referrer (%s)",
+                        mfe_config_base_url, referer
+                    )
                     if mfe_config_base_url == referer:
                         log.info(
                             "Found the site configuration that matches the MFE base domain."
                         )
 
-                        configuration = getattr(site_config.site, "configuration", None)
+                        # configuration = getattr(site_config.site, "configuration", None)
 
-                        mfe_config = configuration.get_value(
-                            'MFE_CONFIG', getattr(settings, 'MFE_CONFIG', {}))
+                        # mfe_config = configuration.get_value(
+                        #     'MFE_CONFIG', getattr(settings, 'MFE_CONFIG', {})
+                        # )
 
-                        if request.query_params.get('mfe'):
-                            mfe = str(request.query_params.get('mfe')).upper()
+                        # if request.query_params.get('mfe'):
+                        #     mfe = str(request.query_params.get('mfe')).upper()
 
-                            mfe_config.update(configuration.get_value(
-                                f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {}))
-                            )
+                        #     mfe_config.update(configuration.get_value(
+                        #         f'MFE_CONFIG_{mfe}', getattr(settings, f'MFE_CONFIG_{mfe}', {}))
+                        #     )
 
                         # Exit out of the loop once you find first correct
                         # MFE_CONFIG in Site Configuration.
