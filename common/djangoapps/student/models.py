@@ -541,7 +541,9 @@ class UserProfile(models.Model):
     GENDER_CHOICES = (
         ('m', gettext_noop('Male')),
         ('f', gettext_noop('Female')),
-        ('nbtg', gettext_noop('Non-binary / third gender')),
+        ('t', gettext_noop('Transgender')),
+        ('nbnc', gettext_noop('Non-binary / Non-Conforming')),
+        ('o', gettext_noop('Other')),
         # Translators: 'Other' refers to the student's gender
         # ('o', gettext_noop('Self-describe/other')) # TODO - Need to change this option to a freetext input
         ('prefer-not-to-say', gettext_noop('Prefer not to say'))
