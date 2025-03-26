@@ -117,8 +117,7 @@ def export_course_to_directory(course_keys, root_dir, external_tool_only):
 
 
 def compress_directory(directory, filename):
-    """Compress a directory into a tar.gz file"""
-    mode = 'w:gz'
-    name = path(directory).name
-    with tarfile.open(filename, mode) as tar_file:
-        tar_file.add(directory, arcname=name)
+    """Compress a directory into a zip file with .imscc extension"""
+    shutil.make_archive(filename, 'zip', directory)
+    # Rename the .zip file to .imscc
+    os.rename(f"{filename}.zip", f"{filename}.imscc")

@@ -3,7 +3,9 @@ Methods for exporting course data to IMSCC
 """
 
 import lxml.etree
+from django.conf import settings
 from fs.osfs import OSFS
+from lms.djangoapps.courseware.exceptions import CourseRunNotFound
 from opaque_keys.edx.locator import CourseLocator
 from xmodule.modulestore import ModuleStoreEnum
 
@@ -73,6 +75,8 @@ class CourseExportManager:
         self.root_dir = root_dir
         self.target_dir = str(target_dir)
         self.external_tool_only = external_tool_only
+        self.lms_base = settings.LMS_BASE
+        self.platform_name = settings.PLATFORM_NAME
 
         """
         Sets up some information to share between export functions
@@ -158,46 +162,75 @@ class CourseExportManager:
         # eventually. Accessing it all now at the beginning increases performance of the export.
         return self.modulestore.get_course(courselike_key, depth=None, lazy=False)
 
+
+    def _get_ordered_blocks(self, modulestore, courselike_key):
+        """
+        Get the ordered published blocks for the course.
+        """
+        ordered_blocks = []
+
+        # Get the unordered list of blocks from the mongo database.
+        with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+            course_descriptor = modulestore.get_course(courselike_key, depth=0)
+            if course_descriptor is None:
+                raise CourseRunNotFound(course_key=courselike_key)
+            
+            # Order the blocks by how they appear in the course. This is important for correct order in the export.
+            for section in course_descriptor.get_children():
+                ordered_blocks.append(section)
+                for subsection in section.get_children():
+                    ordered_blocks.append(subsection)
+                    # Stop at the subsection level for now because we're using LTI external tools for the subsection level only.
+                    # for vertical in subsection.get_children():
+                    #     ordered_blocks.append(vertical)
+                    #     for block in vertical.get_children():
+                    #         ordered_blocks.append(block)
+        
+        return ordered_blocks
+    
     def get_sequential_modules(self, modulestore, courselike_key):
         """
         Retrieve all sequential modules from the course
         """
-        with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+        # with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
             # Get all top-level modules (e.g., chapters, sequentials)
-            top_level_modules = modulestore.get_items(courselike_key)
+            # top_level_modules = modulestore.get_items(courselike_key)
+        top_level_modules = self._get_ordered_blocks(modulestore, courselike_key)
 
-            sequentials = []
-            for module in top_level_modules:
-                if module.category == 'sequential':
-                    sequentials.append(module)
+        sequentials = []
+        for module in top_level_modules:
+            if module.category == 'sequential':
+                sequentials.append(module)
         return sequentials
 
     def get_chapter_modules(self, modulestore, courselike_key):
         """
         Retrieve all chapter modules from the course
         """
-        with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+        # with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
             # Get all top-level modules (e.g., chapters, sequentials)
-            top_level_modules = modulestore.get_items(courselike_key)
+            # top_level_modules = modulestore.get_items(courselike_key)
+        top_level_modules = self._get_ordered_blocks(modulestore, courselike_key)
 
-            chapter = []
-            for module in top_level_modules:
-                if module.category == 'chapter':
-                    chapter.append(module)
+        chapter = []
+        for module in top_level_modules:
+            if module.category == 'chapter':
+                chapter.append(module)
         return chapter
 
     def get_chapter_sequential_modules(self, modulestore, courselike_key):
         """
         Retrieve all chapter and sequential modules from the course
         """
-        with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+        # with modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
             # Get all top-level modules (e.g., chapters, sequentials)
-            top_level_modules = modulestore.get_items(courselike_key)
+            # top_level_modules = modulestore.get_items(courselike_key)
+        top_level_modules = self._get_ordered_blocks(modulestore, courselike_key)
 
-            sequentials_chapters = []
-            for module in top_level_modules:
-                if module.category == 'sequential' or module.category == 'chapter':
-                    sequentials_chapters.append(module)
+        sequentials_chapters = []
+        for module in top_level_modules:
+            if module.category == 'sequential' or module.category == 'chapter':
+                sequentials_chapters.append(module)
         return sequentials_chapters
 
     def serialize_chapter_sequential(self, chapter_sequential):
@@ -217,25 +250,16 @@ class CourseExportManager:
         Returns a course abbreviation to append to the start of module and assignment names
         Returns nothing if the courselike_key provided doesn't match the expected pattern in most courses
         """
-        # re pattern for extracting the values between the plus signs
+        # re pattern for extracting the values between the plus signs to find the Course Number.
         between_pluses = r'(?<=\+)(.*?)(?=\+)'
-        # re pattern for the 'FAA-ACS-AM-IA-ACE' that all courses seem to have
-        course_type = r'([A-Za-z]{3}-[A-Za-z]{3}-[A-Za-z]{2}-[A-Za-z]{2}-[A-Za-z]{3})'
 
         courselike_key = str(courselike_key)
 
         match = re.search(between_pluses, courselike_key)
 
+        # Return the full Course Number value if it matches the expected pattern.
         if match:
-            extracted_value = match.group(1)
-
-            # Check if it matches the course pattern
-            if re.match(course_type, extracted_value):
-                # If it matches, extract the last 2 letters dash 3 letters
-                last_part = extracted_value.split('-')[-2] + '-' + extracted_value.split('-')[-1]
-                return last_part + ' '
-            else:
-                return ''
+            return f"{match.group(1)} "
         else:
             return ''
 
@@ -441,7 +465,7 @@ class CourseExportManager:
 
                         lxml.etree.SubElement(root, 'submission_types').text = 'external_tool'
                         lxml.etree.SubElement(root, 'external_tool_identifierref').text = self.external_tool_identifierref
-                        lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + sequential.url_name
+                        lti_link = f'https://{self.lms_base}/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + sequential.url_name
                         lxml.etree.SubElement(root, 'external_tool_url').text = lti_link
                         lxml.etree.SubElement(root, 'external_tool_data_json').text = '\"\"'
                         lxml.etree.SubElement(root, 'external_tool_link_settings_json').text = '{\"selection_width\":\"\",\"selection_height":\"\"}'
@@ -543,8 +567,9 @@ class CourseExportManager:
             # Bulk operations and only operate on published content
             with self.modulestore.bulk_operations(courselike_key):
                 with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+                    courselike = self.get_courselike(courselike_key)
                     module = lxml.etree.SubElement(learning_module, 'item', {'identifier': self.module_identifiers[courselike_key]})
-                    lxml.etree.SubElement(module, 'title').text = (self.get_courselike(courselike_key)).display_name + ' ' + (self.get_key(courselike_key)).course
+                    lxml.etree.SubElement(module, 'title').text = f"{(self.get_key(courselike_key)).course} {courselike.display_name}"
 
                     # Build out all the chapters and sequentials underneath the one learning module (course)
                     chapter_and_sequential_modules = self.get_chapter_sequential_modules(modulestore, courselike_key)
@@ -552,14 +577,17 @@ class CourseExportManager:
                     # Course abbreviation to append to the start of the module names
                     course_abbreviation = self.get_course_abbreviation(courselike_key)
 
+                    parent_chapter = None
                     for chapter_sequential in chapter_and_sequential_modules:
                         chapter_sequential = self.serialize_chapter_sequential(chapter_sequential)
-                        if chapter_sequential.category == 'sequential':
-                            sequential = lxml.etree.SubElement(module, 'item', {'identifier': self.sequential_to_identifier[chapter_sequential], 'identifierref': self.sequential_to_identifierref[chapter_sequential]})
-                            lxml.etree.SubElement(sequential, 'title').text = course_abbreviation + chapter_sequential.display_name
-                        else:
-                            chapter = lxml.etree.SubElement(module, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
+            
+                        if chapter_sequential.category == 'chapter':
+                            parent_chapter = chapter = lxml.etree.SubElement(module, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
                             lxml.etree.SubElement(chapter, 'title').text = course_abbreviation + chapter_sequential.display_name
+
+                        if chapter_sequential.category == 'sequential':
+                            sequential = lxml.etree.SubElement(parent_chapter, 'item', {'identifier': self.sequential_to_identifier[chapter_sequential], 'identifierref': self.sequential_to_identifierref[chapter_sequential]})
+                            lxml.etree.SubElement(sequential, 'title').text = course_abbreviation + chapter_sequential.display_name
 
         ############################# Resources section of imsmanifest.xml #############################
 
@@ -627,16 +655,16 @@ class CourseExportManager:
                     'http://www.imsglobal.org/xsd/imslticp_v1p0 http://www.imsglobal.org/xsd/lti/ltiv1p0/imslticp_v1p0.xsd')
 
         # Basic metadata content
-        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}title', nsmap={'blti': 'http://www.imsglobal.org/xsd/imsbasiclti_v1p0'}).text = 'EducateWorkforce (courses.educateworkforce.com)'
+        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}title', nsmap={'blti': 'http://www.imsglobal.org/xsd/imsbasiclti_v1p0'}).text = f'{self.platform_name} ({self.lms_base})'
         lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}description').text = ''
-        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}secure_launch_url').text = 'https://courses.educateworkforce.com/lti_provider/'
+        lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}secure_launch_url').text = f'https://{self.lms_base}/lti_provider/'
         vendor = lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}vendor')
         lxml.etree.SubElement(vendor, '{http://www.imsglobal.org/xsd/imslticp_v1p0}code').text = 'unknown'
         lxml.etree.SubElement(vendor, '{http://www.imsglobal.org/xsd/imslticp_v1p0}name').text = 'unknown'
         lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}custom')
         extensions = lxml.etree.SubElement(root, '{http://www.imsglobal.org/xsd/imsbasiclti_v1p0}extensions', platform='canvas.instructure.com')
         lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name='privacy_level').text = 'public'
-        lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name='domain').text = 'courses.educateworkforce.com'
+        lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name='domain').text = f'{self.lms_base}'
         lxml.etree.SubElement(extensions, '{http://www.imsglobal.org/xsd/imslticm_v1p0}property', name='lti_version').text = '1.1'
 
         with export_fs.open(self.external_tool_identifierref + '.xml', 'wb') as external_tool_identifierref_xml:
@@ -665,13 +693,14 @@ class CourseExportManager:
             # Bulk operations and only operate on published content
             with self.modulestore.bulk_operations(courselike_key):
                 with self.modulestore.branch_setting(ModuleStoreEnum.Branch.published_only, courselike_key):
+                    courselike = self.get_courselike(courselike_key)
                     # Get all the chapter and sequential modules to appear under the modules page
                     chapter_sequential_modules = self.get_chapter_sequential_modules(modulestore, courselike_key)
                     # Parse out assignments (assignments are sequentials with a 'format' in the grading policy)
                     assignment_types = {assignment_type['type'] for assignment_type in courselike.grading_policy['GRADER']}
 
                     module = lxml.etree.SubElement(root, 'module', {'identifier': self.module_identifiers[courselike_key]})
-                    lxml.etree.SubElement(module, 'title').text =  (self.get_courselike(courselike_key)).display_name + ' ' + (self.get_key(courselike_key)).course
+                    lxml.etree.SubElement(module, 'title').text =  f"{(self.get_key(courselike_key)).course} {courselike.display_name}"
                     lxml.etree.SubElement(module, 'workflow_state').text = 'active'
 
                     items = lxml.etree.SubElement(module, 'items')
@@ -682,9 +711,15 @@ class CourseExportManager:
                     # Iterate through chapter_sequential_modules and assign their type as they would appear in the modules page
                     # Example types: Header that just has text, external tool, assignment, etc.
 
+                    # Keep track of the position of the element in the course to keep the same order as the course
+                    course_position = 0
+
                     # Check for external_tool_only
                     if not external_tool_only:
+                        # external_tool_only is false, add these types of modules (Assignment, ExternalTool, ModuleSubHeader) to the modules page.
+                        # Assignment types are recognized correctly by external LMS (e.g. Blackboard, Canvas) on import.
                         for chapter_sequential in chapter_sequential_modules:
+                            course_position += 1
                             chapter_sequential = self.serialize_chapter_sequential(chapter_sequential)
                             if chapter_sequential.format in assignment_types:
                                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifier[chapter_sequential]})
@@ -692,21 +727,36 @@ class CourseExportManager:
                                 lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
                                 lxml.etree.SubElement(item, 'identifierref').text = self.sequential_to_identifierref[chapter_sequential]
+                                lxml.etree.SubElement(item, 'indent').text = '1'
+                                lxml.etree.SubElement(item, 'position').text = str(course_position)
+                                lxml.etree.SubElement(item, 'new_tab').text = 'false'
+                                lxml.etree.SubElement(item, 'link_settings_json').text = 'null'
                             elif chapter_sequential.category == 'sequential':
                                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifierref[chapter_sequential]})
                                 lxml.etree.SubElement(item, 'content_type').text = 'ContextExternalTool'
                                 lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
                                 lxml.etree.SubElement(item, 'identifierref').text = self.external_tool_identifierref
-                                lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
+                                lti_link = f'https://{self.lms_base}/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
                                 lxml.etree.SubElement(item, 'url').text = lti_link
+                                lxml.etree.SubElement(item, 'indent').text = '1'
+                                lxml.etree.SubElement(item, 'position').text = str(course_position)
+                                lxml.etree.SubElement(item, 'new_tab').text = 'false'
+                                lxml.etree.SubElement(item, 'link_settings_json').text = '{"selection_width":"","selection_height":""}'
                             else:
                                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
                                 lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
                                 lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+                                lxml.etree.SubElement(item, 'indent').text = '0'
+                                lxml.etree.SubElement(item, 'position').text = str(course_position)
+                                lxml.etree.SubElement(item, 'new_tab').text = 'false'
+                                lxml.etree.SubElement(item, 'link_settings_json').text = 'null'
                     else:
+                        # external_tool_only is true, add these types of modules (ExternalTool, ModuleSubHeader) external tools to the modules page.
+                        # We want to exclude Assignment types because they are not recognized correctly by external LMS (e.g. D2L) on import.
                         for chapter_sequential in chapter_sequential_modules:
+                            course_position += 1
                             chapter_sequential = self.serialize_chapter_sequential(chapter_sequential)
                             if chapter_sequential.category == 'sequential':
                                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.sequential_to_identifierref[chapter_sequential]})
@@ -714,13 +764,21 @@ class CourseExportManager:
                                 lxml.etree.SubElement(item, 'title').text = course_abbreviation + chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
                                 lxml.etree.SubElement(item, 'identifierref').text = self.external_tool_identifierref
-                                lti_link = 'https://courses.educateworkforce.com/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
+                                lti_link = f'https://{self.lms_base}/lti_provider/courses/' + str(courselike_key) + "/" + (str(courselike_key)).replace('course', 'block') + '+type@sequential+block@' + chapter_sequential.url_name
                                 lxml.etree.SubElement(item, 'url').text = lti_link
+                                lxml.etree.SubElement(item, 'indent').text = '1'
+                                lxml.etree.SubElement(item, 'position').text = str(course_position)
+                                lxml.etree.SubElement(item, 'new_tab').text = 'false'
+                                lxml.etree.SubElement(item, 'link_settings_json').text = '{"selection_width":"","selection_height":""}'
                             else:
                                 item = lxml.etree.SubElement(items, 'item', {'identifier': self.chapter_to_identifier[chapter_sequential]})
                                 lxml.etree.SubElement(item, 'content_type').text = 'ContextModuleSubHeader'
                                 lxml.etree.SubElement(item, 'title').text = chapter_sequential.display_name
                                 lxml.etree.SubElement(item, 'workflow_state').text= 'active'
+                                lxml.etree.SubElement(item, 'indent').text = '0'
+                                lxml.etree.SubElement(item, 'position').text = str(course_position)
+                                lxml.etree.SubElement(item, 'new_tab').text = 'false'
+                                lxml.etree.SubElement(item, 'link_settings_json').text = 'null'
 
         # Write to file
         with export_fs.open('course_settings/module_meta.xml', 'wb') as module_meta_xml:
