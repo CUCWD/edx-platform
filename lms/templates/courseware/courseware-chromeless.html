@@ -202,3 +202,24 @@ ${HTML(fragment.foot_html())}
   }());
 </script>
 % endif
+
+% if is_lti_provider:
+<script>
+  function resizeLTIFrame() {
+    if (window.parent !== window) {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage(
+        JSON.stringify({
+          subject: "lti.frameResize",
+          height: height
+        }),
+        "*"
+      );
+    }
+  }
+
+  // Call the resize function after content loads
+  window.onload = resizeLTIFrame;
+  window.addEventListener("resize", resizeLTIFrame);
+</script>
+% endif
