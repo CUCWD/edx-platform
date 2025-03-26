@@ -1940,6 +1940,11 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
         fragment = block.render(requested_view, context=student_view_context)
         optimization_flags = get_optimization_flags_for_content(block, fragment)
 
+        # Check to see if the request is coming from the LTI Provider Launch.
+        is_lti_provider = False
+        if request.resolver_match and request.resolver_match.view_name == "lti_provider_launch":
+            is_lti_provider = True
+
         context = {
             'fragment': fragment,
             'course': course,
@@ -1959,6 +1964,7 @@ def render_xblock(request, usage_key_string, check_if_enrolled=True):
             'on_courseware_page': True,
             'verified_upgrade_link': verified_upgrade_deadline_link(request.user, course=course),
             'is_learning_mfe': is_learning_mfe,
+            'is_lti_provider': is_lti_provider,
             'is_mobile_app': is_request_from_mobile_app(request),
             'reset_deadlines_url': reverse(RESET_COURSE_DEADLINES_NAME),
             'render_course_wide_assets': True,
