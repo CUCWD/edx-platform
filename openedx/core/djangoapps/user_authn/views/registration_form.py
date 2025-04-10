@@ -1072,15 +1072,26 @@ class RegistrationFormFactory:
         terms_label = _("Terms of Service")
         terms_link = marketing_link("TOS")
 
+        pp_link = marketing_link("PRIVACY")
+        coppa_link = marketing_link("COPPA")
+
         # Translators: "Terms of service" is a legal document users must agree to
         # in order to register a new account.
-        label = Text(_("I agree to the {platform_name} {tos_link_start}{terms_of_service}{tos_link_end}")).format(
+        label = Text(_("I have read and agree to the {platform_name} {tos_link_start}{terms_of_service}{tos_link_end}, {privacy_policy_link_start}Privacy Policy{privacy_policy_link_end}, and {coppa_link_start}COPPA Policy{coppa_link_end}")).format(
             platform_name=configuration_helpers.get_value("PLATFORM_NAME", settings.PLATFORM_NAME),
             terms_of_service=terms_label,
             tos_link_start=HTML("<a href='{terms_link}' rel='noopener' target='_blank'>").format(
                 terms_link=terms_link
             ),
             tos_link_end=HTML("</a>"),
+            privacy_policy_link_start=HTML("<a href='{pp_url}' rel='noopener' target='_blank'>").format(
+                pp_url=pp_link
+            ),
+            privacy_policy_link_end=HTML("</a>"),
+            coppa_link_start=HTML("<a href='{coppa_url}' rel='noopener' target='_blank'>").format(
+                coppa_url=coppa_link
+            ),
+            coppa_link_end=HTML("</a>"),
         )
 
         # Translators: "Terms of service" is a legal document users must agree to

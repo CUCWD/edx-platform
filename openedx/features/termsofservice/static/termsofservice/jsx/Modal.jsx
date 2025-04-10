@@ -17,6 +17,7 @@ class ModalView extends Component {
       tos_html: '',
       tos_exists_for_site: false,
       has_user_agreed_to_latest_tos: false,
+      site_name: '',
       tos_isChecked: false,
     };
     this.showModal = this.showModal.bind(this);
@@ -49,7 +50,8 @@ class ModalView extends Component {
         this.setState({
           tos_exists_for_site: data.tos_exists_for_site,
           tos_html: data.tos_html,
-          has_user_agreed_to_latest_tos: data.has_user_agreed_to_latest_tos
+          has_user_agreed_to_latest_tos: data.has_user_agreed_to_latest_tos,
+          site_name: data.site_name
         });
       });
   }
@@ -104,8 +106,8 @@ class ModalView extends Component {
 
         <main>
           <Modal show={this.state.show} handleClose={this.hideModal} >
-            <h2 className="mt-3 text-center">Terms of Service Agreement</h2>
-            <p className="text-center">EducateWorkforce has updated its terms of service. Please read the following terms and agree in order to continue use of the platform.</p>
+            <h2 className="mt-3 text-center">Policy Statements</h2>
+            <p className="text-center">{this.state.site_name} has updated its policy statements. Please read the following terms and agree in order to continue use of the platform.</p>
 
             <div className="modal-body border border-dark rounded m-3">
               <div className="scrollable_tos_style"  dangerouslySetInnerHTML={{ __html: (this.state.tos_html) }}></div>
@@ -116,7 +118,7 @@ class ModalView extends Component {
                 <div className="form-check d-flex justify-content-center flex-nowrap">
                   <input className="form-check-input" type="checkbox" value="" onChange={this.checkboxClicked} id="agree-to-tos"></input>
                   <label className="form-check-label m-3" htmlFor="agree-to-tos">
-                    I agree to the EducateWorkforce Terms of Service
+                    I agree to the {this.state.site_name} Terms of Service, Privacy Policy, and COPPA statement
                   </label>
                 </div>
                 <button type="submit" disabled={this.isCheckboxClicked()} onClick={this.hideModal} className="submit-btn btn btn-primary">Continue to Dashboard</button>
