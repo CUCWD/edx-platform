@@ -68,7 +68,8 @@ def terms_of_service_api(request):  # lint-amnesty, pylint: disable=missing-func
         result = {
             "tos_exists_for_site": bool(latest_tos_html),
             "tos_html": latest_tos_html,
-            "has_user_agreed_to_latest_tos": has_user_agreed_to_latest_tos
+            "has_user_agreed_to_latest_tos": has_user_agreed_to_latest_tos,
+            "site_name": cur_site_name
         }
 
         return JsonResponse(result)
