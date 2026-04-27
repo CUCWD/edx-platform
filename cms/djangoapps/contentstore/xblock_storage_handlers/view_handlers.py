@@ -9,7 +9,7 @@ contentstore/views/block.py to this file, because the logic is reused in another
 Along with it, we moved the business logic of the other views in that file, since that is related.
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 from attrs import asdict
@@ -96,7 +96,273 @@ from ..helpers import (
 
 log = logging.getLogger(__name__)
 
+# Helper function to normalize various time formats to seconds for consistent processing in estimated time calculations
+def _to_seconds(value, default=None):
+    """
+    Normalize timedelta/int/float/'SS'/'MM:SS'/'HH:MM:SS' to seconds.
+    Returns default when value is missing or invalid.
+    """
+    if value is None:
+        return default
+    if isinstance(value, timedelta):
+        return int(value.total_seconds())
+    if isinstance(value, (int, float)):
+        return int(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return default
+        if text.isdigit():
+            return int(text)
+        parts = text.split(':')
+        if all(part.isdigit() for part in parts):
+            if len(parts) == 3:
+                hours, minutes, seconds = map(int, parts)
+                return (hours * 3600) + (minutes * 60) + seconds
+            if len(parts) == 2:
+                minutes, seconds = map(int, parts)
+                return (minutes * 60) + seconds
+    return default
+
+# Helper function to calculate clip-adjusted duration in seconds based on video start/end settings
+def _clip_adjusted_duration_seconds(duration_seconds, start_time, end_time):
+    """Return clip-adjusted duration in seconds based on video start/end settings."""
+    if duration_seconds is None:
+        return None
+
+    total = max(0, _to_seconds(duration_seconds, default=0))
+    start_seconds = max(0, _to_seconds(start_time, default=0))
+    end_seconds = _to_seconds(end_time, default=None)
+
+    if end_seconds is not None and end_seconds > start_seconds:
+        return max(0, min(total, end_seconds) - min(total, start_seconds))
+
+    return total
+
+
 CREATE_IF_NOT_FOUND = ["course_info"]
+
+# The estimated time calculation functions below follow a pattern of checking for an explicit override value first, 
+# then falling back to stored estimated_time values, and only applying type-specific defaults if the time is 
+# still at the base default (1 minute). This allows for flexibility while
+# still providing defaults when no information is available.
+def _calculate_unit_estimated_time(unit_xblock):
+    """
+    Calculate the aggregated estimated time for a unit by summing children's times.
+    
+    Uses stored estimated_time from each component first, then applies
+    type-specific defaults only if still at base default (1 minute):
+    - html: Calculated from word count + images
+    - drag-and-drop-v2: 5 minutes
+    - openassessment: 10 minutes  
+    - video: Uses stored duration
+    - problem and others: 1 minute default
+    """
+    from cms.djangoapps.contentstore.courseware_index import calculate_html_reading_time_seconds
+    
+    total_time = timedelta(0)
+    
+    # Iterate through all child components of the unit and aggregate their estimated times
+    for component in unit_xblock.get_children():
+        # Use stored time if override is set
+        if getattr(component, 'override_estimated_time', False):
+            comp_time = getattr(component, 'estimated_time', timedelta(minutes=1))
+            total_time += comp_time if comp_time else timedelta(minutes=1)
+            continue
+        
+        # Get stored estimated_time first (respects xblock-defined defaults)
+        est_time = getattr(component, 'estimated_time', timedelta(minutes=1))
+
+        # Normalize any non-timedelta stored values to avoid type issues during aggregation.
+        if isinstance(est_time, (int, float)):
+            est_time = timedelta(seconds=max(0, int(est_time)))
+        elif isinstance(est_time, str):
+            parsed_seconds = _to_seconds(est_time, default=None)
+            if parsed_seconds is not None:
+                est_time = timedelta(seconds=max(0, parsed_seconds))
+        
+        # Only apply type-specific defaults if still at base default (1 minute)
+        # This is a fallback (this code will likely not be reached) to handle edge cases like:
+            # 1. older course content created before your field existed
+            # 2. content where the field is missing/unset/corrupted
+            # 3. unexpected plugin load/version mismatch cases
+            # 4. New component types that were added after the initial implementation of this logic
+        if est_time == timedelta(minutes=1):
+            if component.category == 'html':
+                html_content = getattr(component, 'data', '')
+                reading_seconds = calculate_html_reading_time_seconds(html_content)
+                if reading_seconds > 0:
+                    est_time = timedelta(seconds=reading_seconds)
+            
+            elif component.category == 'drag-and-drop-v2':
+                est_time = timedelta(minutes=5)
+            
+            elif component.category == 'openassessment':
+                est_time = timedelta(minutes=10)
+            
+        # Preserve zero-duration values; only default when the value is truly missing.
+        total_time += est_time if est_time is not None else timedelta(minutes=1)
+    
+    # Ensure that we return a minimum of 1 minute if total_time is zero, to avoid returning a zero duration
+    return total_time if total_time else timedelta(minutes=1)
+
+
+# Calculating the estimated time for a subsection by aggregating the estimated times of its child units
+def _calculate_subsection_estimated_time(subsection_xblock):
+    """
+    Calculate the aggregated estimated time for a subsection by summing unit times.
+    """
+    total_time = timedelta(0)
+    
+    for unit in subsection_xblock.get_children():
+        # If unit has override, use its stored time
+        if getattr(unit, 'override_estimated_time', False):
+            unit_time = getattr(unit, 'estimated_time', timedelta(minutes=1))
+            total_time += unit_time if unit_time else timedelta(minutes=1)
+        else:
+            # Otherwise calculate from unit's children
+            total_time += _calculate_unit_estimated_time(unit)
+    
+    return total_time if total_time else timedelta(0)
+
+
+# Calculating the estimated time for a section by aggregating the estimated times of its child subsections
+def _calculate_section_estimated_time(section_xblock):
+    """
+    Calculate the aggregated estimated time for a section by summing subsection times.
+    """
+    total_time = timedelta(0)
+    
+    for subsection in section_xblock.get_children():
+        # If subsection has override, use its stored time
+        if getattr(subsection, 'override_estimated_time', False):
+            subsec_time = getattr(subsection, 'estimated_time', timedelta(minutes=1))
+            total_time += subsec_time if subsec_time else timedelta(minutes=1)
+        else:
+            # Otherwise calculate from subsection's children
+            total_time += _calculate_subsection_estimated_time(subsection)
+    
+    return total_time if total_time else timedelta(0)
+
+# Calculating the estimated time for a course by aggregating the estimated times of its child sections
+def _calculate_course_estimated_time(course_xblock):
+    """
+    Calculate the aggregated estimated time for a course by summing all section times.
+    """
+    total_time = timedelta(0)
+    
+    for section in course_xblock.get_children():
+        # If section has override, use its stored time
+        if getattr(section, 'override_estimated_time', False):
+            section_time = getattr(section, 'estimated_time', timedelta(minutes=1))
+            total_time += section_time if section_time else timedelta(minutes=1)
+        else:
+            # Otherwise calculate from section's children
+            total_time += _calculate_section_estimated_time(section)
+    
+    return total_time if total_time else timedelta(0)
+
+# Recalculates the estimated time for an xblock when its override is turned off, or when a video component's clip settings are edited while override is off
+def _recalculate_estimated_time(xblock, store):
+    """
+    Recalculate the estimated time for an xblock when override is disabled.
+    
+    For units (verticals): Sum up the estimated_time of all children
+    For components: Use type-specific calculations or reset to field default
+    """
+    from cms.djangoapps.contentstore.courseware_index import calculate_html_reading_time_seconds
+    
+    if xblock.category == 'vertical':
+        # Unit: calculate aggregated time from children
+        xblock.estimated_time = _calculate_unit_estimated_time(xblock)
+    
+    elif xblock.category == 'html':
+        # HTML: calculate reading time from content
+        html_content = getattr(xblock, 'data', '')
+        reading_seconds = calculate_html_reading_time_seconds(html_content)
+        if reading_seconds > 0:
+            xblock.estimated_time = timedelta(seconds=reading_seconds)
+        else:
+            xblock.estimated_time = timedelta(minutes=1)
+
+    elif xblock.category == 'video':
+        # TODO: Reintroduce YouTube metadata duration lookup here when API-key configuration
+        # is available and standardized for CMS environments. Without the YouTube API metadata,
+        # the full ength of the youtube video cannot be determined, and the estimated time will 
+        # stay the default 1 minute.
+
+        duration_seconds = None
+        duration_source = 'none'
+
+        # Try to get duration from edxval if edx_video_id is present
+        # If that fails, fall back to stored duration on the xblock 
+        # Lastly, apply clip settings to adjust the duration if start/end times are present
+        if edx_video_id:
+            try:
+                import edxval.api as edxval_api
+                video_data = edxval_api.get_video_info(edx_video_id)
+                duration_seconds = video_data.get('duration')
+                if duration_seconds is not None:
+                    duration_source = 'edxval'
+            except Exception:  # pylint: disable=broad-except
+                duration_seconds = None
+
+        #Try to fall back to stored duration on the xblock if edxval lookup fails or is not available
+        if duration_seconds is None:
+            duration_seconds = getattr(xblock, 'duration', None)
+            if duration_seconds is not None:
+                duration_source = 'xblock'
+
+        # Apply clip settings to adjust the duration if start/end times are present
+        start_time = getattr(xblock, 'start_time', None)
+        end_time = getattr(xblock, 'end_time', None) or getattr(xblock, 'stop_time', None)
+        start_seconds = max(0, _to_seconds(start_time, default=0))
+        end_seconds = _to_seconds(end_time, default=None)
+
+        # If we have a valid duration and start/end times, calculate the clip-adjusted duration.
+        adjusted_seconds = _clip_adjusted_duration_seconds(duration_seconds, start_time, end_time)
+        if adjusted_seconds is None and end_seconds is not None and end_seconds > start_seconds:
+            adjusted_seconds = end_seconds - start_seconds
+            duration_source = 'clip_delta'
+
+        if adjusted_seconds is not None:
+            xblock.estimated_time = timedelta(seconds=adjusted_seconds)
+        elif getattr(xblock, 'estimated_time', None) is None:
+            xblock.estimated_time = timedelta(minutes=1)
+    else:
+        # For other components, use the field's default value
+        est_field = xblock.fields.get('estimated_time')
+        if est_field and est_field.default:
+            xblock.estimated_time = est_field.default
+        else:
+            xblock.estimated_time = timedelta(minutes=1)
+    return xblock
+
+
+def _sync_ancestor_estimated_times(start_block, user):
+    """Recalculate and persist estimated_time from start_block up through ancestors."""
+    block = start_block
+
+    while block is not None:
+        recalculated_time = None
+
+        if not getattr(block, 'override_estimated_time', False):
+            if block.category == 'vertical':
+                recalculated_time = _calculate_unit_estimated_time(block)
+            elif block.category == 'sequential':
+                recalculated_time = _calculate_subsection_estimated_time(block)
+            elif block.category == 'chapter':
+                recalculated_time = _calculate_section_estimated_time(block)
+            elif block.category == 'course':
+                recalculated_time = _calculate_course_estimated_time(block)
+
+        if recalculated_time is not None and getattr(block, 'estimated_time', None) != recalculated_time:
+            old_time = getattr(block, 'estimated_time', None)
+            block.estimated_time = recalculated_time
+            block = _update_with_callback(block, user)
+
+        block = get_parent_xblock(block)
+
 
 # Useful constants for defining predicates
 NEVER = lambda x: False
@@ -444,12 +710,58 @@ def _save_xblock(
 
                         field.write_to(xblock, value)
 
+        if xblock.category == 'html':
+            try:
+                from cms.djangoapps.contentstore.courseware_index import calculate_html_reading_time_seconds
+                html_content = getattr(xblock, 'data', '')
+                reading_seconds = calculate_html_reading_time_seconds(html_content)
+
+                # Keep HTML estimated time aligned with computed reading time unless override is enabled.
+                if not getattr(xblock, 'override_estimated_time', False):
+                    xblock.estimated_time = timedelta(
+                        seconds=reading_seconds if reading_seconds > 0 else 60
+                    )
+            except Exception as exc:  # pylint: disable=broad-except
+                log.exception(
+                    "Error calculating estimated time for HTML block %s: %s",
+                    xblock.location,
+                    exc,
+                )
+
+        course_for_settings = store.get_course(xblock.location.course_key)
+
+        # If course-level estimated-time display is enabled, this block-level setting is effectively locked on.
+        if getattr(course_for_settings, 'show_estimated_time', False) and hasattr(xblock, 'show_estimated_time'):
+            xblock.show_estimated_time = True
+
+        # Recalculate estimated time when override is turned off, and for video clip edits while override is off.
+        should_recalculate_estimated_time = False
+        updated_field_names = set()
+        if metadata is not None:
+            updated_field_names.update(metadata.keys())
+        if fields is not None:
+            updated_field_names.update(fields.keys())
+
+        if 'override_estimated_time' in updated_field_names and not getattr(xblock, 'override_estimated_time', False):
+            should_recalculate_estimated_time = True
+        elif xblock.category == 'video' and not getattr(xblock, 'override_estimated_time', False):
+            clip_fields = {'start_time', 'end_time', 'stop_time', 'edx_video_id', 'youtube_id_1_0'}
+            if updated_field_names.intersection(clip_fields):
+                should_recalculate_estimated_time = True
+
+        # If the estimated time needs to be recalculated, do it before the xblock update so that any changes to the estimated time are included in the editor_saved and post_editor_saved
+        if should_recalculate_estimated_time:
+            xblock = _recalculate_estimated_time(xblock, store)
+
         validate_and_update_xblock_due_date(xblock)
         # update the xblock and call any xblock callbacks
         xblock = _update_with_callback(xblock, user, old_metadata, old_content)
 
+        # Keep persisted container totals in sync for learner-facing APIs.
+        _sync_ancestor_estimated_times(get_parent_xblock(xblock), user)
+
         # for static tabs, their containing course also records their display name
-        course = store.get_course(xblock.location.course_key)
+        course = course_for_settings
         if xblock.location.block_type == "static_tab":
             # find the course's reference to this tab and update the name.
             static_tab = CourseTabList.get_tab_by_slug(
@@ -642,6 +954,9 @@ def _create_block(request):
         boilerplate=request.json.get("boilerplate"),
     )
 
+    # New children change container aggregate estimated time; persist updated parent totals.
+    _sync_ancestor_estimated_times(get_parent_xblock(created_block), request.user)
+
     response = {
         "locator": str(created_block.location),
         "courseKey": str(created_block.location.course_key),
@@ -803,6 +1118,11 @@ def _move_item(source_usage_key, target_parent_usage_key, user, target_index=Non
             user_id=user.id,
         )
 
+        # Moving an item changes aggregate totals in both old and new branches.
+        _sync_ancestor_estimated_times(source_parent, user)
+        if source_parent.location != target_parent.location:
+            _sync_ancestor_estimated_times(target_parent, user)
+
         log.info(
             "MOVE: %s moved from %s to %s at %d index",
             str(source_usage_key),
@@ -835,6 +1155,8 @@ def _delete_item(usage_key, user):
     store = modulestore()
 
     with store.bulk_operations(usage_key.course_key):
+        parent_location = store.get_parent_location(usage_key)
+
         # VS[compat] cdodge: This is a hack because static_tabs also have references from the course block, so
         # if we add one then we need to also add it to the policy information (i.e. metadata)
         # we should remove this once we can break this reference from the course to static tabs
@@ -851,6 +1173,10 @@ def _delete_item(usage_key, user):
         # Delete user bookmarks
         bookmarks_api.delete_bookmarks(usage_key)
         store.delete_item(usage_key, user.id)
+
+        if parent_location:
+            parent_block = store.get_item(parent_location)
+            _sync_ancestor_estimated_times(parent_block, user)
 
 
 def delete_orphans(course_usage_key, user_id, commit=False):
@@ -1105,11 +1431,23 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
             pct_sign=_("%"),
         )
 
+    # Calculate estimated time in minutes, rounded up
+    estimated_time = None
+    if hasattr(xblock, 'estimated_time') and xblock.estimated_time:
+        if isinstance(xblock.estimated_time, timedelta):
+            total_seconds = int(xblock.estimated_time.total_seconds())
+        else:
+            total_seconds = int(xblock.estimated_time) if xblock.estimated_time else 0
+        estimated_time = (total_seconds + 59) // 60
+    
     xblock_info = {
         "id": str(xblock.location),
         "display_name": xblock.display_name_with_default,
         "category": xblock.category,
         "has_children": xblock.has_children,
+        "estimated_time": estimated_time,
+        "show_estimated_time": xblock.show_estimated_time,
+        "override_estimated_time": xblock.override_estimated_time,
     }
 
     if course is not None and PUBLIC_VIDEO_SHARE.is_enabled(xblock.location.course_key):
@@ -1279,6 +1617,50 @@ def create_xblock_info(  # lint-amnesty, pylint: disable=too-many-statements
             # if xblock is a Unit we add the discussion_enabled option
             xblock_info["discussion_enabled"] = xblock.discussion_enabled
 
+        # Add estimated time fields for units, subsections, sections, and course
+        if hasattr(xblock, 'estimated_time'):
+            # Calculate aggregated time based on xblock type (unless override is set)
+            if getattr(xblock, 'override_estimated_time', False):
+                est_time = xblock.estimated_time
+            elif is_xblock_unit:
+                # Unit: aggregate from components
+                est_time = _calculate_unit_estimated_time(xblock)
+            elif xblock.category == 'sequential':
+                # Subsection: aggregate from units
+                est_time = _calculate_subsection_estimated_time(xblock)
+            elif xblock.category == 'chapter':
+                # Section: aggregate from subsections
+                est_time = _calculate_section_estimated_time(xblock)
+            elif xblock.category == 'course':
+                # Course: aggregate from sections
+                est_time = _calculate_course_estimated_time(xblock)
+            else:
+                est_time = xblock.estimated_time
+            
+            # Convert timedelta to HH:MM:SS string for frontend
+            if est_time:
+                total_seconds = int(est_time.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                xblock_info["estimated_time"] = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            else:
+                xblock_info["estimated_time"] = "00:00:00"
+        
+        # Handle show_estimated_time with course-level cascade
+        if hasattr(xblock, 'show_estimated_time'):
+            # Check if course-level show_estimated_time is enabled (forces all to display)
+            course_show_estimated_time = False
+            if course and hasattr(course, 'show_estimated_time'):
+                course_show_estimated_time = course.show_estimated_time
+            
+            # Show estimated time if either the item's own setting or course-level is enabled
+            xblock_info["show_estimated_time"] = xblock.show_estimated_time or course_show_estimated_time
+            xblock_info["course_show_estimated_time"] = course_show_estimated_time
+        
+        if hasattr(xblock, 'override_estimated_time'):
+            xblock_info["override_estimated_time"] = xblock.override_estimated_time
+
+        if is_xblock_unit:
             # Also add upstream info
             xblock_info["upstream_info"] = UpstreamLink.try_get_for_block(xblock, log_error=False).to_json()
 
