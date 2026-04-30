@@ -49,7 +49,8 @@ SUPPORTED_FIELDS = [
     SupportedFieldType('display_name', default_value=''),
     SupportedFieldType('effort_activities'),
     SupportedFieldType('effort_time'),
-    SupportedFieldType('graded'),
+    SupportedFieldType('estimated_time', default_value=''),
+    SupportedFieldType('show_estimated_time',default_value=''),
     SupportedFieldType('format'),
     SupportedFieldType('start'),
     SupportedFieldType('due'),
@@ -103,7 +104,8 @@ SUPPORTED_FIELDS = [
 # of content
 FIELDS_ALLOWED_IN_AUTH_DENIED_CONTENT = [
     "display_name",
-    "block_id",
+    "estimated_time",
+    "show_estimated_time",
     "student_view_url",
     "student_view_multi_device",
     "lms_web_url",
@@ -206,6 +208,20 @@ class BlockSerializer(serializers.Serializer):  # pylint: disable=abstract-metho
                 if field not in FIELDS_ALLOWED_IN_AUTH_DENIED_CONTENT:
                     del cleaned_data[field]
             data = cleaned_data
+
+        # If the block has estimated time and show_estimated_time fields, but the estimated_time 
+        # field is empty, we want to return the default value of 00:01:00 for estimated_time and 
+        # False for show_estimated_time. This is to ensure that if the block has these fields but 
+        # they are not set, we still return a consistent response.
+        from xmodule.modulestore.django import modulestore
+
+        try:
+            item = modulestore().get_item(block_key)
+            data['estimated_time'] = item.estimated_time
+            data['show_estimated_time'] = item.show_estimated_time
+        except:
+            data['estimated_time'] = '00:01:00'
+            data['show_estimated_time'] = False
 
         return data
 

@@ -41,6 +41,9 @@ class CourseMetadata:
     FIELDS_EXCLUDE_LIST = [
         'cohort_config',
         'xml_attributes',
+        # Excluded estimated_time and override_estimated_time to avoid modiifying the esitmated time value in a section and entire course
+        'estimated_time',
+        'override_estimated_time',
         'start',
         'end',
         'enrollment_start',

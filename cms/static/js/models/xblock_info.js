@@ -12,6 +12,12 @@ define(
             defaults: {
                 id: null,
                 display_name: null,
+                /** Added estimated_time, show_estimated_time and override_estimated_time to the defaults
+                 * to avoid undefined values in the EstimatedTimeEditor when these values are not provided by the server.
+                 */
+                estimated_time: null,
+                show_estimated_time: null,
+                override_estimated_time: null,
                 category: null,
                 data: null,
                 metadata: null,

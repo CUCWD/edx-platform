@@ -325,7 +325,8 @@ describe('CourseOutlinePage', function() {
             'show-correctness-editor', 'highlights-editor', 'highlights-enable-editor',
             'course-highlights-enable', 'course-video-sharing-enable', 'summary-configuration-editor',
             'subsection-share-link-modal-tabs', 'full-page-share-link-editor', 'embed-link-share-link-editor',
-        ]);
+            'estimated-time-editor',
+        ]); // Added estimated-time-editor template to the list of templates to install for the test suite
         appendSetFixtures(mockOutlinePage);
         mockCourseJSON = createMockCourseJSON({}, [
             createMockSectionJSON({}, [
