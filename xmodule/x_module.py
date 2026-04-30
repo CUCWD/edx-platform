@@ -1,5 +1,6 @@
 # lint-amnesty, pylint: disable=missing-module-docstring
 
+import datetime
 import importlib.resources as resources
 import logging
 import os
@@ -22,6 +23,7 @@ from xblock.fields import (
     Dict,
     Float,
     Integer,
+    Boolean,
     List,
     Reference,
     ReferenceList,
@@ -229,6 +231,27 @@ class XModuleFields:
         # it'd be nice to have a useful default but it screws up other things; so,
         # use display_name_with_default for those
         default=None
+    )
+    # Adding the estimated_time field for the new feature
+    estimated_time = RelativeTime(
+        display_name=_("Estimated Time"),
+        help=_("The estimated time to complete this component. Formatted as HH:MM:SS. The maximum value is 23:59:59."),
+        scope=Scope.settings,
+        default= datetime.timedelta(seconds=60)
+    )
+    # Adding the show_estimated_time field to toggle the display of the feature
+    show_estimated_time = Boolean(
+        display_name=_("Estimated Time Toggle Display"),
+        help=_("Used to display the estimated time throughout the course when enabled."),
+        scope=Scope.settings,
+        default=False
+    )
+    # Adding the override_estimated_time field to allow overriding the estimated time from components
+    override_estimated_time = Boolean(
+        display_name=_("Estimated Time Override"),
+        help=_("Used to determine if estimated time has been overrided for this module by another one above."),
+        scope=Scope.settings,
+        default=False
     )
 
 

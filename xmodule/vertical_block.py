@@ -141,6 +141,14 @@ class VerticalBlock(
         cta_service = self.runtime.service(self, 'call_to_action')
         vertical_banner_ctas = cta_service.get_ctas(self, 'vertical_banner', completed) if cta_service else []
 
+        # Calculate estimated time for this unit
+        estimated_time_minutes = None
+        show_estimated_time = getattr(self, 'show_estimated_time', False)
+        if show_estimated_time:
+            est_time = getattr(self, 'estimated_time', None)
+            if est_time:
+                estimated_time_minutes = int(est_time.total_seconds() / 60)
+
         fragment_context = {
             'items': contents,
             'xblock_context': context,
@@ -151,6 +159,8 @@ class VerticalBlock(
             'has_assignments': completed is not None,
             'subsection_format': context.get('format', ''),
             'vertical_banner_ctas': vertical_banner_ctas,
+            'show_estimated_time': show_estimated_time,
+            'estimated_time_minutes': estimated_time_minutes,
         }
 
         if view == STUDENT_VIEW:

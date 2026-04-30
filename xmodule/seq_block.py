@@ -777,6 +777,8 @@ class SequenceBlock(
             self.get_parent().display_name_with_default,
             self.display_name_with_default
         ]
+        course = self._get_course()
+        course_show_estimated_time = getattr(course, 'show_estimated_time', False)
         contents = []
         for block in children:
             item_type = get_icon(block)
@@ -816,6 +818,16 @@ class SequenceBlock(
                 'graded': block.graded,
                 'contains_content_type_gated_content': contains_content_type_gated_content,
             }
+            
+            # Add estimated time fields for units, including course-level cascade.
+            est_time = getattr(block, 'estimated_time', None)
+            if est_time:
+                total_seconds = int(est_time.total_seconds())
+                if total_seconds > 0:
+                    block_info['estimated_time_minutes'] = max(1, (total_seconds + 59) // 60)
+            show_estimated_time = getattr(block, 'show_estimated_time', False) or course_show_estimated_time
+            block_info['show_estimated_time'] = show_estimated_time
+            
             if not render_blocks:
                 # The item url format can be defined in the template context like so:
                 # context['item_url'] = '/my/item/path/{usage_key}/whatever'
