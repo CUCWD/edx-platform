@@ -13,6 +13,7 @@ import re
 import struct
 import sys
 import traceback
+import datetime
 
 import nh3
 from django.conf import settings
@@ -25,6 +26,7 @@ from web_fragments.fragment import Fragment
 from xblock.core import XBlock
 from xblock.fields import Boolean, Dict, Float, Integer, Scope, String, XMLString, List
 from xblock.scorable import ScorableXBlockMixin, Score
+from xmodule.fields import RelativeTime
 from xblocks_contrib.problem import ProblemBlock as _ExtractedProblemBlock
 
 from common.djangoapps.xblock_django.constants import (
@@ -182,6 +184,14 @@ class _BuiltInProblemBlock(
         # use display_name_with_default for those
         default=_("Blank Problem")
     )
+
+    estimated_time = RelativeTime(
+        display_name=_("Estimated Time"),
+        help=_("The estimated time a student needs to solve this problem."),
+        scope=Scope.settings,
+        default = datetime.timedelta(seconds=60)
+    )
+
     attempts = Integer(
         help=_("Number of attempts taken by the student on this problem"),
         default=0,
@@ -371,6 +381,20 @@ class _BuiltInProblemBlock(
         add_webpack_js_to_fragment(fragment, 'ProblemBlockDisplay')
         shim_xmodule_js(fragment, 'Problem')
         return fragment
+    
+    def calculate_estimated_time(self):
+        """
+        Calculate the estimated time to solve this problem. If the estimated_time field is set, return that value.
+        Otherwise, calculate the estimated time based on the content of the problem and return it.
+        """
+        if self.override_estimated_time:
+            return self.estimated_time
+
+        if self.data:
+            import readtime
+            result = readtime.of_html(self.data).seconds  
+            return datetime.timedelta(seconds=max(60, result))
+        return datetime.timedelta(seconds=60)
 
     def public_view(self, context):
         """

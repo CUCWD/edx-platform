@@ -6,9 +6,10 @@ import os
 import re
 import sys
 import textwrap
-from datetime import datetime
+import datetime
 
 from django.conf import settings
+from xmodule.fields import RelativeTime
 from fs.errors import ResourceNotFound
 from lxml import etree
 from path import Path as path
@@ -84,6 +85,21 @@ class HtmlBlockMixin(  # lint-amnesty, pylint: disable=abstract-method
         scope=Scope.settings
     )
 
+    estimated_time = RelativeTime(
+        display_name=_("Estimated Time"),
+        help=_("The estimated time a student needs to read this content."),
+        scope=Scope.settings,
+        default=datetime.timedelta(seconds = 60)
+    #  60 is default but this will need to be dynamic according to then number of words
+    )
+
+    override_estimated_time = Boolean(
+        display_name=_("Override Estimated Time"),
+        help=_("Override the calculated read time"),
+        scope= Scope.settings,
+        default=False
+    )
+               
     ENABLE_HTML_XBLOCK_STUDENT_VIEW_DATA = 'ENABLE_HTML_XBLOCK_STUDENT_VIEW_DATA'
 
     @XBlock.supports("multi_device")
