@@ -1376,6 +1376,24 @@ def update_course_advanced_settings(course_block: CourseBlock, data: Dict, user:
 
         # now update mongo
         modulestore().update_item(course_block, user.id)
+        
+        # Recalculate and aggregate estimated time when explicit estimated_time changes,
+        # or when override is turned off and we need to restore calculated totals
+        should_recalculate_estimated_time = (
+            'estimated_time' in data or (
+                'override_estimated_time' in data and
+                isinstance(data.get('override_estimated_time'), dict) and
+                data.get('override_estimated_time', {}).get('value') is False
+            )
+        )
+        # Only recalculate if the course has an estimated_time field, which is only true for courses with the feature enabled
+        if hasattr(course_block, 'estimated_time') and should_recalculate_estimated_time:
+            from cms.djangoapps.contentstore.courseware_index import calculate_and_aggregate_estimated_time
+            calculate_and_aggregate_estimated_time(course_block.id)
+            # Reload course to get updated estimated_time
+            course_block = modulestore().get_course(course_block.id)
+            # Return fresh metadata with calculated time
+            updated_data = CourseMetadata.fetch_all(course_block)
 
         return updated_data
 

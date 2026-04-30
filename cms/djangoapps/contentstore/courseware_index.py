@@ -1,6 +1,7 @@
 """ Code to allow module store to interface with courseware index """
 
 import logging
+import math
 import re
 from abc import ABCMeta, abstractmethod
 from datetime import timedelta
@@ -19,6 +20,13 @@ from xmodule.annotator_mixin import html_to_text  # lint-amnesty, pylint: disabl
 from xmodule.library_tools import normalize_key_for_search  # lint-amnesty, pylint: disable=wrong-import-order
 from xmodule.modulestore import ModuleStoreEnum  # lint-amnesty, pylint: disable=wrong-import-order
 
+import json
+import requests
+from requests.exceptions import Timeout
+from opaque_keys.edx.keys import UsageKey
+from xmodule.modulestore.exceptions import ItemNotFoundError
+from lms.lib.utils import get_parent_unit
+
 # REINDEX_AGE is the default amount of time that we look back for changes
 # that might have happened. If we are provided with a time at which the
 # indexing is triggered, then we know it is safe to only index items
@@ -32,6 +40,195 @@ INDEXING_REQUEST_TIMEOUT = 60
 
 log = logging.getLogger('edx.modulestore')
 
+# Constants for the estimated time calculation for HTML content (Text component).
+DEFAULT_TEXT_READING_WPM = 265
+IMAGE_WEIGHT_START_SECONDS = 12
+IMAGE_WEIGHT_MIN_SECONDS = 3
+
+# Calculate the estimated reading time for HTML content, using the readtime library if available, and 
+# falling back to a word count estimate if not.
+def calculate_html_reading_time_seconds(html_content, wpm=DEFAULT_TEXT_READING_WPM):
+    """Estimate reading time in seconds for HTML content using readtime with fallback logic."""
+    normalized_html = html_content or ''
+    text_content = strip_html_content_to_text(normalized_html)
+    word_count = len(text_content.split()) if text_content else 0
+
+    # If the content is empty, return 0 seconds immediately to avoid unnecessary calculations.
+    if not word_count:
+        return 0
+
+    try:
+        import readtime
+        read_seconds = int(readtime.of_html(normalized_html).seconds)
+        source = 'readtime'
+    except Exception:  # pylint: disable=broad-except
+        # Fallback to local estimate if readtime is unavailable.
+        if wpm <= 0:
+            return 60
+        read_seconds = math.ceil((word_count / wpm) * 60)
+        source = 'fallback_wpm'
+
+    final_seconds = max(60, read_seconds)
+    return final_seconds
+
+# Calculates and aggregates estimated time for a course
+def calculate_and_aggregate_estimated_time(course_key):
+    """
+    Calculate and aggregate estimated time for a course.
+    
+    Walks through the course structure and:
+    1. Applies default times for specific component types (if not already set)
+    2. Aggregates component times up to units, subsections, sections, and course
+
+    Override semantics:
+    - Only unit-level (vertical) override_estimated_time is honored.
+    - Section, subsection, and course estimated times are always derived from children.
+    
+    Default times by component type:
+    - video: Uses duration already set by video_block.py
+    - html(text): Calculated from word count + images
+    - drag-and-drop-v2: 5 minutes
+    - openassessment: 10 minutes  
+    - problem: 1 minute (default from base class)
+    - all others: 1 minute (default from base class)
+    - NOTE: Storyline and Simulations wasn't given a default time of 15 minutes yet (Estimated Time Sharepoint)
+    """
+    import datetime
+    from xmodule.modulestore.django import modulestore
+    
+    store = modulestore()
+    course = store.get_course(course_key)
+    
+    # Verify that the course exists before proceeding
+    if not course:
+        log.warning(f"Course {course_key} not found")
+        return datetime.timedelta(0)
+    
+    total_time = datetime.timedelta(0)
+    
+    # Walk through the course structure: sections -> subsections -> units -> components
+    for section in course.get_children():
+        section_time = datetime.timedelta(0)
+        
+        for subsection in section.get_children():
+            subsection_time = datetime.timedelta(0)
+            
+            for unit in subsection.get_children():
+                unit_time = datetime.timedelta(0)
+                
+                # If the unit has an override_estimated_time flag, use that time and skip calculating from children
+                if getattr(unit, 'override_estimated_time', False):
+                    subsection_time += unit.estimated_time
+                    continue
+                
+                for component in unit.get_children():
+
+                    # Skip if component has manual override
+                    if getattr(component, 'override_estimated_time', False):
+                        unit_time += component.estimated_time
+                        continue
+                    
+                    # Get current estimated time (default is 1 min from base class)
+                    est_time = getattr(component, 'estimated_time', datetime.timedelta(minutes=1))
+                    
+                    # Apply type-specific defaults if still at base default
+                    if est_time == datetime.timedelta(minutes=1):
+                        if component.category == 'html':
+                            # Calculate reading time from content
+                            html_content = getattr(component, 'data', '')
+                            reading_seconds = calculate_html_reading_time_seconds(html_content)
+                            if reading_seconds > 0:
+                                est_time = datetime.timedelta(seconds=reading_seconds)
+                                component.estimated_time = est_time
+                                store.update_item(component, None)
+                        
+                        elif component.category == 'drag-and-drop-v2':
+                            est_time = datetime.timedelta(minutes=5)
+                            component.estimated_time = est_time
+                            store.update_item(component, None)
+                        
+                        elif component.category == 'openassessment':
+                            est_time = datetime.timedelta(minutes=10)
+                            component.estimated_time = est_time
+                            store.update_item(component, None)
+                        
+                        # video: already handled by video_block.py on savv
+                    
+                    unit_time += est_time
+                
+                # Save aggregated unit time
+                unit.estimated_time = unit_time
+                store.update_item(unit, None)
+                subsection_time += unit_time
+            
+            # Save aggregated subsection time
+            subsection.estimated_time = subsection_time
+            store.update_item(subsection, None)
+            section_time += subsection_time
+        
+        # Save aggregated section time
+        section.estimated_time = section_time
+        store.update_item(section, None)
+        total_time += section_time
+    
+    # Save course total
+    course.estimated_time = total_time
+    store.update_item(course, None)
+    
+    return total_time
+
+# This method is used to trigger the key terms API endpoint to start the process of retrieving and searching 
+# through textbooks for key terms
+def keyterms_reindex(course_id):
+    """
+    Uses key terms API endpoint
+    """
+    # url for keyterms api endpoint for reindexing a course
+    url_key_terms_api_reindex = settings.KEY_TERMS_API_REINDEX_URL + "?course_id=" + str(course_id)
+
+    try:
+        requests.post(url_key_terms_api_reindex)
+
+        # retrieve lesson data to be updated
+        payload = json.dumps({})
+        headers = {
+            # 'Authorization': 'Bearer <token>',
+            'Content-Type': 'application/json',
+            # 'Cookie': 'csrftoken=<token>'
+        }
+        response = requests.request("GET", url_key_terms_api_reindex, headers=headers, data=payload)
+
+        if response.status_code == 200:
+            # holds our updated lesson links
+            updatedlesson = {}
+
+            # go through all lessons and update lesson link to find vertical xblock
+            for lesson in response.json():
+                if "vertical+block" not in lesson['lesson_link']:
+                    usage_key = UsageKey.from_string(lesson['lesson_link'])
+                    try:
+                        from xmodule.modulestore.django import modulestore as module_store
+                        item = module_store().get_item(usage_key)
+                        newlink = str(get_parent_unit(item).location)
+                        updatedlesson[lesson['lesson_link']] = newlink
+                    except (ItemNotFoundError):
+                        pass
+                else:
+                    updatedlesson[lesson['lesson_link']] = lesson['lesson_link']
+
+            # send updated data
+            return requests.post(url_key_terms_api_reindex, json=json.dumps(updatedlesson))
+        else:
+            raise ConnectionError(
+                f"Could not connect to the key-terms api. HTTP status code {response.status_code}"
+            )
+    except (ConnectionError, Timeout) as excep:
+        raise SearchIndexingError(
+            'Error(s) present during indexing',
+            _('Error indexing key terms')
+        ) from excep
+
+    return False
 
 def strip_html_content_to_text(html_content):
     """ Gets only the textual part for html content - useful for building text to be searched """
