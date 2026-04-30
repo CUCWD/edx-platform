@@ -103,6 +103,8 @@ def get_course_outline_block_tree(request, course_id, user=None, allow_start_dat
             'due',
             'effort_activities',
             'effort_time',
+            'estimated_time', # Added estimaated_time when fetching blocks for the course outline to display estimated time for blocks in the course outline
+            'show_estimated_time', # Added show_estimated_time when fetching blocks for the course outline to determine whether to show estimated time for blocks in the course outline
             'format',
             'graded',
             'has_scheduled_content',

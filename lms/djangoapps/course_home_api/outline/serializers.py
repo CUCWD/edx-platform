@@ -53,6 +53,7 @@ class CourseBlockSerializer(serializers.Serializer):
                 'description': description,
                 'display_name': display_name,
                 'due': block.get('due'),
+                # Get the estimated time for the block. If the block does not have an estimated time, return the default value of 00:01:00. 
                 'effort_activities': block.get('effort_activities'),
                 'effort_time': block.get('effort_time'),
                 'icon': icon,
@@ -61,6 +62,8 @@ class CourseBlockSerializer(serializers.Serializer):
                 'resume_block': block.get('resume_block', False),
                 'type': block_type,
                 'has_scheduled_content': block.get('has_scheduled_content'),
+                # Get the value of show_estimated_time for the block (True or False)
+                'show_estimated_time': block.get('show_estimated_time'),
                 'hide_from_toc': block.get('hide_from_toc'),
             },
         }

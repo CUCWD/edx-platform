@@ -10,6 +10,12 @@ from openedx.core.djangolib.markup import HTML
 
 %if unit_title and show_title:
   <h2 class="hd hd-2 unit-title">${unit_title}</h2>
+  % if show_estimated_time and estimated_time_minutes:
+    <p class="estimated-time-display" style="margin-top: 4px; font-size: 14px; color: #707070;">
+      <span class="fa fa-clock-o" aria-hidden="true" style="margin-right: 4px;"></span>
+      [Estimated Time to Complete: <em>${estimated_time_minutes} ${'minute' if estimated_time_minutes == 1 else 'minutes'}</em>
+    </p>
+  % endif
 % endif
 
 % if has_assignments and due:
