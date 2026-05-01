@@ -1,0 +1,47 @@
+<form>
+<h3 class="modal-section-title">
+    <%- gettext('Estimated Time') %>
+</h3>
+<div class="modal-section-content">
+    <label class="label">
+        <span><%- gettext('Estimated Time to Complete') %></span>
+    </label>
+    <div>
+        <input type="text" id="estimated_time" name="estimated_time"
+            value=""
+            placeholder="HH:MM:SS"
+            class="estimated-time input input-text"
+            pattern="\d{1,2}:\d{2}:\d{2}"
+            title="Enter time in HH:MM:SS format"
+            autocomplete="off" />
+        <p class="field-message">
+            <%- gettext('Specify the estimated time for learners to complete this component.') %>
+        </p>
+    </div>
+</div>
+
+<div class="modal-section-content">
+    <label class="label">
+        <input type="checkbox" id="estimated_time_override" name="estimated_time_override"
+            value="1" class="estimated-time-override input input-checkbox" autocomplete="off" />
+        <span><%- gettext('Override Estimated Time') %></span>
+    </label>
+    <p class="field-message">
+        <%- gettext('When checked, this component\'s estimated time will not be recalculated automatically during course re-indexing.') %>
+    </p>
+</div>
+
+<div class="modal-section-content">
+    <label class="label">
+        <input type="checkbox" id="show_estimated_time" name="show_estimated_time"
+            value="1" class="show_estimated_time input input-checkbox" autocomplete="off" />
+        <span><%- gettext('Show Estimated Time to Learners') %></span>
+    </label>
+    <p class="field-message">
+        <%- gettext('When checked, learners will see the estimated completion time in the course outline and component view.') %>
+    </p>
+    <p class="field-message" id="course_show_estimated_time_message" style="display:none;">
+        <%- gettext('Course-level Estimated Time Display is enabled, so this setting is locked on for this item.') %>
+    </p>
+</div>
+</form>
