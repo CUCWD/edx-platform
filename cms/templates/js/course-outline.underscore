@@ -153,6 +153,20 @@ if (is_proctored_exam) {
                     <span class="wrapper-<%- xblockType %>-title wrapper-xblock-field incontext-editor is-editable" data-field="display_name" data-field-display-name="<%- gettext("Display Name") %>">
                         <span class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value"><%- xblockInfo.get('display_name') %></span>
                     </span>
+                    <% if (xblockInfo.get('show_estimated_time') && xblockInfo.get('estimated_time') && xblockInfo.get('estimated_time') !== '00:00:00') { %>
+                        <%
+                            var estTime = xblockInfo.get('estimated_time');
+                            var parts = estTime.split(':');
+                            var hours = parseInt(parts[0], 10);
+                            var minutes = parseInt(parts[1], 10);
+                            var seconds = parseInt(parts[2], 10) || 0;
+                            var totalMinutes = Math.ceil(((hours * 3600) + (minutes * 60) + seconds) / 60);
+                        %>
+                        <span class="estimated-time-display" style="margin-left: 12px; font-size: 75%; color: #707070; font-weight: normal; font-style: italic;">
+                            <span class="icon fa fa-clock-o" aria-hidden="true" style="margin-right: 4px;"></span>
+                            Estimated Time to Complete <%- totalMinutes %> minute<% if (totalMinutes !== 1) { %>s<% } %>
+                        </span>
+                    <% } %>
                 <% } %>
             </h3>
         <% if (xblockType == "unit") {%>
@@ -272,6 +286,15 @@ if (is_proctored_exam) {
         </div>
     </div>
     <div class="<%- xblockType %>-status">
+        <% if (xblockInfo.get('estimated_time') != null) { %>
+            <%- gettext("Estimated Time To Complete:')} %>
+            <%- xblockInfo.get('estimated_time') %>
+            <% if (xblockInfo.get('estimated_time')==1) %> <%- gettext('minute') %>
+             <% else %> <%- gettext('minutes') %>
+            <% if (xblockInfo.get('override_estimated_time') == true)  { %>
+             <%- gettext('(Overrided)') %> 
+            <% } %>
+        <% } %>
         <% if (!xblockInfo.isVertical()) { %>
             <% if (xblockInfo.get('explanatory_message') !=null) { %>
                 <div class="explanatory-message">
